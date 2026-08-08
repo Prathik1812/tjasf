@@ -228,7 +228,7 @@ export default function HomePage() {
           </div>
           <h2 className="font-['Playfair_Display'] font-medium text-[clamp(34px,4vw,52px)] leading-[1.08] text-[#102342] mb-10">Take the next step.</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link to="/submit" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
+            <Link to="/dashboard/submit" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
               <div className="w-11 h-11 bg-white text-[#eb5526] flex items-center justify-center mb-6">
                 <FileText size={22} />
               </div>

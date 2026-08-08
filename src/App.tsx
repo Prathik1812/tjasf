@@ -60,11 +60,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Submit (author/reviewer/editor/admin only) */}
-          <Route element={<ProtectedRoute allowedRoles={['author', 'reviewer', 'section_editor', 'managing_editor', 'editor_in_chief', 'admin']} />}>
-            <Route path="/submit" element={<SubmitManuscriptPage />} />
-          </Route>
-
           {/* Dashboard */}
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
@@ -74,6 +69,11 @@ export default function App() {
               <Route path="/dashboard/reviews/:id" element={<ReviewDetailPage />} />
               <Route path="/dashboard/editor" element={<EditorWorkspacePage />} />
               <Route path="/dashboard/editor/:id" element={<ManuscriptEditorPage />} />
+              
+              {/* Submit (author/reviewer/editor/admin only) */}
+              <Route element={<ProtectedRoute allowedRoles={['author', 'reviewer', 'section_editor', 'managing_editor', 'editor_in_chief', 'admin']} />}>
+                <Route path="/dashboard/submit" element={<SubmitManuscriptPage />} />
+              </Route>
 
               {/* Admin only */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>

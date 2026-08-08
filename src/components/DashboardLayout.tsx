@@ -103,7 +103,7 @@ function getNavItems(role?: UserRole): NavItem[] {
   }
 
   if (role === 'author') {
-    items.push({ to: '/submit', label: 'Submit New', icon: FileEdit });
+    items.push({ to: '/dashboard/submit', label: 'Submit New', icon: FileEdit });
   }
 
   if (role === 'reviewer') {

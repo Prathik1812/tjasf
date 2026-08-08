@@ -72,7 +72,7 @@ export default function DashboardHome() {
             <Link to="/dashboard/manuscripts" className="text-xs font-bold text-[#eb5526] hover:underline">View all</Link>
           </div>
           {manuscripts.length === 0 ? (
-            <p className="text-sm text-[#667082]">No manuscripts yet. <Link to="/submit" className="text-[#eb5526] font-semibold">Submit your first paper</Link></p>
+            <p className="text-sm text-[#667082]">No manuscripts yet. <Link to="/dashboard/submit" className="text-[#eb5526] font-semibold">Submit your first paper</Link></p>
           ) : (
             <div className="space-y-3">
               {manuscripts.slice(0, 5).map((m) => (
