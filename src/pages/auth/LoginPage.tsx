@@ -28,7 +28,7 @@ export default function LoginPage() {
       'admin@tjasf.org': { name: 'Prathik Kumar', role: 'admin' },
     };
 
-    const isDemo = email in demoAccounts;
+    const isDemo = email.toLowerCase() in demoAccounts;
 
     // 1. Try to sign in directly
     const { error: signInError } = await signIn(email, password);
@@ -41,15 +41,25 @@ export default function LoginPage() {
         const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
         
         if (existingProfile) {
-          // Update the role to the selected radio button workspace
-          await supabase.from('profiles').update({ role: dbRole }).eq('id', sessionUser.id);
+          if (isDemo) {
+            // Demo accounts can switch roles on the fly using the radio buttons
+            await supabase.from('profiles').update({ role: dbRole }).eq('id', sessionUser.id);
+          } else {
+            // Personal email accounts preserve their database role (do NOT overwrite it)
+            // Unless it is 'user' or invalid, in which case we make sure it is 'author'
+            if (existingProfile.role === 'user' || !existingProfile.role) {
+              await supabase.from('profiles').update({ role: 'author' }).eq('id', sessionUser.id);
+            }
+          }
         } else {
           // If no profile row exists (e.g. registered directly in Auth tab or custom flow), create it
+          // Defaults to 'author' for personal email, or uses selectedRole for demo
+          const initialRole = isDemo ? dbRole : 'author';
           await supabase.from('profiles').insert({
             id: sessionUser.id,
             email,
             full_name: sessionUser.user_metadata?.full_name || email.split('@')[0],
-            role: dbRole,
+            role: initialRole,
             is_active: true,
             email_verified: true,
           });
@@ -63,7 +73,7 @@ export default function LoginPage() {
     // 2. If direct login failed and matches a demo credential, attempt auto-registration
     if (isDemo && password === 'password123') {
       try {
-        const cred = demoAccounts[email];
+        const cred = demoAccounts[email.toLowerCase()];
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -150,7 +160,7 @@ export default function LoginPage() {
 
             {/* Role Selection Radio Buttons */}
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-2">Select Workspace Role</label>
+              <label className="block text-sm font-semibold text-[#102342] mb-1">Select Workspace Role</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { value: 'author', label: 'Author' },
@@ -178,6 +188,9 @@ export default function LoginPage() {
                   </label>
                 ))}
               </div>
+              <p className="text-[10px] text-[#8a919b] mt-1.5 leading-relaxed">
+                * Personal emails default to <strong>Author</strong> on registration. Assigned database roles (e.g. Reviewer or Editor) are preserved and will not be overwritten upon sign in.
+              </p>
             </div>
 
             <button type="submit" disabled={loading} className="w-full py-3 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] transition-colors disabled:opacity-50">
