@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
 
 export default function DashboardLayout() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -13,6 +13,11 @@ export default function DashboardLayout() {
     await signOut();
     navigate('/');
   };
+
+  const activeProfile = profile || (user ? {
+    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    role: 'author' as UserRole,
+  } : null);
 
   const roleLabel: Record<UserRole, string> = {
     author: 'Author',
@@ -23,7 +28,7 @@ export default function DashboardLayout() {
     admin: 'Administrator',
   };
 
-  const navItems = getNavItems(profile?.role);
+  const navItems = getNavItems(activeProfile?.role);
 
   return (
     <div className="min-h-screen bg-[#f5f4f0] flex">
@@ -35,8 +40,8 @@ export default function DashboardLayout() {
         </div>
         <div className="px-5 py-4 border-b border-[#1d3556]">
           <p className="text-[10px] uppercase tracking-wider text-[#7e8da4]">Signed in as</p>
-          <p className="text-sm font-semibold mt-1">{profile?.full_name || 'User'}</p>
-          <p className="text-xs text-[#7e8da4] mt-0.5">{profile ? roleLabel[profile.role] : ''}</p>
+          <p className="text-sm font-semibold mt-1">{activeProfile?.full_name || 'User'}</p>
+          <p className="text-xs text-[#7e8da4] mt-0.5">{activeProfile ? roleLabel[activeProfile.role] : ''}</p>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
           {navItems.map((item) => (

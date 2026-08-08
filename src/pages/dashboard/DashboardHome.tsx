@@ -7,28 +7,34 @@ import { StatCard, StatusBadge } from '@/components/DashboardLayout';
 import type { Manuscript, Review, UserRole } from '@/types';
 
 export default function DashboardHome() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [editorManuscripts, setEditorManuscripts] = useState<Manuscript[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const activeProfile = profile || (user ? {
+    id: user.id,
+    email: user.email || '',
+    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    role: 'author' as UserRole,
+  } : null);
 
   useEffect(() => {
     (async () => {
-      if (!profile) return;
-      const { data: ms } = await supabase.from('manuscripts').select('*').eq('submitter_id', profile.id).order('created_at', { ascending: false });
+      const targetUserId = activeProfile?.id;
+      if (!targetUserId) return;
+      const { data: ms } = await supabase.from('manuscripts').select('*').eq('submitter_id', targetUserId).order('created_at', { ascending: false });
       if (ms) setManuscripts(ms as Manuscript[]);
-      const { data: rv } = await supabase.from('reviews').select('*').eq('reviewer_id', profile.id).order('created_at', { ascending: false });
+      const { data: rv } = await supabase.from('reviews').select('*').eq('reviewer_id', targetUserId).order('created_at', { ascending: false });
       if (rv) setReviews(rv as Review[]);
-      if (['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(profile.role)) {
+      if (activeProfile && ['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(activeProfile.role)) {
         const { data: em } = await supabase.from('manuscripts').select('*').order('created_at', { ascending: false }).limit(10);
         if (em) setEditorManuscripts(em as Manuscript[]);
       }
-      setLoading(false);
     })();
-  }, [profile]);
+  }, [activeProfile]);
 
-  if (!profile) return null;
+  if (!user || !activeProfile) return null;
 
   const roleLabel: Record<UserRole, string> = {
     author: 'Author',
@@ -42,24 +48,24 @@ export default function DashboardHome() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Welcome, {profile.full_name.split(' ')[0]}</h1>
-        <p className="text-[#667082] text-sm mt-1">You are signed in as {roleLabel[profile.role]}</p>
+        <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Welcome, {activeProfile.full_name.split(' ')[0]}</h1>
+        <p className="text-[#667082] text-sm mt-1">You are signed in as {roleLabel[activeProfile.role]}</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Manuscripts" value={manuscripts.length} icon={FileText} />
-        {(profile.role === 'reviewer' || profile.role === 'admin') && (
+        {(activeProfile.role === 'reviewer' || activeProfile.role === 'admin') && (
           <StatCard label="Reviews" value={reviews.length} icon={ClipboardList} />
         )}
-        {['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(profile.role) && (
+        {['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(activeProfile.role) && (
           <StatCard label="In Editorial" value={editorManuscripts.length} icon={BookOpen} />
         )}
-        {profile.role === 'author' && (
+        {activeProfile.role === 'author' && (
           <StatCard label="Submitted" value={manuscripts.filter((m) => m.status !== 'draft').length} icon={FileEdit} />
         )}
       </div>
 
-      {profile.role === 'author' && (
+      {activeProfile.role === 'author' && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-[#102342]">Recent Manuscripts</h2>
@@ -83,7 +89,7 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {profile.role === 'reviewer' && (
+      {activeProfile.role === 'reviewer' && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-[#102342]">Review Assignments</h2>
@@ -99,7 +105,7 @@ export default function DashboardHome() {
                     <p className="text-sm font-medium text-[#102342]">Review #{r.id.slice(0, 8)}</p>
                     <p className="text-xs text-[#667082]">Invited: {new Date(r.invited_at).toLocaleDateString('en-GB')}</p>
                   </div>
-                  <StatusBadge status={r.status} />
+                  <Link to={`/dashboard/reviews/${r.id}`} className="text-xs font-bold text-[#eb5526] hover:underline">Start Review</Link>
                 </div>
               ))}
             </div>
@@ -107,22 +113,20 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(profile.role) && (
+      {['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(activeProfile.role) && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#102342]">Manuscripts in Pipeline</h2>
-            <Link to="/dashboard/editor" className="text-xs font-bold text-[#eb5526] hover:underline">View all</Link>
+            <h2 className="text-lg font-semibold text-[#102342]">Recent Submissions (Editorial)</h2>
+            <Link to="/dashboard/editor" className="text-xs font-bold text-[#eb5526] hover:underline">Go to Editor Workspace</Link>
           </div>
-          {loading ? (
-            <p className="text-sm text-[#667082]">Loading...</p>
-          ) : editorManuscripts.length === 0 ? (
-            <p className="text-sm text-[#667082]">No manuscripts in the pipeline.</p>
+          {editorManuscripts.length === 0 ? (
+            <p className="text-sm text-[#667082]">No submissions in active review.</p>
           ) : (
             <div className="space-y-3">
               {editorManuscripts.slice(0, 5).map((m) => (
                 <div key={m.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#102342] truncate">{m.title || 'Untitled'}</p>
+                    <p className="text-sm font-medium text-[#102342] truncate">{m.title || 'Untitled manuscript'}</p>
                     <p className="text-xs text-[#667082]">{new Date(m.created_at).toLocaleDateString('en-GB')}</p>
                   </div>
                   <StatusBadge status={m.status} />
@@ -133,7 +137,7 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {profile.role === 'admin' && (
+      {activeProfile.role === 'admin' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link to="/dashboard/admin/users" className="bg-white rounded-lg border border-[#e6e5e0] p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
             <div className="w-11 h-11 bg-[#f1f0ec] rounded-lg flex items-center justify-center text-[#eb5526]"><Users size={22} /></div>
