@@ -103,7 +103,7 @@ export default function HomePage() {
       <section className="bg-[#eb5526] text-white">
         <div className="max-w-[1160px] mx-auto px-8 grid grid-cols-2 md:grid-cols-4 py-6">
           {[
-            { v: '01', l: 'Volume published' },
+            { v: '0', l: 'Volumes published' },
             { v: '06', l: 'Scientific domains' },
             { v: '100%', l: 'Open access' },
             { v: 'Global', l: 'Editorial community' },

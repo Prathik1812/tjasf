@@ -7,21 +7,29 @@ import { StatusBadge } from '@/components/DashboardLayout';
 import type { Manuscript, Domain } from '@/types';
 
 export default function MyManuscripts() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const activeProfile = profile || (user ? {
+    id: user.id,
+    email: user.email || '',
+    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    role: 'author' as any,
+  } : null);
+
   useEffect(() => {
     (async () => {
-      if (!profile) return;
-      const { data } = await supabase.from('manuscripts').select('*').eq('submitter_id', profile.id).order('created_at', { ascending: false });
+      const targetUserId = activeProfile?.id;
+      if (!targetUserId) return;
+      const { data } = await supabase.from('manuscripts').select('*').eq('submitter_id', targetUserId).order('created_at', { ascending: false });
       if (data) setManuscripts(data as Manuscript[]);
       const { data: doms } = await supabase.from('domains').select('*');
       if (doms) setDomains(doms as Domain[]);
       setLoading(false);
     })();
-  }, [profile]);
+  }, [activeProfile]);
 
   const domainName = (id: string | null) => domains.find((d) => d.id === id)?.name || 'Unassigned';
 
@@ -32,7 +40,7 @@ export default function MyManuscripts() {
           <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">My Manuscripts</h1>
           <p className="text-[#667082] text-sm mt-1">Track and manage your submissions</p>
         </div>
-        <Link to="/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c]">
+        <Link to="/dashboard/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c]">
           <Plus size={16} /> New Submission
         </Link>
       </div>
@@ -44,7 +52,7 @@ export default function MyManuscripts() {
           <FileText size={40} className="mx-auto text-[#d8d8d1] mb-4" />
           <p className="text-[#667082] text-lg mb-2">No manuscripts yet</p>
           <p className="text-[#667082] text-sm mb-6">Start your first submission to see it here.</p>
-          <Link to="/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c]">
+          <Link to="/dashboard/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c]">
             <Plus size={16} /> Submit a Manuscript
           </Link>
         </div>
