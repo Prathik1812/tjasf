@@ -59,7 +59,7 @@ export default function Layout() {
                 Dashboard
               </NavLink>
             )}
-            <Link to="/submit" className="text-[#eb5526] border-l border-[#d8d8d1] pl-7 flex items-center gap-2 hover:text-[#d7461c] transition-colors">
+            <Link to="/dashboard/submit" className="text-[#eb5526] border-l border-[#d8d8d1] pl-7 flex items-center gap-2 hover:text-[#d7461c] transition-colors">
               Submit your paper <ArrowRight size={15} />
             </Link>
           </nav>
@@ -74,7 +74,7 @@ export default function Layout() {
             {profile && (
               <NavLink to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-[#eb5526]">Dashboard</NavLink>
             )}
-            <Link to="/submit" onClick={() => setMenuOpen(false)} className="text-[#eb5526]">Submit your paper</Link>
+            <Link to="/dashboard/submit" onClick={() => setMenuOpen(false)} className="text-[#eb5526]">Submit your paper</Link>
           </div>
         )}
       </header>
@@ -98,7 +98,7 @@ export default function Layout() {
           </div>
           <div className="flex flex-col gap-3 text-xs">
             <strong className="text-white text-[11px] uppercase tracking-wider mb-2">Publish with us</strong>
-            <Link to="/submit" className="hover:text-white">Submit a manuscript</Link>
+            <Link to="/dashboard/submit" className="hover:text-white">Submit a manuscript</Link>
             <Link to="/editorial-board" className="hover:text-white">Editorial Board</Link>
             <Link to="/policies" className="hover:text-white">Publication ethics</Link>
           </div>
