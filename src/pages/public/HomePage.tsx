@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Search, FileText, Users, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Search, FileText, Users, ShieldCheck, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Article, Issue, Volume, Announcement } from '@/types';
 
@@ -59,11 +59,14 @@ export default function HomePage() {
             <p className="text-[#596476] max-w-[550px] text-[17px] leading-[1.65] mb-8">
               TJASF is an international, peer-reviewed journal for research that crosses boundaries, challenges assumptions, and opens new scientific frontiers.
             </p>
-            <div className="flex items-center gap-7">
+            <div className="flex flex-wrap items-center gap-6 mt-2">
               <Link to="/current-issue" className="inline-flex items-center gap-3 px-5 py-3.5 text-xs font-bold text-white bg-[#eb5526] hover:bg-[#d7461c] transition-all hover:-translate-y-0.5">
                 Explore latest research <ArrowRight size={17} />
               </Link>
-              <Link to="/about" className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]">
+              <a href="/assets/templates/TJASF_Paper_Template.docx" download className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]">
+                <Download size={16} /> Download Template (.docx)
+              </a>
+              <Link to="/about" className="inline-flex items-center gap-2 text-xs font-bold text-[#27334a] hover:text-[#eb5526] transition-colors">
                 Discover the journal <ArrowRight size={16} />
               </Link>
             </div>
