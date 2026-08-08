@@ -59,14 +59,11 @@ export default function HomePage() {
             <p className="text-[#596476] max-w-[550px] text-[17px] leading-[1.65] mb-8">
               TJASF is an international, peer-reviewed journal for research that crosses boundaries, challenges assumptions, and opens new scientific frontiers.
             </p>
-            <div className="flex flex-wrap items-center gap-6 mt-2">
+            <div className="flex items-center gap-7">
               <Link to="/current-issue" className="inline-flex items-center gap-3 px-5 py-3.5 text-xs font-bold text-white bg-[#eb5526] hover:bg-[#d7461c] transition-all hover:-translate-y-0.5">
                 Explore latest research <ArrowRight size={17} />
               </Link>
-              <a href="/assets/templates/TJASF_Paper_Template.docx" download className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]">
-                <Download size={16} /> Download Template (.docx)
-              </a>
-              <Link to="/about" className="inline-flex items-center gap-2 text-xs font-bold text-[#27334a] hover:text-[#eb5526] transition-colors">
+              <Link to="/about" className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]">
                 Discover the journal <ArrowRight size={16} />
               </Link>
             </div>
@@ -231,14 +228,23 @@ export default function HomePage() {
           </div>
           <h2 className="font-['Playfair_Display'] font-medium text-[clamp(34px,4vw,52px)] leading-[1.08] text-[#102342] mb-10">Take the next step.</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link to="/dashboard/submit" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
-              <div className="w-11 h-11 bg-white text-[#eb5526] flex items-center justify-center mb-6">
-                <FileText size={22} />
+            <div className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-11 h-11 bg-white text-[#eb5526] flex items-center justify-center mb-6">
+                  <FileText size={22} />
+                </div>
+                <h3 className="font-['Playfair_Display'] font-medium text-[25px] mb-3 text-[#102342]">Submit your research</h3>
+                <p className="text-[#717b8a] text-[13px] leading-[1.6] mb-6">Share rigorous, original work with a global scientific audience.</p>
               </div>
-              <h3 className="font-['Playfair_Display'] font-medium text-[25px] mb-3 text-[#102342]">Submit your research</h3>
-              <p className="text-[#717b8a] text-[13px] leading-[1.6] mb-5">Share rigorous, original work with a global scientific audience.</p>
-              <span className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526]">Author guidelines <ArrowRight size={16} /></span>
-            </Link>
+              <div className="flex flex-col gap-2.5">
+                <Link to="/dashboard/submit" className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:underline">
+                  Submit a manuscript <ArrowRight size={15} />
+                </Link>
+                <a href="/assets/templates/TJASF_Paper_Template.docx" download className="inline-flex items-center gap-2 text-xs font-bold text-[#102342] hover:text-[#eb5526] transition-colors">
+                  <Download size={14} /> Download Word Template (.docx)
+                </a>
+              </div>
+            </div>
             <Link to="/editorial-board" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
               <div className="w-11 h-11 bg-white text-[#eb5526] flex items-center justify-center mb-6">
                 <Users size={22} />
