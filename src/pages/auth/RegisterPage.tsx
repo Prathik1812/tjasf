@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'author' | 'reviewer' | 'editor' | 'admin'>('author');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +26,8 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, fullName);
+    const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
+    const { error } = await signUp(email, password, fullName, dbRole as any);
     if (error) {
       setError(error);
       setLoading(false);
@@ -53,6 +55,39 @@ export default function RegisterPage() {
               <label className="block text-sm font-semibold text-[#102342] mb-1">Email</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
             </div>
+            
+            {/* Role Selection Radio Buttons */}
+            <div>
+              <label className="block text-sm font-semibold text-[#102342] mb-2">Select Your Role</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'author', label: 'Author' },
+                  { value: 'reviewer', label: 'Reviewer' },
+                  { value: 'editor', label: 'Editor' },
+                  { value: 'admin', label: 'Admin' },
+                ].map((r) => (
+                  <label
+                    key={r.value}
+                    className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                      selectedRole === r.value
+                        ? 'border-[#eb5526] bg-[#eb5526]/5 text-[#eb5526]'
+                        : 'border-[#d8d8d1] bg-white text-[#667082] hover:bg-[#fbfaf8]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="registerRole"
+                      value={r.value}
+                      checked={selectedRole === r.value}
+                      onChange={() => setSelectedRole(r.value as any)}
+                      className="accent-[#eb5526]"
+                    />
+                    {r.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1">Password</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />

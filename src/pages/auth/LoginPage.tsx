@@ -4,13 +4,14 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string })?.from || '/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'author' | 'reviewer' | 'editor' | 'admin'>('author');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,7 @@ export default function LoginPage() {
 
     // Pre-configured demo details for on-the-fly registration if they don't exist yet
     const demoAccounts: Record<string, { name: string; role: string }> = {
+      'author@tjasf.org': { name: 'Author Candidate', role: 'author' },
       'reviewer@tjasf.org': { name: 'Prof. Alan Turing', role: 'reviewer' },
       'rajesh.thumma@anurag.edu.in': { name: 'Dr. Rajesh Thumma', role: 'editor_in_chief' },
       'admin@tjasf.org': { name: 'Prathik Kumar', role: 'admin' },
@@ -30,12 +32,35 @@ export default function LoginPage() {
 
     // 1. Try to sign in directly
     const { error: signInError } = await signIn(email, password);
+    
     if (!signInError) {
+      // Direct sign in succeeded! Self-heal or update the user's role profile
+      const { data: { user: sessionUser } } = await supabase.auth.getUser();
+      if (sessionUser) {
+        const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
+        const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
+        
+        if (existingProfile) {
+          // Update the role to the selected radio button workspace
+          await supabase.from('profiles').update({ role: dbRole }).eq('id', sessionUser.id);
+        } else {
+          // If no profile row exists (e.g. registered directly in Auth tab or custom flow), create it
+          await supabase.from('profiles').insert({
+            id: sessionUser.id,
+            email,
+            full_name: sessionUser.user_metadata?.full_name || email.split('@')[0],
+            role: dbRole,
+            is_active: true,
+            email_verified: true,
+          });
+        }
+        await refreshProfile();
+      }
       navigate(from);
       return;
     }
 
-    // 2. If it failed and matches a demo credential, attempt auto-registration
+    // 2. If direct login failed and matches a demo credential, attempt auto-registration
     if (isDemo && password === 'password123') {
       try {
         const cred = demoAccounts[email];
@@ -52,11 +77,12 @@ export default function LoginPage() {
           // Clean up any old auto-profiles for this ID
           await supabase.from('profiles').delete().eq('id', signUpData.user.id);
 
+          const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
           const { error: profileError } = await supabase.from('profiles').insert({
             id: signUpData.user.id,
             email,
             full_name: cred.name,
-            role: cred.role,
+            role: dbRole,
             is_active: true,
             email_verified: true,
           });
@@ -65,12 +91,13 @@ export default function LoginPage() {
             throw new Error(profileError.message);
           }
 
-          // 3. Final sign in
+          // 3. Final sign in after registering
           const { error: finalSignInError } = await signIn(email, password);
           if (finalSignInError) {
             throw new Error(finalSignInError);
           }
 
+          await refreshProfile();
           navigate(from);
           return;
         }
@@ -95,6 +122,7 @@ export default function LoginPage() {
     };
     setEmail(credentials[roleKey]);
     setPassword('password123');
+    setSelectedRole(roleKey);
   };
 
   return (
@@ -114,10 +142,44 @@ export default function LoginPage() {
               <label className="block text-sm font-semibold text-[#102342] mb-1">Email</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
             </div>
+            
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1">Password</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
             </div>
+
+            {/* Role Selection Radio Buttons */}
+            <div>
+              <label className="block text-sm font-semibold text-[#102342] mb-2">Select Workspace Role</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'author', label: 'Author' },
+                  { value: 'reviewer', label: 'Reviewer' },
+                  { value: 'editor', label: 'Editor' },
+                  { value: 'admin', label: 'Admin' },
+                ].map((r) => (
+                  <label
+                    key={r.value}
+                    className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                      selectedRole === r.value
+                        ? 'border-[#eb5526] bg-[#eb5526]/5 text-[#eb5526]'
+                        : 'border-[#d8d8d1] bg-white text-[#667082] hover:bg-[#fbfaf8]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="loginRole"
+                      value={r.value}
+                      checked={selectedRole === r.value}
+                      onChange={() => setSelectedRole(r.value as any)}
+                      className="accent-[#eb5526]"
+                    />
+                    {r.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <button type="submit" disabled={loading} className="w-full py-3 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] transition-colors disabled:opacity-50">
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
