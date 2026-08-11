@@ -126,3 +126,13 @@ WHERE slug = 'author-guidelines';
 UPDATE policies
 SET content = 'Authors may self-archive the accepted version of their manuscript in institutional repositories immediately upon publication.'
 WHERE slug = 'archiving-policy';
+
+-- 10. Update Editorial Board Member Profile details
+UPDATE editorial_board
+SET affiliation = 'TJASF Editorial Office'
+WHERE name = 'Dr. Rajesh Thumma';
+
+UPDATE editorial_board
+SET role_title = 'Managing Editor (Operations & Technology)',
+    bio = 'Managing Editor responsible for the design, development, operations, and maintenance of the TJASF peer review system and digital publishing platform.'
+WHERE name = 'Prathik Kumar';

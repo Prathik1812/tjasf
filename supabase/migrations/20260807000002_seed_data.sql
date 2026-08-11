@@ -15,8 +15,8 @@ ALTER TABLE editorial_board ADD COLUMN IF NOT EXISTS photo_url text DEFAULT '';
 DELETE FROM editorial_board;
 
 INSERT INTO editorial_board (name, role_title, affiliation, domain, bio, photo_url, sort_order, is_active) VALUES
-  ('Dr. Rajesh Thumma', 'Editor in Chief', 'Anurag University, Hyderabad, India', 'Engineering / Power Electronics', 'Associate Professor in the Department of Electronics and Communication Engineering at Anurag University. Expert in power electronics, WSN, and IoT applications. ORCID: 0000-0003-4181-4572.', '/assets/images/rajesh_thumma.jpg', 1, true),
-  ('Prathik Kumar', 'Technical Lead', 'TJASF Editorial Office', 'Full-Stack Software Engineering', 'Technical Lead responsible for the design, development, and maintenance of the TJASF peer review system and digital publishing platform.', '/assets/images/prathik_kumar.png', 2, true)
+  ('Dr. Rajesh Thumma', 'Editor in Chief', 'TJASF Editorial Office', 'Engineering / Power Electronics', 'Associate Professor in the Department of Electronics and Communication Engineering at Anurag University. Expert in power electronics, WSN, and IoT applications. ORCID: 0000-0003-4181-4572.', '/assets/images/rajesh_thumma.jpg', 1, true),
+  ('Prathik Kumar', 'Managing Editor (Operations & Technology)', 'TJASF Editorial Office', 'Full-Stack Software Engineering', 'Managing Editor responsible for the design, development, operations, and maintenance of the TJASF peer review system and digital publishing platform.', '/assets/images/prathik_kumar.png', 2, true)
 ON CONFLICT DO NOTHING;
 
 -- ============ SEED VOLUME & ISSUE ============
