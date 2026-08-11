@@ -11,6 +11,7 @@ interface Author {
   affiliation: string;
   department: string;
   corresponding: boolean;
+  orcid?: string;
 }
 
 const STEPS = [
@@ -39,7 +40,7 @@ export default function SubmitManuscriptPage() {
   const [title, setTitle] = useState('');
   const [domainId, setDomainId] = useState('');
   const [authors, setAuthors] = useState<Author[]>([
-    { name: profile?.full_name || '', email: profile?.email || '', affiliation: '', department: '', corresponding: true }
+    { name: profile?.full_name || '', email: profile?.email || '', affiliation: '', department: '', corresponding: true, orcid: profile?.orcid || '' }
   ]);
   const [abstract, setAbstract] = useState('');
   const [keywords, setKeywords] = useState('');
@@ -192,6 +193,7 @@ export default function SubmitManuscriptPage() {
           corresponding: authors[i].corresponding,
           affiliation: authors[i].affiliation,
           department: authors[i].department,
+          orcid: authors[i].orcid || '',
           sort_order: i,
         });
       }
@@ -199,7 +201,7 @@ export default function SubmitManuscriptPage() {
     navigate('/dashboard/manuscripts');
   };
 
-  const addAuthor = () => setAuthors([...authors, { name: '', email: '', affiliation: '', department: '', corresponding: false }]);
+  const addAuthor = () => setAuthors([...authors, { name: '', email: '', affiliation: '', department: '', corresponding: false, orcid: '' }]);
   const removeAuthor = (i: number) => setAuthors(authors.filter((_, idx) => idx !== i));
   const updateAuthor = (i: number, field: keyof Author, value: string | boolean) => {
     const updated = [...authors];
@@ -305,6 +307,7 @@ export default function SubmitManuscriptPage() {
                         updateAuthor(i, 'email', selected.email || '');
                         updateAuthor(i, 'affiliation', selected.affiliation || '');
                         updateAuthor(i, 'department', selected.department || '');
+                        updateAuthor(i, 'orcid', selected.orcid || '');
                       }
                     }}
                     className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
@@ -321,6 +324,7 @@ export default function SubmitManuscriptPage() {
                   <input type="email" placeholder="Email" value={a.email} onChange={(e) => updateAuthor(i, 'email', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
                   <input type="text" placeholder="Affiliation" value={a.affiliation} onChange={(e) => updateAuthor(i, 'affiliation', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
                   <input type="text" placeholder="Department" value={a.department} onChange={(e) => updateAuthor(i, 'department', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
+                  <input type="text" placeholder="ORCID ID (e.g., 0000-0002-1825-0097)" value={a.orcid || ''} onChange={(e) => updateAuthor(i, 'orcid', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white md:col-span-2" />
                 </div>
               </div>
             ))}

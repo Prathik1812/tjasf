@@ -2,9 +2,10 @@
 -- This migration updates the database structure to support Plagiarism Report uploads
 -- and updates all policies to reflect plagiarism checks, pricing, and timelines.
 
--- 1. Add plagiarism columns
+-- 1. Add plagiarism columns and author ORCID support
 ALTER TABLE manuscripts ADD COLUMN IF NOT EXISTS plagiarism_report_url text DEFAULT '';
 ALTER TABLE manuscripts ADD COLUMN IF NOT EXISTS plagiarism_report_name text DEFAULT '';
+ALTER TABLE manuscript_authors ADD COLUMN IF NOT EXISTS orcid text DEFAULT '';
 
 -- 2. Update About Page Indexing Text
 UPDATE homepage_content

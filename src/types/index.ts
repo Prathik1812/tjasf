@@ -90,6 +90,7 @@ export interface ManuscriptAuthor {
   corresponding: boolean;
   affiliation: string;
   department: string;
+  orcid?: string;
   sort_order: number;
 }
 
