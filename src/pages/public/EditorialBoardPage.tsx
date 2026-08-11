@@ -38,15 +38,11 @@ export default function EditorialBoardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {members.map((m) => (
-            <div key={m.id} className="bg-white rounded-lg border border-[#e6e5e0] p-6 hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 rounded-full bg-[#f1f0ec] flex items-center justify-center text-[#eb5526] font-['Playfair_Display'] text-2xl font-medium mb-4 overflow-hidden">
-                {m.photo_url ? <img src={m.photo_url} alt={m.name} className="w-full h-full object-cover" /> : m.name.charAt(0)}
-              </div>
-              <h3 className="font-semibold text-[#102342] text-lg">{m.name}</h3>
-              <p className="text-[#eb5526] text-sm font-semibold mt-1">{m.role_title}</p>
-              {m.affiliation && <p className="text-[#667082] text-sm mt-1">{m.affiliation}</p>}
-              {m.domain && <p className="text-[#667082] text-xs mt-1">{m.domain}</p>}
-              {m.bio && <p className="text-[#667082] text-sm mt-3 line-clamp-3">{m.bio}</p>}
+            <div key={m.id} className="bg-white rounded-lg border border-[#e6e5e0] p-6 hover:shadow-md transition-shadow">
+              <p className="text-xs font-bold text-[#eb5526] uppercase tracking-wider mb-1">{m.role_title}</p>
+              <h3 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl mb-2">{m.name}</h3>
+              {m.affiliation && <p className="text-[#667082] text-sm">{m.affiliation}</p>}
+              {m.domain && <p className="text-[#667082] text-xs mt-1 italic">{m.domain}</p>}
             </div>
           ))}
         </div>

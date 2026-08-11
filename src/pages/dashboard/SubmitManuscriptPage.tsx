@@ -45,6 +45,9 @@ export default function SubmitManuscriptPage() {
   const [keywords, setKeywords] = useState('');
   const [fileName, setFileName] = useState('');
   const [fileUrl, setFileUrl] = useState('');
+  const [plagiarismFileName, setPlagiarismFileName] = useState('');
+  const [plagiarismFileUrl, setPlagiarismFileUrl] = useState('');
+  const [uploadingPlagiarism, setUploadingPlagiarism] = useState(false);
   const [references, setReferences] = useState('');
   const [conflictOfInterest, setConflictOfInterest] = useState(false);
   const [fundingReceived, setFundingReceived] = useState(false);
@@ -78,7 +81,7 @@ export default function SubmitManuscriptPage() {
     if (step === 1) return title.trim().length > 0 && domainId.length > 0;
     if (step === 2) return authors.length > 0 && authors.every((a) => a.name.trim().length > 0);
     if (step === 3) return abstract.trim().length > 0;
-    if (step === 4) return fileName.length > 0;
+    if (step === 4) return fileName.length > 0 && plagiarismFileName.length > 0;
     if (step === 5) return originalWork && copyrightAgreement && policiesAgreement;
     return false;
   };
@@ -121,6 +124,34 @@ export default function SubmitManuscriptPage() {
     }, 2500);
   };
 
+  const handlePlagiarismUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setError('Invalid File Type: The plagiarism report must be in PDF format.');
+      setPlagiarismFileName('');
+      setPlagiarismFileUrl('');
+      e.target.value = '';
+      return;
+    }
+
+    setPlagiarismFileName(file.name);
+    setUploadingPlagiarism(true);
+    setError('');
+
+    const filePath = `plagiarism-reports/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from('manuscripts').upload(filePath, file);
+    if (upErr) {
+      setError('Failed to upload plagiarism report: ' + upErr.message);
+      setUploadingPlagiarism(false);
+      return;
+    }
+    const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
+    setPlagiarismFileUrl(pubData.publicUrl);
+    setUploadingPlagiarism(false);
+  };
+
   const handleSubmit = async () => {
     if (!profile) return;
     setSubmitting(true);
@@ -136,6 +167,8 @@ export default function SubmitManuscriptPage() {
       status: 'submitted',
       file_url: fileUrl,
       file_name: fileName,
+      plagiarism_report_url: plagiarismFileUrl,
+      plagiarism_report_name: plagiarismFileName,
       conflict_of_interest: conflictOfInterest,
       funding_received: fundingReceived,
       ai_used: aiUsed,
@@ -349,6 +382,34 @@ export default function SubmitManuscriptPage() {
                 )}
               </div>
             </div>
+            
+            {/* Plagiarism Report File */}
+            <div>
+              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Plagiarism Report (Turnitin or iThenticate PDF)</label>
+              <div className="border-2 border-dashed border-[#d8d8d1] rounded-lg p-8 text-center bg-[#fbfaf8]">
+                {uploadingPlagiarism ? (
+                  <div className="py-4 space-y-3">
+                    <div className="w-10 h-10 border-4 border-t-[#eb5526] border-[#f1f0ec] rounded-full animate-spin mx-auto" />
+                    <p className="text-sm font-semibold text-[#102342]">Uploading plagiarism report...</p>
+                  </div>
+                ) : plagiarismFileName ? (
+                  <div className="flex items-center justify-center gap-2 text-sm text-[#102342]">
+                    <Upload size={18} className="text-[#eb5526]" /> {plagiarismFileName}
+                    <button onClick={() => { setPlagiarismFileName(''); setPlagiarismFileUrl(''); }} className="ml-2 text-red-400 hover:text-red-600"><Trash2 size={15} /></button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={32} className="mx-auto text-[#d8d8d1] mb-3" />
+                    <p className="text-sm text-[#667082] mb-2">Drag and drop or click to upload your similarity report</p>
+                    <p className="text-xs text-[#667082]">PDF format only (Similarity index must be ≤ 10%)</p>
+                    <input type="file" accept=".pdf" onChange={handlePlagiarismUpload} className="hidden" id="plagiarism-upload" />
+                    <label htmlFor="plagiarism-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-lg cursor-pointer hover:bg-[#eeece7]">
+                      Choose Report PDF
+                    </label>
+                  </>
+                )}
+              </div>
+            </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-semibold text-[#102342]">References</label>
@@ -399,7 +460,7 @@ export default function SubmitManuscriptPage() {
                 <p className="text-base font-semibold text-[#102342] leading-snug">{title || '—'}</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#e6e5e0] pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-[#e6e5e0] pt-4">
                 <div>
                   <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Research Domain</strong>
                   <span className="inline-block px-2.5 py-1 bg-[#f1f0ec] rounded-full text-xs font-semibold text-[#102342]">
@@ -408,7 +469,11 @@ export default function SubmitManuscriptPage() {
                 </div>
                 <div>
                   <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Manuscript File</strong>
-                  <p className="text-xs font-medium text-[#eb5526]">{fileName || 'No file uploaded'}</p>
+                  <p className="text-xs font-medium text-[#eb5526] truncate">{fileName || 'No file uploaded'}</p>
+                </div>
+                <div>
+                  <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Plagiarism Report</strong>
+                  <p className="text-xs font-medium text-[#eb5526] truncate">{plagiarismFileName || 'No report uploaded'}</p>
                 </div>
               </div>
 

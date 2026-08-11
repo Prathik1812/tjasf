@@ -67,6 +67,8 @@ export interface Manuscript {
   status: ManuscriptStatus;
   file_url: string;
   file_name: string;
+  plagiarism_report_url?: string;
+  plagiarism_report_name?: string;
   conflict_of_interest: boolean;
   funding_received: boolean;
   ai_used: boolean;
