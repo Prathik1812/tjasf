@@ -19,6 +19,7 @@ export default function Layout() {
     { to: '/current-issue', label: 'Current Issue' },
     { to: '/archives', label: 'Archives' },
     { to: '/policies', label: 'Policies' },
+    { to: '/join', label: 'Join Us' },
     { to: '/search', label: 'Search' },
     { to: '/contact', label: 'Contact' },
   ];
@@ -106,6 +107,7 @@ export default function Layout() {
             <strong className="text-white text-[11px] uppercase tracking-wider mb-2">Publish with us</strong>
             <Link to="/dashboard/submit" className="hover:text-white">Submit a manuscript</Link>
             <Link to="/editorial-board" className="hover:text-white">Editorial Board</Link>
+            <Link to="/join" className="hover:text-white">Join the Editorial Board</Link>
             <Link to="/policies" className="hover:text-white">Publication ethics</Link>
           </div>
           <div className="flex flex-col gap-3 text-xs">

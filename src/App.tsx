@@ -14,6 +14,7 @@ import SearchPage from '@/pages/public/SearchPage';
 import ContactPage from '@/pages/public/ContactPage';
 import ArticleDetailPage from '@/pages/public/ArticleDetailPage';
 import IssueDetailPage from '@/pages/public/IssueDetailPage';
+import JoinUsPage from '@/pages/public/JoinUsPage';
 
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/article/:id" element={<ArticleDetailPage />} />
+            <Route path="/join" element={<JoinUsPage />} />
           </Route>
 
           {/* Auth */}
