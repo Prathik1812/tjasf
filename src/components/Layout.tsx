@@ -19,7 +19,6 @@ export default function Layout() {
     { to: '/current-issue', label: 'Current Issue' },
     { to: '/archives', label: 'Archives' },
     { to: '/policies', label: 'Policies' },
-    { to: '/join', label: 'Join Us' },
     { to: '/search', label: 'Search' },
     { to: '/contact', label: 'Contact' },
   ];
