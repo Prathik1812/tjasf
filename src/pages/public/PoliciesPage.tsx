@@ -3,6 +3,90 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Policy } from '@/types';
 
+function parseMarkdown(text: string) {
+  if (!text) return '';
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let key = 0;
+  let inList = false;
+  let listItems: React.ReactNode[] = [];
+
+  const parseInline = (lineText: string) => {
+    const parts = lineText.split('**');
+    return parts.map((part, index) => {
+      if (index % 2 === 1) {
+        return <strong key={index} className="font-bold text-[#102342]">{part}</strong>;
+      }
+      return part;
+    });
+  };
+
+  const flushList = () => {
+    if (inList && listItems.length > 0) {
+      elements.push(
+        <ul key={`list-${key++}`} className="list-disc pl-5 my-4 space-y-2 text-[#27334a]">
+          {listItems}
+        </ul>
+      );
+      listItems = [];
+      inList = false;
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('###')) {
+      flushList();
+      elements.push(
+        <h3 key={key++} className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] mt-6 mb-2">
+          {parseInline(line.replace(/^###\s*/, ''))}
+        </h3>
+      );
+    } else if (line.startsWith('##')) {
+      flushList();
+      elements.push(
+        <h2 key={key++} className="font-['Playfair_Display'] font-semibold text-xl text-[#102342] mt-8 mb-3 border-b border-[#e6e5e0] pb-2">
+          {parseInline(line.replace(/^##\s*/, ''))}
+        </h2>
+      );
+    } else if (line.startsWith('#')) {
+      flushList();
+      elements.push(
+        <h1 key={key++} className="font-['Playfair_Display'] font-semibold text-2xl text-[#102342] mt-10 mb-4">
+          {parseInline(line.replace(/^#\s*/, ''))}
+        </h1>
+      );
+    } else if (line.startsWith('-') || line.startsWith('*')) {
+      inList = true;
+      listItems.push(
+        <li key={key++} className="text-sm text-[#27334a] leading-relaxed">
+          {parseInline(line.replace(/^[-*]\s*/, ''))}
+        </li>
+      );
+    } else if (/^\d+\.\s*/.test(line)) {
+      flushList();
+      const itemText = line.replace(/^\d+\.\s*/, '');
+      elements.push(
+        <div key={key++} className="pl-4 my-2 text-sm text-[#27334a] leading-relaxed flex gap-2">
+          <span className="font-bold text-[#eb5526]">{line.match(/^\d+\./)?.[0]}</span>
+          <span>{parseInline(itemText)}</span>
+        </div>
+      );
+    } else if (line === '') {
+      flushList();
+    } else {
+      flushList();
+      elements.push(
+        <p key={key++} className="text-sm text-[#27334a] leading-[1.7] mb-4">
+          {parseInline(lines[i].trim())}
+        </p>
+      );
+    }
+  }
+  flushList();
+  return elements;
+}
+
 export default function PoliciesPage() {
   const { slug } = useParams();
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -81,17 +165,17 @@ export default function PoliciesPage() {
           </aside>
           <div className="min-w-0">
             {activePolicy ? (
-              <div className="bg-white rounded-lg border border-[#e6e5e0] p-8">
+              <div className="bg-white rounded-lg border border-[#e6e5e0] p-8 shadow-sm">
                 <h2 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342] mb-2">{activePolicy.title}</h2>
                 <p className="text-xs text-[#667082] mb-6">
                   Last updated: {new Date(activePolicy.last_updated).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
                 </p>
-                <div className="prose prose-lg max-w-none text-[#27334a] leading-[1.7] whitespace-pre-wrap">
-                  {activePolicy.content}
+                <div className="prose prose-lg max-w-none text-[#27334a] leading-[1.7]">
+                  {parseMarkdown(activePolicy.content)}
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-[#e6e5e0] p-8">
+              <div className="bg-white rounded-lg border border-[#e6e5e0] p-8 shadow-sm">
                 <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mb-4">Select a policy to read</h2>
                 <p className="text-[#667082]">Browse our policies using the menu on the left. Click any policy title to read the full text.</p>
               </div>
