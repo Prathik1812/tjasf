@@ -245,13 +245,13 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-            <Link to="/editorial-board" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
+            <Link to="/join" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
               <div className="w-11 h-11 bg-white text-[#eb5526] flex items-center justify-center mb-6">
                 <Users size={22} />
               </div>
-              <h3 className="font-['Playfair_Display'] font-medium text-[25px] mb-3 text-[#102342]">Join our reviewers</h3>
-              <p className="text-[#717b8a] text-[13px] leading-[1.6] mb-5">Help shape the research that defines tomorrow's conversations.</p>
-              <span className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526]">Become a reviewer <ArrowRight size={16} /></span>
+              <h3 className="font-['Playfair_Display'] font-medium text-[25px] mb-3 text-[#102342]">Join our editorial board</h3>
+              <p className="text-[#717b8a] text-[13px] leading-[1.6] mb-5">Apply to join the TJASF Editorial Board or reviewer panel to guide peer review in your specialty.</p>
+              <span className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526]">Apply to join us <ArrowRight size={16} /></span>
             </Link>
             <Link to="/policies" className="bg-[#f1f0ec] p-7 border-t-[3px] border-transparent hover:border-[#eb5526] hover:bg-[#eeece7] hover:-translate-y-1 transition-all">
               <div className="w-11 h-11 bg-white text-[#eb5526] flex items-center justify-center mb-6">
