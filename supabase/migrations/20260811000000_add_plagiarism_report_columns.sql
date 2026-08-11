@@ -121,3 +121,8 @@ Authors must upload an official plagiarism report in PDF format from **Turnitin*
 - **Normal Track**: No submission fees or APCs. Review process is **12 weeks**.
 - **Fast Track**: Expedited review in **4 weeks** for a **$40** processing fee. The journal is self-funded.'
 WHERE slug = 'author-guidelines';
+
+-- 9. Update Archiving Policy (slug: archiving-policy)
+UPDATE policies
+SET content = 'Authors may self-archive the accepted version of their manuscript in institutional repositories immediately upon publication.'
+WHERE slug = 'archiving-policy';
