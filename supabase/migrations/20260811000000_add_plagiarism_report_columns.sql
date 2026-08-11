@@ -60,14 +60,14 @@ WHERE slug = 'copyright-and-license';
 UPDATE policies
 SET content = 'Please ensure your submission satisfies each point of the checklist. Submissions missing any of these items will be returned immediately.
 
-- **[Point 1] Official Paper Template**: The manuscript must be formatted strictly in accordance with the official TJASF template (.doc or .docx format).
-- **[Point 2] File Naming**: The manuscript file name must contain the keyword ''template'' or ''tjasf'' (e.g. `tjasf_physics_paper.docx`) to pass the automated technical screen.
-- **[Point 3] Plagiarism Report Upload**: Authors must upload a valid Turnitin or iThenticate plagiarism report (PDF format) showing a similarity index of **10% or less**.
-- **[Point 4] Title & Abstract**: The submission must include a title and an abstract of 300 words or less.
-- **[Point 5] Keywords**: Include 3 to 5 relevant indexing keywords.
-- **[Point 6] Author Information**: Provide full legal names, active email addresses, and institutional affiliations for all co-authors during setup.
-- **[Point 7] Disclosures & Declarations**: Include explicit declarations regarding funding sources, conflict of interest statements, and AI-assistance usage.
-- **[Point 8] Reference List**: All references must be formatted in standard IEEE style, with active DOIs included where available.'
+1. **Official Paper Template**: The manuscript must be formatted strictly in accordance with the official TJASF template (.doc or .docx format).
+2. **File Naming**: The manuscript file name must contain the keyword ''template'' or ''tjasf'' (e.g. `tjasf_physics_paper.docx`) to pass the automated technical screen.
+3. **Plagiarism Report Upload**: Authors must upload a valid Turnitin or iThenticate plagiarism report (PDF format) showing a similarity index of **10% or less**.
+4. **Title & Abstract**: The submission must include a title and an abstract of 300 words or less.
+5. **Keywords**: Include 3 to 5 relevant indexing keywords.
+6. **Author Information**: Provide full legal names, active email addresses, and institutional affiliations for all co-authors during setup.
+7. **Disclosures & Declarations**: Include explicit declarations regarding funding sources, conflict of interest statements, and AI-assistance usage.
+8. **Reference List**: All references must be formatted in standard IEEE style, with active DOIs included where available.'
 WHERE slug = 'submission-checklist';
 
 -- 7. Update Peer Review Policy (slug: peer-review-policy)
