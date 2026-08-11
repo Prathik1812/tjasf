@@ -105,11 +105,18 @@ export default function ManuscriptEditorPage() {
               {manuscript.keywords.map((kw, i) => <span key={i} className="px-3 py-1 bg-[#f1f0ec] rounded-full text-xs text-[#667082]">{kw}</span>)}
             </div>
           )}
-          {manuscript.file_url && (
-            <a href={manuscript.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline">
-              Download manuscript ({manuscript.file_name || 'file'})
-            </a>
-          )}
+          <div className="flex gap-6 mt-3">
+            {manuscript.file_url && (
+              <a href={manuscript.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline">
+                Download manuscript ({manuscript.file_name || 'file'})
+              </a>
+            )}
+            {manuscript.plagiarism_report_url && (
+              <a href={manuscript.plagiarism_report_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline border-l border-[#d8d8d1] pl-6">
+                Download Plagiarism Report ({manuscript.plagiarism_report_name || 'PDF'})
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
