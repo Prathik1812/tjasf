@@ -11,13 +11,26 @@ function parseMarkdown(text: string) {
   let inList = false;
   let listItems: React.ReactNode[] = [];
 
+  let inTable = false;
+  let tableHeaders: React.ReactNode[] = [];
+  let tableRows: React.ReactNode[] = [];
+
   const parseInline = (lineText: string) => {
-    const parts = lineText.split('**');
-    return parts.map((part, index) => {
-      if (index % 2 === 1) {
-        return <strong key={index} className="font-bold text-[#102342]">{part}</strong>;
-      }
-      return part;
+    const brParts = lineText.split('<br>');
+    return brParts.map((subText, subIdx) => {
+      const parts = subText.split('**');
+      const inlineElements = parts.map((part, index) => {
+        if (index % 2 === 1) {
+          return <strong key={index} className="font-bold text-[#102342]">{part}</strong>;
+        }
+        return part;
+      });
+      return (
+        <span key={subIdx}>
+          {inlineElements}
+          {subIdx < brParts.length - 1 && <br />}
+        </span>
+      );
     });
   };
 
@@ -33,57 +46,107 @@ function parseMarkdown(text: string) {
     }
   };
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (line.startsWith('###')) {
-      flushList();
+  const flushTable = () => {
+    if (inTable) {
       elements.push(
-        <h3 key={key++} className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] mt-6 mb-2">
-          {parseInline(line.replace(/^###\s*/, ''))}
-        </h3>
-      );
-    } else if (line.startsWith('##')) {
-      flushList();
-      elements.push(
-        <h2 key={key++} className="font-['Playfair_Display'] font-semibold text-xl text-[#102342] mt-8 mb-3 border-b border-[#e6e5e0] pb-2">
-          {parseInline(line.replace(/^##\s*/, ''))}
-        </h2>
-      );
-    } else if (line.startsWith('#')) {
-      flushList();
-      elements.push(
-        <h1 key={key++} className="font-['Playfair_Display'] font-semibold text-2xl text-[#102342] mt-10 mb-4">
-          {parseInline(line.replace(/^#\s*/, ''))}
-        </h1>
-      );
-    } else if (line.startsWith('-') || line.startsWith('*')) {
-      inList = true;
-      listItems.push(
-        <li key={key++} className="text-sm text-[#27334a] leading-relaxed">
-          {parseInline(line.replace(/^[-*]\s*/, ''))}
-        </li>
-      );
-    } else if (/^\d+\.\s*/.test(line)) {
-      flushList();
-      const itemText = line.replace(/^\d+\.\s*/, '');
-      elements.push(
-        <div key={key++} className="pl-4 my-2 text-sm text-[#27334a] leading-relaxed flex gap-2">
-          <span className="font-bold text-[#eb5526]">{line.match(/^\d+\./)?.[0]}</span>
-          <span>{parseInline(itemText)}</span>
+        <div key={`table-${key++}`} className="overflow-x-auto my-6 rounded-lg border border-[#e6e5e0] shadow-sm">
+          <table className="min-w-full border-collapse">
+            {tableHeaders.length > 0 && (
+              <thead className="bg-[#08172f] text-white">
+                <tr>{tableHeaders}</tr>
+              </thead>
+            )}
+            <tbody className="bg-white text-sm text-[#27334a]">
+              {tableRows}
+            </tbody>
+          </table>
         </div>
       );
-    } else if (line === '') {
+      tableHeaders = [];
+      tableRows = [];
+      inTable = false;
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('|') && line.endsWith('|')) {
       flushList();
+      if (line.includes('---')) {
+        continue;
+      }
+      const cells = line.split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+      if (!inTable) {
+        inTable = true;
+        tableHeaders = cells.map((cell, idx) => (
+          <th key={idx} className="border border-[#e6e5e0] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center bg-[#08172f] text-white">
+            {parseInline(cell)}
+          </th>
+        ));
+      } else {
+        tableRows.push(
+          <tr key={key++} className="hover:bg-[#fbfaf8] transition-colors odd:bg-white even:bg-[#fbfaf8]/40">
+            {cells.map((cell, idx) => (
+              <td key={idx} className="border border-[#e6e5e0] px-6 py-4 text-center leading-relaxed">
+                {parseInline(cell)}
+              </td>
+            ))}
+          </tr>
+        );
+      }
     } else {
-      flushList();
-      elements.push(
-        <p key={key++} className="text-sm text-[#27334a] leading-[1.7] mb-4">
-          {parseInline(lines[i].trim())}
-        </p>
-      );
+      flushTable();
+      if (line.startsWith('###')) {
+        flushList();
+        elements.push(
+          <h3 key={key++} className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] mt-6 mb-2">
+            {parseInline(line.replace(/^###\s*/, ''))}
+          </h3>
+        );
+      } else if (line.startsWith('##')) {
+        flushList();
+        elements.push(
+          <h2 key={key++} className="font-['Playfair_Display'] font-semibold text-xl text-[#102342] mt-8 mb-3 border-b border-[#e6e5e0] pb-2">
+            {parseInline(line.replace(/^##\s*/, ''))}
+          </h2>
+        );
+      } else if (line.startsWith('#')) {
+        flushList();
+        elements.push(
+          <h1 key={key++} className="font-['Playfair_Display'] font-semibold text-2xl text-[#102342] mt-10 mb-4">
+            {parseInline(line.replace(/^#\s*/, ''))}
+          </h1>
+        );
+      } else if (line.startsWith('-') || line.startsWith('*')) {
+        inList = true;
+        listItems.push(
+          <li key={key++} className="text-sm text-[#27334a] leading-relaxed">
+            {parseInline(line.replace(/^[-*]\s*/, ''))}
+          </li>
+        );
+      } else if (/^\d+\.\s*/.test(line)) {
+        flushList();
+        const itemText = line.replace(/^\d+\.\s*/, '');
+        elements.push(
+          <div key={key++} className="pl-4 my-2 text-sm text-[#27334a] leading-relaxed flex gap-2">
+            <span className="font-bold text-[#eb5526]">{line.match(/^\d+\./)?.[0]}</span>
+            <span>{parseInline(itemText)}</span>
+          </div>
+        );
+      } else if (line === '') {
+        flushList();
+      } else {
+        flushList();
+        elements.push(
+          <p key={key++} className="text-sm text-[#27334a] leading-[1.7] mb-4">
+            {parseInline(lines[i].trim())}
+          </p>
+        );
+      }
     }
   }
   flushList();
+  flushTable();
   return elements;
 }
 

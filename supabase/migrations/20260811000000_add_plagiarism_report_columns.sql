@@ -34,10 +34,17 @@ SET content = '### 1. Fees Structure
 TJASF is a self-funded academic journal committed to keeping scientific research widely accessible. We offer two routes for publication and peer review:
 
 - **Normal Track (Free)**: There are no submission fees or article processing charges (APCs). The peer review process takes approximately **12 weeks**.
-- **Fast Track ($40)**: Authors can request an expedited peer review process. For a fee of **$40**, the editorial office guarantees a first-round decision within **4 weeks**.
+- **Fast Track (USD 40)**: Authors can request an expedited peer review process (first-round decision in **4 weeks**).
 
-### 2. Journal Funding
-The journal is fully self-funded and does not receive institutional sponsorships or commercial subsidies. Fast-track fees are used directly to offset operational costs, server maintenance, and publishing tools.'
+| REGISTRATION FEE | SERVICES |
+| :---: | :---: |
+| **USD 40 $**<br>(DOI Included) | Includes Paper Handling Charges, Publication Charges, Soft copy of Certificates, Review Report+DOI (Digital Object Identifier) |
+
+### 2. Payment Methods
+All payments must be made using the following method:
+- **Bank Transfer / Wire Transfer**
+
+Payment details and wire instructions will be provided by the managing editor upon acceptance of the fast-track request.'
 WHERE slug = 'article-processing-charges';
 
 -- 5. Update Copyright and License (slug: copyright-and-license)
