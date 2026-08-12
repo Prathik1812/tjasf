@@ -30,8 +30,12 @@ const EXPERIENCE_OPTIONS = [
 
 const ROLES = [
   {
+    name: "Peer Reviewer",
+    desc: "Evaluates submissions in their area of expertise, provides detailed double-blind review reports, and recommends decisions to the editors."
+  },
+  {
     name: "Editorial Board Member",
-    desc: "Active reviewer who evaluates submissions in their specialty, recommends decisions, and offers guidance on general journal policy."
+    desc: "Reviews submissions in their specialty, recommends decisions, and offers guidance on general journal policies."
   },
   {
     name: "Section Editor",
