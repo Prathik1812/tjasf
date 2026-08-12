@@ -5,7 +5,25 @@ import type { Policy } from '@/types';
 
 function parseMarkdown(text: string) {
   if (!text) return '';
-  const lines = text.split('\n');
+  const rawLines = text.replace(/\r/g, '').split('\n');
+  
+  // Pre-process to merge table rows that were wrapped/split across multiple lines
+  const lines: string[] = [];
+  for (let i = 0; i < rawLines.length; i++) {
+    let line = rawLines[i].trim();
+    if (line.startsWith('|') && !line.endsWith('|')) {
+      while (i + 1 < rawLines.length) {
+        i++;
+        const nextLine = rawLines[i].trim();
+        line += ' ' + nextLine;
+        if (nextLine.endsWith('|')) {
+          break;
+        }
+      }
+    }
+    lines.push(line);
+  }
+
   const elements: React.ReactNode[] = [];
   let key = 0;
   let inList = false;
