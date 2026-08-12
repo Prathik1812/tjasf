@@ -80,7 +80,7 @@ export default function HomePage() {
               <p className="text-[#bbc5d4] text-xs mt-2">Volume {currentVolume.number} &middot; Issue {currentIssue.number}</p>
               <div className="h-px bg-[#53627a] my-5" />
               <p className="font-['Playfair_Display'] text-[15px] leading-[1.45] text-white max-w-[210px]">
-                {currentIssue.title || 'New perspectives in the sciences, from discovery to impact.'}
+                {currentIssue.title && !currentIssue.title.toLowerCase().includes('frontier') ? currentIssue.title : 'Inaugural Issue'}
               </p>
               <Link to={`/issue/${currentIssue.id}`} className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] mt-4">
                 View the current issue <ArrowRight size={15} />
@@ -212,7 +212,7 @@ export default function HomePage() {
               New research.<br /><em className="text-[#eb5526] italic">Wider horizons.</em>
             </h2>
             <p className="text-[#bdc7d5] text-base leading-[1.65] max-w-[440px] mb-7">
-              Volume 01, Issue 02 brings together new perspectives on the systems shaping our shared future — from responsible computation to resilient environments.
+              Volume {currentVolume ? String(currentVolume.number).padStart(2, '0') : '01'}, Issue {currentIssue ? String(currentIssue.number).padStart(2, '0') : '01'} brings together new perspectives on the systems shaping our shared future — from responsible computation to resilient environments.
             </p>
             <Link to="/current-issue" className="button button-light">
               Read the current issue <ArrowRight size={17} />
