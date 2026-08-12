@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'author' | 'reviewer' | 'editor' | 'admin'>('author');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -28,32 +27,22 @@ export default function RegisterPage() {
     }
 
     const emailLower = email.toLowerCase().trim();
+    let dbRole: 'author' | 'reviewer' | 'editor_in_chief' | 'admin' = 'author';
 
-    // Enforce email domain and role alignment
+    // Auto-assign roles only for the 2 authorized email addresses, block other @tjasf.org emails
     if (emailLower.endsWith('@tjasf.org')) {
-      if (emailLower === 'editor@tjasf.org' && selectedRole !== 'editor') {
-        setError('This email is reserved. Please select the Editor role to register.');
-        return;
-      }
-      if (emailLower === 'admin@tjasf.org' && selectedRole !== 'admin') {
-        setError('This email is reserved. Please select the Admin role to register.');
-        return;
-      }
-      if (emailLower !== 'editor@tjasf.org' && emailLower !== 'admin@tjasf.org') {
+      if (emailLower === 'editor@tjasf.org') {
+        dbRole = 'editor_in_chief';
+      } else if (emailLower === 'admin@tjasf.org') {
+        dbRole = 'admin';
+      } else {
         setError('Only editor@tjasf.org and admin@tjasf.org are authorized under the @tjasf.org domain.');
-        return;
-      }
-    } else {
-      // Personal email addresses
-      if (selectedRole === 'editor' || selectedRole === 'admin') {
-        setError('Access Denied: Editor and Admin registrations require authorized @tjasf.org accounts.');
         return;
       }
     }
 
     setLoading(true);
-    const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
-    const { error: signUpError } = await signUp(email, password, fullName, dbRole as any);
+    const { error: signUpError } = await signUp(email, password, fullName, dbRole);
     if (signUpError) {
       setError(signUpError);
       setLoading(false);
@@ -81,39 +70,6 @@ export default function RegisterPage() {
               <label className="block text-sm font-semibold text-[#102342] mb-1">Email</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
             </div>
-            
-            {/* Role Selection Radio Buttons */}
-            <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-2">Select Your Role</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { value: 'author', label: 'Author' },
-                  { value: 'reviewer', label: 'Reviewer' },
-                  { value: 'editor', label: 'Editor' },
-                  { value: 'admin', label: 'Admin' },
-                ].map((r) => (
-                  <label
-                    key={r.value}
-                    className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                      selectedRole === r.value
-                        ? 'border-[#eb5526] bg-[#eb5526]/5 text-[#eb5526]'
-                        : 'border-[#d8d8d1] bg-white text-[#667082] hover:bg-[#fbfaf8]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="registerRole"
-                      value={r.value}
-                      checked={selectedRole === r.value}
-                      onChange={() => setSelectedRole(r.value as any)}
-                      className="accent-[#eb5526]"
-                    />
-                    {r.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1">Password</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
