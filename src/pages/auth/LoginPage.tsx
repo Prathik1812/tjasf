@@ -23,26 +23,10 @@ export default function LoginPage() {
 
     const emailLower = email.toLowerCase().trim();
 
-    // 1. Enforce email domain and role consistency
+    // 1. Enforce strict @tjasf.org email usage
     if (emailLower.endsWith('@tjasf.org')) {
-      if (emailLower === 'editor@tjasf.org' && selectedRole !== 'editor') {
-        setError('Invalid workspace role. editor@tjasf.org must sign in as an Editor.');
-        setLoading(false);
-        return;
-      }
-      if (emailLower === 'admin@tjasf.org' && selectedRole !== 'admin') {
-        setError('Invalid workspace role. admin@tjasf.org must sign in as an Admin.');
-        setLoading(false);
-        return;
-      }
       if (emailLower !== 'editor@tjasf.org' && emailLower !== 'admin@tjasf.org') {
         setError('Unauthorized email address under the @tjasf.org domain.');
-        setLoading(false);
-        return;
-      }
-    } else {
-      if (selectedRole === 'editor' || selectedRole === 'admin') {
-        setError('Access Denied: Editor and Admin workspaces are restricted to @tjasf.org accounts.');
         setLoading(false);
         return;
       }
