@@ -26,12 +26,6 @@ function parseMarkdown(text: string) {
 
   const elements: React.ReactNode[] = [];
   let key = 0;
-  let inList = false;
-  let listItems: React.ReactNode[] = [];
-
-  let inTable = false;
-  let tableHeaders: React.ReactNode[] = [];
-  let tableRows: React.ReactNode[] = [];
 
   const parseInline = (lineText: string) => {
     const brParts = lineText.split('<br>');
@@ -52,56 +46,67 @@ function parseMarkdown(text: string) {
     });
   };
 
-  const flushList = () => {
-    if (inList && listItems.length > 0) {
-      elements.push(
-        <ul key={`list-${key++}`} className="list-disc pl-5 my-4 space-y-2 text-[#27334a]">
-          {listItems}
-        </ul>
-      );
-      listItems = [];
-      inList = false;
-    }
-  };
-
-  const flushTable = () => {
-    if (inTable) {
-      elements.push(
-        <div key={`table-${key++}`} className="overflow-x-auto my-6 rounded-lg border border-[#e6e5e0] shadow-sm">
-          <table className="min-w-full border-collapse">
-            {tableHeaders.length > 0 && (
-              <thead className="bg-[#08172f] text-white">
-                <tr>{tableHeaders}</tr>
-              </thead>
-            )}
-            <tbody className="bg-white text-sm text-[#27334a]">
-              {tableRows}
-            </tbody>
-          </table>
-        </div>
-      );
-      tableHeaders = [];
-      tableRows = [];
-      inTable = false;
-    }
-  };
-
-  for (let i = 0; i < lines.length; i++) {
+  let i = 0;
+  while (i < lines.length) {
     const line = lines[i].trim();
+
+    if (line === '') {
+      i++;
+      continue;
+    }
+
+    // 1. Headings
+    if (line.startsWith('###')) {
+      elements.push(
+        <h3 key={key++} className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] mt-6 mb-2">
+          {parseInline(line.replace(/^###\s*/, ''))}
+        </h3>
+      );
+      i++;
+      continue;
+    }
+    if (line.startsWith('##')) {
+      elements.push(
+        <h2 key={key++} className="font-['Playfair_Display'] font-semibold text-xl text-[#102342] mt-8 mb-3 border-b border-[#e6e5e0] pb-2">
+          {parseInline(line.replace(/^##\s*/, ''))}
+        </h2>
+      );
+      i++;
+      continue;
+    }
+    if (line.startsWith('#')) {
+      elements.push(
+        <h1 key={key++} className="font-['Playfair_Display'] font-semibold text-2xl text-[#102342] mt-10 mb-4">
+          {parseInline(line.replace(/^#\s*/, ''))}
+        </h1>
+      );
+      i++;
+      continue;
+    }
+
+    // 2. Table
     if (line.startsWith('|') && line.endsWith('|')) {
-      flushList();
-      if (line.includes('---')) {
-        continue;
-      }
-      const cells = line.split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
-      if (!inTable) {
-        inTable = true;
-        tableHeaders = cells.map((cell, idx) => (
+      const tableHeaders: React.ReactNode[] = [];
+      const tableRows: React.ReactNode[] = [];
+      
+      const headerCells = line.split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+      tableHeaders.push(
+        ...headerCells.map((cell, idx) => (
           <th key={idx} className="border border-[#e6e5e0] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center bg-[#08172f] text-white">
             {parseInline(cell)}
           </th>
-        ));
-      } else {
+        ))
+      );
+      
+      i++;
+      
+      if (i < lines.length && lines[i].trim().includes('---')) {
+        i++;
+      }
+      
+      while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+        const rowLine = lines[i].trim();
+        const cells = rowLine.split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
         tableRows.push(
           <tr key={key++} className="hover:bg-[#fbfaf8] transition-colors odd:bg-white even:bg-[#fbfaf8]/40">
             {cells.map((cell, idx) => (
@@ -111,60 +116,99 @@ function parseMarkdown(text: string) {
             ))}
           </tr>
         );
+        i++;
       }
-    } else {
-      flushTable();
-      if (line.startsWith('###')) {
-        flushList();
-        elements.push(
-          <h3 key={key++} className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] mt-6 mb-2">
-            {parseInline(line.replace(/^###\s*/, ''))}
-          </h3>
-        );
-      } else if (line.startsWith('##')) {
-        flushList();
-        elements.push(
-          <h2 key={key++} className="font-['Playfair_Display'] font-semibold text-xl text-[#102342] mt-8 mb-3 border-b border-[#e6e5e0] pb-2">
-            {parseInline(line.replace(/^##\s*/, ''))}
-          </h2>
-        );
-      } else if (line.startsWith('#')) {
-        flushList();
-        elements.push(
-          <h1 key={key++} className="font-['Playfair_Display'] font-semibold text-2xl text-[#102342] mt-10 mb-4">
-            {parseInline(line.replace(/^#\s*/, ''))}
-          </h1>
-        );
-      } else if (line.startsWith('-') || line.startsWith('*')) {
-        inList = true;
+      
+      elements.push(
+        <div key={`table-${key++}`} className="overflow-x-auto my-6 rounded-lg border border-[#e6e5e0] shadow-sm">
+          <table className="min-w-full border-collapse">
+            <thead className="bg-[#08172f] text-white">
+              <tr>{tableHeaders}</tr>
+            </thead>
+            <tbody className="bg-white text-sm text-[#27334a]">
+              {tableRows}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    // 3. Bullet list
+    if (line.startsWith('-') || line.startsWith('*')) {
+      const listItems: React.ReactNode[] = [];
+      
+      while (i < lines.length && (lines[i].trim().startsWith('-') || lines[i].trim().startsWith('*'))) {
+        let itemText = lines[i].trim().replace(/^[-*]\s*/, '');
+        i++;
+        
+        while (i < lines.length) {
+          const nextLine = lines[i].trim();
+          if (nextLine === '' || nextLine.startsWith('#') || nextLine.startsWith('-') || nextLine.startsWith('*') || nextLine.startsWith('|') || /^\d+\.\s*/.test(nextLine)) {
+            break;
+          }
+          itemText += ' ' + nextLine;
+          i++;
+        }
+        
         listItems.push(
           <li key={key++} className="text-sm text-[#27334a] leading-relaxed">
-            {parseInline(line.replace(/^[-*]\s*/, ''))}
+            {parseInline(itemText)}
           </li>
         );
-      } else if (/^\d+\.\s*/.test(line)) {
-        flushList();
-        const itemText = line.replace(/^\d+\.\s*/, '');
-        elements.push(
-          <div key={key++} className="pl-4 my-2 text-sm text-[#27334a] leading-relaxed flex gap-2">
-            <span className="font-bold text-[#eb5526]">{line.match(/^\d+\./)?.[0]}</span>
-            <span>{parseInline(itemText)}</span>
-          </div>
-        );
-      } else if (line === '') {
-        flushList();
-      } else {
-        flushList();
-        elements.push(
-          <p key={key++} className="text-sm text-[#27334a] leading-[1.7] mb-4">
-            {parseInline(lines[i].trim())}
-          </p>
-        );
       }
+      
+      elements.push(
+        <ul key={`list-${key++}`} className="list-disc pl-5 my-4 space-y-2 text-[#27334a]">
+          {listItems}
+        </ul>
+      );
+      continue;
     }
+
+    // 4. Numbered list item
+    if (/^\d+\.\s*/.test(line)) {
+      const numMatch = line.match(/^\d+\./)?.[0];
+      let itemText = line.replace(/^\d+\.\s*/, '');
+      i++;
+      
+      while (i < lines.length) {
+        const nextLine = lines[i].trim();
+        if (nextLine === '' || nextLine.startsWith('#') || nextLine.startsWith('-') || nextLine.startsWith('*') || nextLine.startsWith('|') || /^\d+\.\s*/.test(nextLine)) {
+          break;
+        }
+        itemText += ' ' + nextLine;
+        i++;
+      }
+      
+      elements.push(
+        <div key={key++} className="pl-4 my-2 text-sm text-[#27334a] leading-relaxed flex gap-2">
+          <span className="font-bold text-[#eb5526]">{numMatch}</span>
+          <span>{parseInline(itemText)}</span>
+        </div>
+      );
+      continue;
+    }
+
+    // 5. Standard paragraph
+    let paragraphText = line;
+    i++;
+    while (i < lines.length) {
+      const nextLine = lines[i].trim();
+      if (nextLine === '' || nextLine.startsWith('#') || nextLine.startsWith('-') || nextLine.startsWith('*') || nextLine.startsWith('|') || /^\d+\.\s*/.test(nextLine)) {
+        break;
+      }
+      paragraphText += ' ' + nextLine;
+      i++;
+    }
+    
+    elements.push(
+      <p key={key++} className="text-sm text-[#27334a] leading-[1.7] mb-4">
+        {parseInline(paragraphText)}
+      </p>
+    );
   }
-  flushList();
-  flushTable();
+
   return elements;
 }
 
