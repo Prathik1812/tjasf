@@ -39,10 +39,8 @@ export default function EditorialBoardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {members.map((m) => (
             <div key={m.id} className="bg-white rounded-lg border border-[#e6e5e0] p-6 hover:shadow-md transition-shadow">
-              <p className="text-xs font-bold text-[#eb5526] uppercase tracking-wider mb-1">{m.role_title}</p>
-              <h3 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl mb-2">{m.name}</h3>
-              {m.affiliation && <p className="text-[#667082] text-sm">{m.affiliation}</p>}
-              {m.domain && <p className="text-[#667082] text-xs mt-1 italic">{m.domain}</p>}
+              <h3 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl mb-1">{m.name}</h3>
+              <p className="text-xs font-bold text-[#eb5526] uppercase tracking-wider">{m.role_title}</p>
             </div>
           ))}
         </div>

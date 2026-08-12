@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -25,11 +26,36 @@ export default function RegisterPage() {
       setError('Password must be at least 6 characters');
       return;
     }
+
+    const emailLower = email.toLowerCase().trim();
+
+    // Enforce email domain and role alignment
+    if (emailLower.endsWith('@tjasf.org')) {
+      if (emailLower === 'editor@tjasf.org' && selectedRole !== 'editor') {
+        setError('This email is reserved. Please select the Editor role to register.');
+        return;
+      }
+      if (emailLower === 'admin@tjasf.org' && selectedRole !== 'admin') {
+        setError('This email is reserved. Please select the Admin role to register.');
+        return;
+      }
+      if (emailLower !== 'editor@tjasf.org' && emailLower !== 'admin@tjasf.org') {
+        setError('Only editor@tjasf.org and admin@tjasf.org are authorized under the @tjasf.org domain.');
+        return;
+      }
+    } else {
+      // Personal email addresses
+      if (selectedRole === 'editor' || selectedRole === 'admin') {
+        setError('Access Denied: Editor and Admin registrations require authorized @tjasf.org accounts.');
+        return;
+      }
+    }
+
     setLoading(true);
     const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
-    const { error } = await signUp(email, password, fullName, dbRole as any);
-    if (error) {
-      setError(error);
+    const { error: signUpError } = await signUp(email, password, fullName, dbRole as any);
+    if (signUpError) {
+      setError(signUpError);
       setLoading(false);
     } else {
       navigate('/dashboard');

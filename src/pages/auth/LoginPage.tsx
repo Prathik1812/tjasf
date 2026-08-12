@@ -15,54 +15,81 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Pre-configured demo details for on-the-fly registration if they don't exist yet
-    const demoAccounts: Record<string, { name: string; role: string }> = {
-      'author@tjasf.org': { name: 'Author Candidate', role: 'author' },
-      'reviewer@tjasf.org': { name: 'Prof. Alan Turing', role: 'reviewer' },
-      'rajesh.thumma@anurag.edu.in': { name: 'Dr. Rajesh Thumma', role: 'editor_in_chief' },
-      'admin@tjasf.org': { name: 'Prathik Kumar', role: 'admin' },
-    };
+    const emailLower = email.toLowerCase().trim();
 
-    const isDemo = email.toLowerCase() in demoAccounts;
+    // 1. Enforce email domain and role consistency
+    if (emailLower.endsWith('@tjasf.org')) {
+      if (emailLower === 'editor@tjasf.org' && selectedRole !== 'editor') {
+        setError('Invalid workspace role. editor@tjasf.org must sign in as an Editor.');
+        setLoading(false);
+        return;
+      }
+      if (emailLower === 'admin@tjasf.org' && selectedRole !== 'admin') {
+        setError('Invalid workspace role. admin@tjasf.org must sign in as an Admin.');
+        setLoading(false);
+        return;
+      }
+      if (emailLower !== 'editor@tjasf.org' && emailLower !== 'admin@tjasf.org') {
+        setError('Unauthorized email address under the @tjasf.org domain.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (selectedRole === 'editor' || selectedRole === 'admin') {
+        setError('Access Denied: Editor and Admin workspaces are restricted to @tjasf.org accounts.');
+        setLoading(false);
+        return;
+      }
+    }
 
-    // 1. Try to sign in directly
+    // 2. Perform Supabase Sign In
     const { error: signInError } = await signIn(email, password);
     
     if (!signInError) {
-      // Direct sign in succeeded! Self-heal or update the user's role profile
       const { data: { user: sessionUser } } = await supabase.auth.getUser();
       if (sessionUser) {
-        const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
         const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
         
         if (existingProfile) {
-          if (isDemo) {
-            // Demo accounts can switch roles on the fly using the radio buttons
-            await supabase.from('profiles').update({ role: dbRole }).eq('id', sessionUser.id);
-          } else {
-            // Personal email accounts preserve their database role (do NOT overwrite it)
-            // Unless it is 'user' or invalid, in which case we make sure it is 'author'
-            if (existingProfile.role === 'user' || !existingProfile.role) {
-              await supabase.from('profiles').update({ role: 'author' }).eq('id', sessionUser.id);
-            }
+          // Double-check database role matches selected role group to prevent unauthorized cross-sign-in
+          const getMappedRoleGroup = (dbRole: string): 'author' | 'reviewer' | 'editor' | 'admin' => {
+            if (dbRole === 'admin') return 'admin';
+            if (dbRole === 'reviewer') return 'reviewer';
+            if (dbRole.includes('editor') || dbRole.includes('chief')) return 'editor';
+            return 'author';
+          };
+
+          const matchedGroup = getMappedRoleGroup(existingProfile.role || 'author');
+          if (matchedGroup !== selectedRole) {
+            await supabase.auth.signOut();
+            const formattedRole = (existingProfile.role || 'author').replace(/_/g, ' ');
+            setError(`Access Denied: You selected "${selectedRole.toUpperCase()}" but this account is registered as a ${formattedRole.toUpperCase()}.`);
+            setLoading(false);
+            return;
           }
         } else {
-          // If no profile row exists (e.g. registered directly in Auth tab or custom flow), create it
-          // Defaults to 'author' for personal email, or uses selectedRole for demo
-          const initialRole = isDemo ? dbRole : 'author';
+          // Auto-insert profile row if missing, default to author
           await supabase.from('profiles').insert({
             id: sessionUser.id,
             email,
             full_name: sessionUser.user_metadata?.full_name || email.split('@')[0],
-            role: initialRole,
+            role: 'author',
             is_active: true,
             email_verified: true,
           });
+          
+          if (selectedRole !== 'author') {
+            await supabase.auth.signOut();
+            setError('Access Denied: New profiles default to Author workspace.');
+            setLoading(false);
+            return;
+          }
         }
         await refreshProfile();
       }
@@ -70,69 +97,8 @@ export default function LoginPage() {
       return;
     }
 
-    // 2. If direct login failed and matches a demo credential, attempt auto-registration
-    if (isDemo && password === 'password123') {
-      try {
-        const cred = demoAccounts[email.toLowerCase()];
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (signUpError) {
-          throw new Error(signUpError.message);
-        }
-
-        if (signUpData.user) {
-          // Clean up any old auto-profiles for this ID
-          await supabase.from('profiles').delete().eq('id', signUpData.user.id);
-
-          const dbRole = selectedRole === 'editor' ? 'editor_in_chief' : selectedRole;
-          const { error: profileError } = await supabase.from('profiles').insert({
-            id: signUpData.user.id,
-            email,
-            full_name: cred.name,
-            role: dbRole,
-            is_active: true,
-            email_verified: true,
-          });
-
-          if (profileError) {
-            throw new Error(profileError.message);
-          }
-
-          // 3. Final sign in after registering
-          const { error: finalSignInError } = await signIn(email, password);
-          if (finalSignInError) {
-            throw new Error(finalSignInError);
-          }
-
-          await refreshProfile();
-          navigate(from);
-          return;
-        }
-      } catch (err: any) {
-        setError(err.message || 'An error occurred during quick sign in');
-        setLoading(false);
-        return;
-      }
-    }
-
-    // Standard credential error if not demo
     setError(signInError);
     setLoading(false);
-  };
-
-  const handleQuickFill = (roleKey: 'author' | 'reviewer' | 'editor' | 'admin') => {
-    const credentials = {
-      author: 'author@tjasf.org',
-      reviewer: 'reviewer@tjasf.org',
-      editor: 'rajesh.thumma@anurag.edu.in',
-      admin: 'admin@tjasf.org',
-    };
-    setEmail(credentials[roleKey]);
-    setPassword('password123');
-    setSelectedRole(roleKey);
   };
 
   return (
@@ -201,44 +167,6 @@ export default function LoginPage() {
           <p className="text-sm text-[#667082] text-center mt-6">
             Don't have an account? <Link to="/register" className="text-[#eb5526] font-semibold hover:underline">Create one</Link>
           </p>
-
-          <div className="mt-8 border-t border-[#e6e5e0] pt-6">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#737b88] mb-3 text-center">Auto-Fill Test Credentials</h2>
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                type="button" 
-                onClick={() => handleQuickFill('author')} 
-                disabled={loading}
-                className="py-2.5 px-3 bg-[#f1f0ec] text-[#27334a] rounded-lg text-xs font-semibold hover:bg-[#eb5526] hover:text-white transition-colors text-center disabled:opacity-50"
-              >
-                Author
-              </button>
-              <button 
-                type="button" 
-                onClick={() => handleQuickFill('reviewer')} 
-                disabled={loading}
-                className="py-2.5 px-3 bg-[#f1f0ec] text-[#27334a] rounded-lg text-xs font-semibold hover:bg-[#eb5526] hover:text-white transition-colors text-center disabled:opacity-50"
-              >
-                Reviewer
-              </button>
-              <button 
-                type="button" 
-                onClick={() => handleQuickFill('editor')} 
-                disabled={loading}
-                className="py-2.5 px-3 bg-[#f1f0ec] text-[#27334a] rounded-lg text-xs font-semibold hover:bg-[#eb5526] hover:text-white transition-colors text-center disabled:opacity-50"
-              >
-                Editor
-              </button>
-              <button 
-                type="button" 
-                onClick={() => handleQuickFill('admin')} 
-                disabled={loading}
-                className="py-2.5 px-3 bg-[#f1f0ec] text-[#27334a] rounded-lg text-xs font-semibold hover:bg-[#eb5526] hover:text-white transition-colors text-center disabled:opacity-50"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
