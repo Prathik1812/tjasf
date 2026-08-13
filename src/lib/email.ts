@@ -125,3 +125,22 @@ export async function sendReviewerAcceptedNotification(reviewerName: string, man
     html
   });
 }
+
+// Editor assignment notification
+export async function sendEditorAssignmentEmail(editorName: string, editorEmail: string, manuscriptTitle: string, manuscriptId: string) {
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Manuscript Assignment Notification</h2>
+      <p>Dear ${editorName},</p>
+      <p>You have been assigned as the editor for the manuscript <strong>"${manuscriptTitle}"</strong> (${manuscriptId}) submitted to <strong>The Journal of Advanced Scientific Frontiers (TJASF)</strong>.</p>
+      <p>Please log into your Editor Portal to evaluate the manuscript, verify details, and assign reviewers.</p>
+      <p style="margin-top: 24px;">Kind regards,</p>
+      <p><strong>TJASF Editorial Office</strong><br><a href="https://www.tjasf.com">www.tjasf.com</a></p>
+    </div>
+  `;
+  return sendEmail({
+    to: editorEmail,
+    subject: `TJASF: Manuscript Assigned to You - ${manuscriptId}`,
+    html
+  });
+}

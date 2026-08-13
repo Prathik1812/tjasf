@@ -3,18 +3,22 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
-import { sendDecisionEmail } from '@/lib/email';
+import { useAuth } from '@/context/AuthContext';
+import { sendDecisionEmail, sendEditorAssignmentEmail } from '@/lib/email';
 import type { Manuscript, Profile, Review, ManuscriptStatus, ReviewStatus, Domain } from '@/types';
 
 export default function ManuscriptEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { profile: activeUser } = useAuth();
   const [manuscript, setManuscript] = useState<Manuscript | null>(null);
   const [submitter, setSubmitter] = useState<Profile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewers, setReviewers] = useState<Profile[]>([]);
+  const [editors, setEditors] = useState<Profile[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedReviewer, setSelectedReviewer] = useState('');
+  const [selectedEditor, setSelectedEditor] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -24,12 +28,15 @@ export default function ManuscriptEditorPage() {
       const { data: ms } = await supabase.from('manuscripts').select('*').eq('id', id).maybeSingle();
       if (ms) {
         setManuscript(ms as Manuscript);
+        setSelectedEditor((ms as Manuscript).editor_id || '');
         const { data: sub } = await supabase.from('profiles').select('*').eq('id', (ms as Manuscript).submitter_id).maybeSingle();
         if (sub) setSubmitter(sub as Profile);
         const { data: revs } = await supabase.from('reviews').select('*').eq('manuscript_id', id);
         if (revs) setReviews(revs as Review[]);
         const { data: revwrs } = await supabase.from('profiles').select('*').in('role', ['reviewer', 'section_editor']);
         if (revwrs) setReviewers(revwrs as Profile[]);
+        const { data: eds } = await supabase.from('profiles').select('*').in('role', ['section_editor', 'managing_editor', 'editor_in_chief']);
+        if (eds) setEditors(eds as Profile[]);
         const { data: doms } = await supabase.from('domains').select('*');
         if (doms) setDomains(doms as Domain[]);
       }
@@ -75,6 +82,31 @@ export default function ManuscriptEditorPage() {
       }
     }
 
+    setUpdating(false);
+  };
+
+  const assignEditor = async () => {
+    if (!manuscript) return;
+    setUpdating(true);
+    const edId = selectedEditor || null;
+    await supabase.from('manuscripts').update({ editor_id: edId }).eq('id', manuscript.id);
+    setManuscript({ ...manuscript, editor_id: edId });
+
+    if (edId) {
+      const selectedEd = editors.find((e) => e.id === edId);
+      if (selectedEd) {
+        try {
+          await sendEditorAssignmentEmail(
+            selectedEd.full_name,
+            selectedEd.email || '',
+            manuscript.title,
+            manuscript.id.substring(0, 8).toUpperCase()
+          );
+        } catch (err) {
+          console.error('Failed to send editor assignment email:', err);
+        }
+      }
+    }
     setUpdating(false);
   };
 
@@ -156,6 +188,34 @@ export default function ManuscriptEditorPage() {
           ))}
         </div>
       </div>
+
+      {/* Assign Editor - Only for Editor-in-Chief and Admin */}
+      {activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role) && (
+        <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
+          <h2 className="font-semibold text-[#102342] mb-4">Assign Editor</h2>
+          <div className="flex gap-2">
+            <select
+              value={selectedEditor}
+              onChange={(e) => setSelectedEditor(e.target.value)}
+              className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+            >
+              <option value="">Unassigned</option>
+              {editors.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.full_name} ({e.email}) - {e.role.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={assignEditor}
+              disabled={updating}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30 cursor-pointer"
+            >
+              Update Assignment
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
         <h2 className="font-semibold text-[#102342] mb-4">Assigned Reviewers</h2>
