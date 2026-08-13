@@ -309,7 +309,14 @@ ${referencesXml}
       <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="min-w-0 flex-1 mr-4">
-            <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mb-1">{manuscript.title}</h1>
+            <div className="flex flex-wrap items-center gap-3 mb-1">
+              <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342]">{manuscript.title}</h1>
+              {manuscript.fast_track && (
+                <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
+                  Fast-Track
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-4 text-xs text-[#667082]">
               <span>Submitted by: {submitter?.full_name || 'Unknown'}</span>
               <span>Date: {new Date(manuscript.created_at).toLocaleDateString('en-GB')}</span>

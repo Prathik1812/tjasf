@@ -40,6 +40,7 @@ export default function SubmitManuscriptPage() {
 
   const [title, setTitle] = useState('');
   const [domainId, setDomainId] = useState('');
+  const [fastTrack, setFastTrack] = useState(false);
   const [authors, setAuthors] = useState<Author[]>([
     { name: profile?.full_name || '', email: profile?.email || '', affiliation: '', department: '', corresponding: true, orcid: profile?.orcid || '' }
   ]);
@@ -371,6 +372,7 @@ export default function SubmitManuscriptPage() {
       original_work: originalWork,
       copyright_agreement: copyrightAgreement,
       policies_agreement: policiesAgreement,
+      fast_track: fastTrack,
     }).select().single();
 
     if (insErr) {
@@ -511,7 +513,43 @@ export default function SubmitManuscriptPage() {
                 {domains.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
-            <p className="text-xs text-[#667082]">Choose the research domain that best fits your manuscript. This helps assign appropriate editors and reviewers.</p>
+            
+            <div>
+              <label className="block text-sm font-semibold text-[#102342] mb-2.5">Submission Track *</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFastTrack(false)}
+                  className={`p-4 rounded-lg border text-left transition-all ${
+                    !fastTrack
+                      ? 'border-[#eb5526] bg-amber-50/20 shadow-sm'
+                      : 'border-[#d8d8d1] hover:border-gray-400 bg-white'
+                  }`}
+                >
+                  <div className="font-bold text-xs text-[#102342] mb-1">Regular Track</div>
+                  <div className="text-[11px] text-[#667082] leading-relaxed">Standard peer-review cycle (approx. 12-16 weeks). Free of charge.</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFastTrack(true)}
+                  className={`p-4 rounded-lg border text-left transition-all ${
+                    fastTrack
+                      ? 'border-[#eb5526] bg-amber-50/20 shadow-sm'
+                      : 'border-[#d8d8d1] hover:border-gray-400 bg-white'
+                  }`}
+                >
+                  <div className="font-bold text-xs text-[#102342] mb-1 flex items-center justify-between">
+                    <span>Fast-Track</span>
+                    <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
+                      $40 USD
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#667082] leading-relaxed">Expedited peer-review cycle (approx. 4-8 weeks). Processing fee applies.</div>
+                </button>
+              </div>
+            </div>
+            
+            <p className="text-xs text-[#667082]">Choose the research domain and submission track that best fits your needs.</p>
           </div>
         )}
 

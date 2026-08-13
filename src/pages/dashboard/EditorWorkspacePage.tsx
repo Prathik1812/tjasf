@@ -63,7 +63,14 @@ export default function EditorWorkspacePage() {
             <Link key={m.id} to={`/dashboard/editor/${m.id}`} className="block bg-white rounded-lg border border-[#e6e5e0] p-5 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-[#102342] truncate">{m.title || 'Untitled'}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-[#102342] truncate">{m.title || 'Untitled'}</h3>
+                    {m.fast_track && (
+                      <span className="shrink-0 bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
+                        Fast-Track
+                      </span>
+                    )}
+                  </div>
                   <div className="flex gap-4 text-xs text-[#667082] mt-1">
                     <span>{domainName(m.domain_id)}</span>
                     <span>By {submitterName(m.submitter_id)}</span>

@@ -78,6 +78,7 @@ export interface Manuscript {
   policies_agreement: boolean;
   editor_id: string | null;
   version: number;
+  fast_track?: boolean;
   created_at: string;
   updated_at: string;
 }
