@@ -21,6 +21,9 @@ export default function ManuscriptEditorPage() {
   const [selectedEditor, setSelectedEditor] = useState('');
   const [editorWorkloads, setEditorWorkloads] = useState<Record<string, number>>({});
   const [reviewerWorkloads, setReviewerWorkloads] = useState<Record<string, number>>({});
+  const [reviewerStats, setReviewerStats] = useState<Record<string, { total: number, completed: number, declined: number }>>({});
+  const [editorSearch, setEditorSearch] = useState('');
+  const [reviewerSearch, setReviewerSearch] = useState('');
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -55,16 +58,29 @@ export default function ManuscriptEditorPage() {
           setEditorWorkloads(workloads);
         }
 
-        // Fetch reviewer workloads: count active assignments (pending/in progress) for each reviewer
+        // Fetch reviewer workloads and statistics: count active and historical review actions
         const { data: allRevs } = await supabase.from('reviews').select('reviewer_id, status');
         if (allRevs) {
           const workloads: Record<string, number> = {};
+          const stats: Record<string, { total: number, completed: number, declined: number }> = {};
           allRevs.forEach((r) => {
-            if (r.reviewer_id && (r.status === 'pending_invitation' || r.status === 'in_progress')) {
-              workloads[r.reviewer_id] = (workloads[r.reviewer_id] || 0) + 1;
+            if (r.reviewer_id) {
+              if (r.status === 'pending_invitation' || r.status === 'in_progress') {
+                workloads[r.reviewer_id] = (workloads[r.reviewer_id] || 0) + 1;
+              }
+              if (!stats[r.reviewer_id]) {
+                stats[r.reviewer_id] = { total: 0, completed: 0, declined: 0 };
+              }
+              stats[r.reviewer_id].total += 1;
+              if (r.status === 'submitted') {
+                stats[r.reviewer_id].completed += 1;
+              } else if (r.status === 'declined') {
+                stats[r.reviewer_id].declined += 1;
+              }
             }
           });
           setReviewerWorkloads(workloads);
+          setReviewerStats(stats);
         }
       }
       setLoading(false);
@@ -263,6 +279,19 @@ ${referencesXml}
     URL.revokeObjectURL(url);
   };
 
+  const filteredEditors = editors.filter((e) =>
+    e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) ||
+    (e.email || '').toLowerCase().includes(editorSearch.toLowerCase())
+  );
+
+  const filteredReviewers = reviewers
+    .filter((r) => !reviews.some((rv) => rv.reviewer_id === r.id))
+    .filter((r) =>
+      r.full_name.toLowerCase().includes(reviewerSearch.toLowerCase()) ||
+      (r.email || '').toLowerCase().includes(reviewerSearch.toLowerCase()) ||
+      (r.reviewer_domains || []).some((d) => d.toLowerCase().includes(reviewerSearch.toLowerCase()))
+    );
+
   if (loading) return <p className="text-[#667082]">Loading...</p>;
   if (!manuscript) return <p className="text-[#667082]">Manuscript not found.</p>;
 
@@ -354,7 +383,15 @@ ${referencesXml}
       {/* Assign Editor - Only for Editor-in-Chief and Admin */}
       {activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role) && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
-          <h2 className="font-semibold text-[#102342] mb-4">Assign Editor</h2>
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search editor by name or email..."
+              value={editorSearch}
+              onChange={(e) => setEditorSearch(e.target.value)}
+              className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+            />
+          </div>
           <div className="flex gap-2">
             <select
               value={selectedEditor}
@@ -362,7 +399,7 @@ ${referencesXml}
               className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
             >
               <option value="">Unassigned</option>
-              {editors.map((e) => {
+              {filteredEditors.map((e) => {
                 const count = editorWorkloads[e.id] || 0;
                 return (
                   <option key={e.id} value={e.id}>
@@ -389,8 +426,8 @@ ${referencesXml}
             {reviews.map((r) => {
               const reviewer = reviewers.find((p) => p.id === r.reviewer_id);
               return (
-                <div key={r.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0">
-                  <div>
+                <div key={r.id} className="flex items-start justify-between border-b border-[#f1f0ec] py-4 last:border-0">
+                  <div className="min-w-0 flex-1 mr-4">
                     <p className="text-sm font-medium text-[#102342] flex items-center gap-2">
                       {reviewer?.full_name || 'Unknown reviewer'}
                       {reviewer && isExpertMatch(reviewer) && (
@@ -401,6 +438,22 @@ ${referencesXml}
                       <StatusBadge status={r.status} />
                       {r.decision && <span className="font-semibold text-[#102342]">Decision: {r.decision.replace(/_/g, ' ')}</span>}
                     </div>
+                    {r.status === 'submitted' && (
+                      <div className="mt-3 bg-[#fbfaf8] border border-[#e6e5e0] rounded-lg p-3.5 space-y-2 text-xs text-[#27334a] max-w-[700px]">
+                        {r.comments && (
+                          <div>
+                            <strong className="text-[#102342] block mb-1">Review Report (Grades & Comments):</strong>
+                            <pre className="whitespace-pre-wrap font-sans bg-white p-2.5 border border-[#f1f0ec] rounded text-[#27334a] text-xs leading-relaxed">{r.comments}</pre>
+                          </div>
+                        )}
+                        {r.confidential_notes && (
+                          <div className="mt-2.5 text-red-800">
+                            <strong>Confidential Notes to Editor:</strong>
+                            <pre className="whitespace-pre-wrap font-sans bg-red-50 p-2.5 border border-red-100 rounded text-xs mt-1 leading-relaxed">{r.confidential_notes}</pre>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     {['pending_invitation', 'in_progress'].includes(r.status) && (
@@ -424,23 +477,36 @@ ${referencesXml}
         ) : (
           <p className="text-sm text-[#667082] mb-4">No reviewers assigned yet.</p>
         )}
-        <div className="flex gap-2">
-          <select value={selectedReviewer} onChange={(e) => setSelectedReviewer(e.target.value)} className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]">
-            <option value="">Select a reviewer...</option>
-            {reviewers.filter((r) => !reviews.some((rv) => rv.reviewer_id === r.id)).map((r) => {
-              const count = reviewerWorkloads[r.id] || 0;
-              return (
-                <option key={r.id} value={r.id}>
-                  {r.full_name} ({r.email}) - Workload: {count} active review{count !== 1 ? 's' : ''} {isExpertMatch(r) ? '★ Expert Match' : ''}
-                </option>
-              );
-            })}
-          </select>
+        <div className="mt-4 border-t border-[#f1f0ec] pt-4">
+          <label className="block text-xs font-semibold text-[#102342] mb-1.5">Assign Peer Reviewer</label>
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search reviewer by name, email, or domain..."
+              value={reviewerSearch}
+              onChange={(e) => setReviewerSearch(e.target.value)}
+              className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select value={selectedReviewer} onChange={(e) => setSelectedReviewer(e.target.value)} className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]">
+              <option value="">Select a reviewer...</option>
+              {filteredReviewers.map((r) => {
+                const activeCount = reviewerWorkloads[r.id] || 0;
+                const stats = reviewerStats[r.id] || { total: 0, completed: 0, declined: 0 };
+                return (
+                  <option key={r.id} value={r.id}>
+                    {r.full_name} ({r.email}) - Active: {activeCount} | Completed: {stats.completed} | Declined: {stats.declined} {isExpertMatch(r) ? '★ Expert Match' : ''}
+                  </option>
+                );
+              })}
+            </select>
           <button onClick={assignReviewer} disabled={!selectedReviewer || updating} className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30 cursor-pointer">
             <UserPlus size={16} /> Assign
           </button>
         </div>
       </div>
     </div>
+  </div>
   );
 }

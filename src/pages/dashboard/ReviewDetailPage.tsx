@@ -22,6 +22,8 @@ export default function ReviewDetailPage() {
   const [originality, setOriginality] = useState(5);
   const [methodology, setMethodology] = useState(5);
   const [clarity, setClarity] = useState(5);
+  const [literature, setLiterature] = useState(5);
+  const [impact, setImpact] = useState(5);
 
   useEffect(() => {
     (async () => {
@@ -33,12 +35,22 @@ export default function ReviewDetailPage() {
         setConfidentialNotes((rev as Review).confidential_notes || '');
         
         const rawComments = (rev as Review).comments || '';
-        const match = rawComments.match(/^\[GRADES - Originality: (\d)\/5 \| Methodology: (\d)\/5 \| Clarity: (\d)\/5\]\n\n([\s\S]*)$/);
-        if (match) {
-          setOriginality(parseInt(match[1]));
-          setMethodology(parseInt(match[2]));
-          setClarity(parseInt(match[3]));
-          setComments(match[4]);
+        const gradesMatch = rawComments.match(/^\[GRADES - ([^\]]+)\]/);
+        if (gradesMatch) {
+          const gradesStr = gradesMatch[1];
+          const grades: Record<string, number> = {};
+          gradesStr.split('|').forEach(g => {
+            const parts = g.split(':');
+            if (parts[0] && parts[1]) {
+              grades[parts[0].trim().toLowerCase()] = parseInt(parts[1].split('/')[0]);
+            }
+          });
+          setOriginality(grades['originality'] || 5);
+          setMethodology(grades['methodology & rigor'] || grades['methodology'] || 5);
+          setClarity(grades['writing clarity & structure'] || grades['clarity'] || 5);
+          setLiterature(grades['literature review & context'] || grades['literature'] || 5);
+          setImpact(grades['scientific contribution & impact'] || grades['impact'] || 5);
+          setComments(rawComments.replace(/^\[GRADES - [^\]]+\]\n\n/, ''));
         } else {
           setComments(rawComments);
         }
@@ -69,7 +81,7 @@ export default function ReviewDetailPage() {
   const submitReview = async () => {
     if (!review || !decision) return;
     setSaving(true);
-    const structuredComments = `[GRADES - Originality: ${originality}/5 | Methodology: ${methodology}/5 | Clarity: ${clarity}/5]\n\n${comments}`;
+    const structuredComments = `[GRADES - Originality: ${originality}/5 | Methodology: ${methodology}/5 | Clarity: ${clarity}/5 | Literature: ${literature}/5 | Impact: ${impact}/5]\n\n${comments}`;
     await supabase.from('reviews').update({
       status: 'submitted' as ReviewStatus,
       decision: decision as ReviewDecision,
@@ -182,6 +194,8 @@ export default function ReviewDetailPage() {
                 { label: 'Originality', val: originality, set: setOriginality },
                 { label: 'Methodology & Rigor', val: methodology, set: setMethodology },
                 { label: 'Writing Clarity & Structure', val: clarity, set: setClarity },
+                { label: 'Literature Review & Context', val: literature, set: setLiterature },
+                { label: 'Scientific Contribution & Impact', val: impact, set: setImpact },
               ].map((criteria, idx) => (
                 <div key={idx} className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-[#27334a]">{criteria.label}</span>
