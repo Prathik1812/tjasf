@@ -17,6 +17,12 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
+    const nameRegex = /^[a-zA-Z\s\.\-]+$/;
+    if (!nameRegex.test(fullName.trim())) {
+      setError('Full Name must only contain letters, spaces, periods, or hyphens (no numbers).');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;

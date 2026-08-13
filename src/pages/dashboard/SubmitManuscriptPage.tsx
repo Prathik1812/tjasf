@@ -87,6 +87,24 @@ export default function SubmitManuscriptPage() {
     return false;
   };
 
+  const handleNext = () => {
+    setError('');
+
+    // Validate Step 2: Authors Names (prevent numbers)
+    if (step === 2) {
+      const nameRegex = /^[a-zA-Z\s\.\-]+$/;
+      for (let i = 0; i < authors.length; i++) {
+        const name = authors[i].name.trim();
+        if (!nameRegex.test(name)) {
+          setError(`Invalid Name for Author ${i + 1}: Name must only contain letters, spaces, periods, or hyphens (no numbers).`);
+          return;
+        }
+      }
+    }
+
+    setStep(step + 1);
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -553,7 +571,7 @@ export default function SubmitManuscriptPage() {
           </button>
           {step < 5 ? (
             <button
-              onClick={() => setStep(step + 1)}
+              onClick={handleNext}
               disabled={!canProceed()}
               className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30"
             >

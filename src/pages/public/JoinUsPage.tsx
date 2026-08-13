@@ -30,24 +30,16 @@ const EXPERIENCE_OPTIONS = [
 
 const ROLES = [
   {
-    name: "Peer Reviewer",
-    desc: "Evaluates submissions in their area of expertise, provides detailed double-blind review reports, and recommends decisions to the editors."
+    name: "Associate Editor",
+    desc: "Supports the Editor-in-Chief in desk screening, quality control, handling appeals, and overseeing special issues."
   },
   {
     name: "Editorial Board Member",
     desc: "Reviews submissions in their specialty, recommends decisions, and offers guidance on general journal policies."
   },
   {
-    name: "Section Editor",
-    desc: "Handles manuscripts for a specific scientific domain, assigns double-blind reviewers, monitors timelines, and recommends decisions."
-  },
-  {
-    name: "Associate Editor",
-    desc: "Supports the Editor-in-Chief in desk screening, quality control, handling appeals, and overseeing special issues."
-  },
-  {
-    name: "Technical Editor",
-    desc: "Reviews accepted drafts for formatting standards, math equation layouts, reference formatting, and code/data accessibility."
+    name: "Peer Reviewer",
+    desc: "Evaluates submissions in their area of expertise, provides detailed double-blind review reports, and recommends decisions to the editors."
   }
 ];
 
@@ -182,6 +174,32 @@ export default function JoinUsPage() {
       );
     }
     return false;
+  };
+
+  const handleNext = () => {
+    setError('');
+
+    if (step === 1) {
+      const nameRegex = /^[a-zA-Z\s\.\-]+$/;
+      if (!nameRegex.test(fullName.trim())) {
+        setError('Full Name must only contain letters, spaces, periods, or hyphens (no numbers).');
+        return;
+      }
+
+      const cleanPhone = phone.trim();
+      if (!cleanPhone.startsWith('+')) {
+        setError('Phone number must start with a "+" followed by your country code (e.g. +91 98765 43210).');
+        return;
+      }
+
+      const phoneDigits = cleanPhone.replace(/[^0-9]/g, '');
+      if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+        setError('Please enter a valid phone number including country code (8 to 15 digits total).');
+        return;
+      }
+    }
+
+    setStep(prev => prev + 1);
   };
 
   const handleSubmit = async () => {
@@ -551,7 +569,7 @@ export default function JoinUsPage() {
           
           {step < 5 ? (
             <button
-              onClick={() => setStep(prev => prev + 1)}
+              onClick={handleNext}
               disabled={!validateStep()}
               className="inline-flex items-center gap-1 px-5 py-2.5 bg-[#102342] hover:bg-[#eb5526] text-white text-xs font-bold rounded-lg disabled:opacity-35 transition-colors"
             >
