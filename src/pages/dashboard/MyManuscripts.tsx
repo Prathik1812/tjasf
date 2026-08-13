@@ -100,6 +100,14 @@ export default function MyManuscripts() {
 
       if (updErr) throw updErr;
 
+      // Record new version in versions archive
+      await supabase.from('manuscript_versions').insert({
+        manuscript_id: m.id,
+        version: (m.version || 1) + 1,
+        file_url: revisionFileUrl,
+        file_name: revisionFileName,
+      });
+
       // Clean up states
       setRevisingId(null);
       setRevisionFileName('');

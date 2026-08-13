@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
-import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive } from 'lucide-react';
+import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive, Mail } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
 
@@ -123,6 +123,7 @@ function getNavItems(role?: UserRole): NavItem[] {
       { to: '/dashboard/admin/policies', label: 'Policies', icon: FileText },
       { to: '/dashboard/admin/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/dashboard/admin/homepage', label: 'Homepage', icon: Settings },
+      { to: '/dashboard/admin/emails', label: 'Email Templates', icon: Mail },
     );
   }
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, ChevronLeft, Upload, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { sendSubmissionEmail } from '@/lib/email';
+import { sendSubmissionEmail, sendCoAuthorConsentEmail } from '@/lib/email';
 import type { Domain, Profile } from '@/types';
 
 interface Author {
@@ -204,8 +204,15 @@ export default function SubmitManuscriptPage() {
       return;
     }
     if (data) {
+      // Insert v1 into versions archive
+      await supabase.from('manuscript_versions').insert({
+        manuscript_id: data.id,
+        version: 1,
+        file_url: fileUrl,
+        file_name: fileName,
+      });
       for (let i = 0; i < authors.length; i++) {
-        await supabase.from('manuscript_authors').insert({
+        const { data: insertedAuthor } = await supabase.from('manuscript_authors').insert({
           manuscript_id: data.id,
           name: authors[i].name,
           email: authors[i].email,
@@ -214,7 +221,21 @@ export default function SubmitManuscriptPage() {
           department: authors[i].department,
           orcid: authors[i].orcid || '',
           sort_order: i,
-        });
+        }).select().single();
+
+        if (insertedAuthor && authors[i].email) {
+          try {
+            await sendCoAuthorConsentEmail(
+              insertedAuthor.name,
+              insertedAuthor.email || '',
+              title,
+              insertedAuthor.id,
+              profile.full_name
+            );
+          } catch (err) {
+            console.error('Failed to send co-author verification email:', err);
+          }
+        }
       }
     }
 

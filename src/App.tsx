@@ -15,6 +15,7 @@ import ContactPage from '@/pages/public/ContactPage';
 import ArticleDetailPage from '@/pages/public/ArticleDetailPage';
 import IssueDetailPage from '@/pages/public/IssueDetailPage';
 import JoinUsPage from '@/pages/public/JoinUsPage';
+import CoAuthorConsentPage from '@/pages/public/CoAuthorConsentPage';
 
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
@@ -34,6 +35,7 @@ import ManageIssuesPage from '@/pages/admin/ManageIssuesPage';
 import ManagePoliciesPage from '@/pages/admin/ManagePoliciesPage';
 import ManageAnnouncementsPage from '@/pages/admin/ManageAnnouncementsPage';
 import ManageHomepagePage from '@/pages/admin/ManageHomepagePage';
+import ManageEmailTemplatesPage from '@/pages/admin/ManageEmailTemplatesPage';
 
 import NotFoundPage from '@/pages/NotFoundPage';
 
@@ -56,6 +58,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/article/:id" element={<ArticleDetailPage />} />
             <Route path="/join" element={<JoinUsPage />} />
+            <Route path="/co-author-consent" element={<CoAuthorConsentPage />} />
           </Route>
 
           {/* Auth */}
@@ -86,6 +89,7 @@ export default function App() {
                 <Route path="/dashboard/admin/policies" element={<ManagePoliciesPage />} />
                 <Route path="/dashboard/admin/announcements" element={<ManageAnnouncementsPage />} />
                 <Route path="/dashboard/admin/homepage" element={<ManageHomepagePage />} />
+                <Route path="/dashboard/admin/emails" element={<ManageEmailTemplatesPage />} />
               </Route>
             </Route>
           </Route>

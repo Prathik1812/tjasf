@@ -25,6 +25,7 @@ export default function ManuscriptEditorPage() {
   const [editorSearch, setEditorSearch] = useState('');
   const [reviewerSearch, setReviewerSearch] = useState('');
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [fileVersions, setFileVersions] = useState<{ id: string, version: number, file_url: string, file_name: string, created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -82,6 +83,10 @@ export default function ManuscriptEditorPage() {
           setReviewerWorkloads(workloads);
           setReviewerStats(stats);
         }
+
+        // Fetch historical file versions
+        const { data: versions } = await supabase.from('manuscript_versions').select('*').eq('manuscript_id', id).order('version', { ascending: false });
+        if (versions) setFileVersions(versions);
       }
       setLoading(false);
     })();
@@ -366,6 +371,22 @@ ${referencesXml}
               </div>
             )}
           </div>
+          {fileVersions.length > 1 && (
+            <div className="mt-3.5 border-t border-[#f1f0ec] pt-3.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block mb-2">Historical File Archives:</span>
+              <div className="space-y-2">
+                {fileVersions.map((v) => (
+                  <div key={v.id} className="flex items-center gap-3 text-xs">
+                    <span className="font-semibold text-[#102342] bg-[#f1f0ec] px-2 py-0.5 rounded">v{v.version}</span>
+                    <a href={v.file_url} target="_blank" rel="noopener noreferrer" className="text-[#eb5526] hover:underline font-medium">
+                      Download {v.file_name}
+                    </a>
+                    <span className="text-[#667082]">({new Date(v.created_at).toLocaleDateString('en-GB')})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
