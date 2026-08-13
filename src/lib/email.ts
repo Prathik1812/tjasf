@@ -102,3 +102,26 @@ export async function sendDecisionEmail(authorName: string, authorEmail: string,
     html
   });
 }
+
+// Reviewer acceptance notification to editorial office
+export async function sendReviewerAcceptedNotification(reviewerName: string, manuscriptTitle: string, manuscriptId: string) {
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Reviewer Accepted Invitation</h2>
+      <p>Dear Editor,</p>
+      <p>This is to notify you that reviewer <strong>${reviewerName}</strong> has accepted the invitation to review the following manuscript:</p>
+      <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px;">
+        <p style="margin: 0;"><strong>Manuscript ID:</strong> ${manuscriptId}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Title:</strong> ${manuscriptTitle}</p>
+      </div>
+      <p>The status of this review has been updated to <strong>In Progress</strong> in your editor dashboard.</p>
+      <p style="margin-top: 24px;">Kind regards,</p>
+      <p><strong>TJASF System Notification</strong><br><a href="https://www.tjasf.com">www.tjasf.com</a></p>
+    </div>
+  `;
+  return sendEmail({
+    to: 'editorial@tjasf.com',
+    subject: `TJASF: Reviewer Accepted Invitation - ${manuscriptId}`,
+    html
+  });
+}

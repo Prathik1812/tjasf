@@ -3,11 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
+import { useAuth } from '@/context/AuthContext';
+import { sendReviewerAcceptedNotification } from '@/lib/email';
 import type { Review, Manuscript, ReviewDecision, ReviewStatus } from '@/types';
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [review, setReview] = useState<Review | null>(null);
   const [manuscript, setManuscript] = useState<Manuscript | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,10 +53,22 @@ export default function ReviewDetailPage() {
   }, [id]);
 
   const acceptReview = async () => {
-    if (!review) return;
+    if (!review || !manuscript) return;
     setSaving(true);
     await supabase.from('reviews').update({ status: 'in_progress' as ReviewStatus, responded_at: new Date().toISOString() }).eq('id', review.id);
     setReview({ ...review, status: 'in_progress' });
+
+    // Send email notification to editorial office
+    try {
+      await sendReviewerAcceptedNotification(
+        profile?.full_name || 'A reviewer',
+        manuscript.title,
+        manuscript.id.substring(0, 8).toUpperCase()
+      );
+    } catch (err) {
+      console.error('Failed to send reviewer acceptance notification email:', err);
+    }
+
     setSaving(false);
   };
 
