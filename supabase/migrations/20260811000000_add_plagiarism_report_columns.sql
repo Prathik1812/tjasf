@@ -33,8 +33,8 @@ UPDATE policies
 SET content = '### 1. Fees Structure
 TJASF is a self-funded academic journal committed to keeping scientific research widely accessible. We offer two routes for publication and peer review:
 
-- **Normal Track (Free)**: There are no submission fees or article processing charges (APCs). First-round decision takes **3 weeks**, and total process takes **12 weeks**.
-- **Fast Track (USD 40)**: Authors can request an expedited peer review process (first-round decision in **1 week**, total process in **4 weeks**).
+- **Normal Track (Free)**: There are no submission fees or article processing charges (APCs). The peer review and publication process takes approximately **12–16 weeks**.
+- **Fast Track (USD 40)**: Authors can request an expedited peer review process (total process takes **4–8 weeks**).
 
 | REGISTRATION FEE | SERVICES |
 | :---: | :---: |
@@ -87,8 +87,8 @@ SET content = 'TJASF operates a strict double-blind peer review process to ensur
 - Non-compliant papers are immediately desk-rejected.
 
 ### 2. Review Timelines
-- **Normal Track (Free)**: First-round evaluation and feedback take **3 weeks** (total process takes **12 weeks**).
-- **Fast Track ($40)**: Expedited review guarantees first-round evaluations within **1 week** (total process takes **4 weeks**).
+- **Normal Track (Free)**: Peer review and evaluation process takes **12–16 weeks**.
+- **Fast Track ($40)**: Expedited peer review process takes **4–8 weeks**.
 
 ### 3. Evaluation Criteria
 Reviewers evaluate submissions on:
@@ -125,8 +125,8 @@ The manuscript should be organized into the following standard sections:
 Authors must upload an official plagiarism report in PDF format from **Turnitin** or **iThenticate** during submission. The similarity index must not exceed **10%**. Manuscripts with higher scores or missing reports will not proceed to review.
 
 ### 4. Review Tracks & Fees
-- **Normal Track**: No submission fees or APCs. First-round decision in **3 weeks**, and total process is **12 weeks**.
-- **Fast Track**: Expedited first-round decision in **1 week**, and total process is **4 weeks** for a **$40** processing fee. The journal is self-funded.'
+- **Normal Track**: No submission fees or APCs. The peer review and publication process takes **12–16 weeks**.
+- **Fast Track**: Expedited peer review and publication process takes **4–8 weeks** for a **$40** processing fee. The journal is self-funded.'
 WHERE slug = 'author-guidelines';
 
 -- 9. Update Archiving Policy (slug: archiving-policy)
