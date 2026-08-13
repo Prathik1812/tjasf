@@ -34,6 +34,10 @@ const ROLES = [
     desc: "Supports the Editor-in-Chief in desk screening, quality control, handling appeals, and overseeing special issues."
   },
   {
+    name: "Section Editor",
+    desc: "Handles manuscripts for a specific scientific domain, assigns double-blind reviewers, monitors timelines, and recommends decisions."
+  },
+  {
     name: "Editorial Board Member",
     desc: "Reviews submissions in their specialty, recommends decisions, and offers guidance on general journal policies."
   },
