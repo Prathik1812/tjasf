@@ -144,3 +144,27 @@ export async function sendEditorAssignmentEmail(editorName: string, editorEmail:
     html
   });
 }
+
+// Reviewer reminder notification
+export async function sendReviewReminderEmail(reviewerName: string, reviewerEmail: string, manuscriptTitle: string, manuscriptId: string, dueDate: string) {
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Review Deadline Reminder</h2>
+      <p>Dear Dr. ${reviewerName},</p>
+      <p>This is a friendly reminder that your peer-review report for the manuscript <strong>"${manuscriptTitle}"</strong> (${manuscriptId}) is due soon.</p>
+      <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px;">
+        <p style="margin: 0;"><strong>Manuscript ID:</strong> ${manuscriptId}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString('en-GB')}</p>
+      </div>
+      <p>Please log into your Reviewer Portal to access the manuscript files and submit your evaluation report.</p>
+      <p>If you need an extension or have any questions, please reply directly to this email.</p>
+      <p style="margin-top: 24px;">Kind regards,</p>
+      <p><strong>TJASF Editorial Office</strong><br><a href="https://www.tjasf.com">www.tjasf.com</a></p>
+    </div>
+  `;
+  return sendEmail({
+    to: reviewerEmail,
+    subject: `TJASF: Urgent Reminder for Manuscript Review - ${manuscriptId}`,
+    html
+  });
+}

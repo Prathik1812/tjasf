@@ -13,6 +13,7 @@ export default function ReviewDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   const [decision, setDecision] = useState<ReviewDecision | ''>('');
   const [comments, setComments] = useState('');
@@ -108,9 +109,32 @@ export default function ReviewDetailPage() {
               </div>
             )}
             {manuscript.file_url && (
-              <a href={manuscript.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline">
-                Download manuscript file ({manuscript.file_name || 'PDF'})
-              </a>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <a href={manuscript.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline">
+                    Download manuscript file ({manuscript.file_name || 'PDF'})
+                  </a>
+                </div>
+                {manuscript.file_url.toLowerCase().endsWith('.pdf') && (
+                  <div>
+                    <button
+                      onClick={() => setShowPdfPreview(!showPdfPreview)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#eb5526] text-[#eb5526] hover:bg-[#eb5526] hover:text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                    >
+                      {showPdfPreview ? 'Hide PDF Preview' : 'Show PDF Preview'}
+                    </button>
+                    {showPdfPreview && (
+                      <div className="mt-3 border border-[#e6e5e0] rounded-lg overflow-hidden bg-gray-50">
+                        <iframe
+                          src={manuscript.file_url}
+                          className="w-full h-[600px] border-0"
+                          title="Manuscript PDF Preview"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}

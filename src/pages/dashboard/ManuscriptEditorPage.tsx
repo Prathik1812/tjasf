@@ -4,7 +4,7 @@ import { ArrowLeft, UserPlus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
-import { sendDecisionEmail, sendEditorAssignmentEmail } from '@/lib/email';
+import { sendDecisionEmail, sendEditorAssignmentEmail, sendReviewReminderEmail } from '@/lib/email';
 import type { Manuscript, Profile, Review, ManuscriptStatus, ReviewStatus, Domain } from '@/types';
 
 export default function ManuscriptEditorPage() {
@@ -20,6 +20,8 @@ export default function ManuscriptEditorPage() {
   const [selectedReviewer, setSelectedReviewer] = useState('');
   const [selectedEditor, setSelectedEditor] = useState('');
   const [editorWorkloads, setEditorWorkloads] = useState<Record<string, number>>({});
+  const [reviewerWorkloads, setReviewerWorkloads] = useState<Record<string, number>>({});
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -41,7 +43,7 @@ export default function ManuscriptEditorPage() {
         const { data: doms } = await supabase.from('domains').select('*');
         if (doms) setDomains(doms as Domain[]);
 
-        // Fetch workloads: count active papers (excluding rejected or published) for each editor
+        // Fetch editor workloads: count active papers (excluding rejected or published) for each editor
         const { data: allMs } = await supabase.from('manuscripts').select('editor_id, status');
         if (allMs) {
           const workloads: Record<string, number> = {};
@@ -51,6 +53,18 @@ export default function ManuscriptEditorPage() {
             }
           });
           setEditorWorkloads(workloads);
+        }
+
+        // Fetch reviewer workloads: count active assignments (pending/in progress) for each reviewer
+        const { data: allRevs } = await supabase.from('reviews').select('reviewer_id, status');
+        if (allRevs) {
+          const workloads: Record<string, number> = {};
+          allRevs.forEach((r) => {
+            if (r.reviewer_id && (r.status === 'pending_invitation' || r.status === 'in_progress')) {
+              workloads[r.reviewer_id] = (workloads[r.reviewer_id] || 0) + 1;
+            }
+          });
+          setReviewerWorkloads(workloads);
         }
       }
       setLoading(false);
@@ -147,6 +161,108 @@ export default function ManuscriptEditorPage() {
     setUpdating(false);
   };
 
+  const sendReminder = async (reviewId: string) => {
+    const rev = reviews.find((r) => r.id === reviewId);
+    if (!rev || !manuscript) return;
+    const reviewer = reviewers.find((p) => p.id === rev.reviewer_id);
+    if (!reviewer) return;
+
+    setUpdating(true);
+    try {
+      await sendReviewReminderEmail(
+        reviewer.full_name,
+        reviewer.email || '',
+        manuscript.title,
+        manuscript.id.substring(0, 8).toUpperCase(),
+        rev.due_date || new Date().toISOString()
+      );
+      alert(`Reminder email sent successfully to Dr. ${reviewer.full_name}!`);
+    } catch (err) {
+      console.error('Failed to send reminder email:', err);
+      alert('Failed to send reminder email. Please check your network or Vercel logs.');
+    }
+    setUpdating(false);
+  };
+
+  const exportJatsXml = () => {
+    if (!manuscript) return;
+
+    // Construct standard JATS XML format
+    const authorsXml = submitter ? `
+      <contrib contrib-type="author">
+        <name>
+          <surname>${submitter.full_name.split(' ').pop() || ''}</surname>
+          <given-names>${submitter.full_name.split(' ').slice(0, -1).join(' ') || submitter.full_name}</given-names>
+        </name>
+        <email>${submitter.email || ''}</email>
+        <xref ref-type="aff" rid="aff-1"/>
+      </contrib>
+    ` : '';
+
+    const keywordsXml = (manuscript.keywords || []).map((k) => `<kwd>${k}</kwd>`).join('\n            ');
+    const referencesXml = (manuscript.reference_text || '')
+      .split('\n')
+      .filter(Boolean)
+      .map((r, i) => `      <ref id="ref-${i + 1}"><mixed-citation>${r.trim()}</mixed-citation></ref>`)
+      .join('\n');
+
+    const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.2 20190208//EN" "JATS-journalpublishing1.dtd">
+<article article-type="research-article" dtd-version="1.2" xml:lang="en">
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="publisher-id">TJASF</journal-id>
+      <journal-title-group>
+        <journal-title>The Journal of Advanced Scientific Frontiers</journal-title>
+      </journal-title-group>
+      <issn pub-type="epub">3062-8822</issn>
+      <publisher>
+        <publisher-name>TJASF Publications</publisher-name>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="publisher-id">${manuscript.id.substring(0, 8).toUpperCase()}</article-id>
+      <article-id pub-id-type="doi">10.xxxx/tjasf.2026.${manuscript.id.substring(0, 8).toUpperCase()}</article-id>
+      <title-group>
+        <article-title>${manuscript.title}</article-title>
+      </title-group>
+      <contrib-group>
+        ${authorsXml.trim()}
+      </contrib-group>
+      <aff id="aff-1">
+        <institution>${submitter?.affiliation || 'TJASF Contributed Institution'}</institution>
+        <dept>${submitter?.department || ''}</dept>
+      </aff>
+      <pub-date pub-type="epub">
+        <year>${new Date().getFullYear()}</year>
+      </pub-date>
+      <abstract>
+        <p>${manuscript.abstract}</p>
+      </abstract>
+      <kwd-group>
+        ${keywordsXml}
+      </kwd-group>
+    </article-meta>
+  </front>
+  <back>
+    <ref-list>
+      <title>References</title>
+${referencesXml}
+    </ref-list>
+  </back>
+</article>`;
+
+    const blob = new Blob([xmlContent], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${manuscript.id.substring(0, 8).toUpperCase()}_jats.xml`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <p className="text-[#667082]">Loading...</p>;
   if (!manuscript) return <p className="text-[#667082]">Manuscript not found.</p>;
 
@@ -158,15 +274,27 @@ export default function ManuscriptEditorPage() {
 
       <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342]">{manuscript.title}</h1>
-          <StatusBadge status={manuscript.status} />
+          <div className="min-w-0 flex-1 mr-4">
+            <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mb-1">{manuscript.title}</h1>
+            <div className="flex flex-wrap gap-4 text-xs text-[#667082]">
+              <span>Submitted by: {submitter?.full_name || 'Unknown'}</span>
+              <span>Date: {new Date(manuscript.created_at).toLocaleDateString('en-GB')}</span>
+              <span>Version: {manuscript.version}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            {['accepted', 'published'].includes(manuscript.status) && (
+              <button
+                onClick={exportJatsXml}
+                className="px-3.5 py-2 bg-[#102342] text-white hover:bg-[#1a345e] text-xs font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                Export JATS XML
+              </button>
+            )}
+            <StatusBadge status={manuscript.status} />
+          </div>
         </div>
         <div className="space-y-3">
-          <div className="flex gap-4 text-xs text-[#667082]">
-            <span>Submitted by: {submitter?.full_name || 'Unknown'}</span>
-            <span>Date: {new Date(manuscript.created_at).toLocaleDateString('en-GB')}</span>
-            <span>Version: {manuscript.version}</span>
-          </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#667082] mb-1">Abstract</h3>
             <p className="text-sm text-[#27334a] leading-relaxed">{manuscript.abstract}</p>
@@ -176,16 +304,37 @@ export default function ManuscriptEditorPage() {
               {manuscript.keywords.map((kw, i) => <span key={i} className="px-3 py-1 bg-[#f1f0ec] rounded-full text-xs text-[#667082]">{kw}</span>)}
             </div>
           )}
-          <div className="flex gap-6 mt-3">
-            {manuscript.file_url && (
-              <a href={manuscript.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline">
-                Download manuscript ({manuscript.file_name || 'file'})
-              </a>
-            )}
-            {manuscript.plagiarism_report_url && (
-              <a href={manuscript.plagiarism_report_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline border-l border-[#d8d8d1] pl-6">
-                Download Plagiarism Report ({manuscript.plagiarism_report_name || 'PDF'})
-              </a>
+          <div className="flex flex-col gap-3 mt-3">
+            <div className="flex gap-6">
+              {manuscript.file_url && (
+                <a href={manuscript.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline">
+                  Download manuscript ({manuscript.file_name || 'file'})
+                </a>
+              )}
+              {manuscript.plagiarism_report_url && (
+                <a href={manuscript.plagiarism_report_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#eb5526] font-semibold hover:underline border-l border-[#d8d8d1] pl-6">
+                  Download Plagiarism Report ({manuscript.plagiarism_report_name || 'PDF'})
+                </a>
+              )}
+            </div>
+            {manuscript.file_url && manuscript.file_url.toLowerCase().endsWith('.pdf') && (
+              <div>
+                <button
+                  onClick={() => setShowPdfPreview(!showPdfPreview)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#eb5526] text-[#eb5526] hover:bg-[#eb5526] hover:text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                >
+                  {showPdfPreview ? 'Hide PDF Preview' : 'Show PDF Preview'}
+                </button>
+                {showPdfPreview && (
+                  <div className="mt-3 border border-[#e6e5e0] rounded-lg overflow-hidden bg-gray-50">
+                    <iframe
+                      src={manuscript.file_url}
+                      className="w-full h-[600px] border-0"
+                      title="Manuscript PDF Preview"
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -253,9 +402,21 @@ export default function ManuscriptEditorPage() {
                       {r.decision && <span className="font-semibold text-[#102342]">Decision: {r.decision.replace(/_/g, ' ')}</span>}
                     </div>
                   </div>
-                  <button onClick={() => removeReview(r.id)} disabled={updating} className="text-red-400 hover:text-red-600 disabled:opacity-30">
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {['pending_invitation', 'in_progress'].includes(r.status) && (
+                      <button
+                        onClick={() => sendReminder(r.id)}
+                        disabled={updating}
+                        title="Send Review Reminder Email"
+                        className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 font-semibold rounded transition-colors cursor-pointer"
+                      >
+                        Remind
+                      </button>
+                    )}
+                    <button onClick={() => removeReview(r.id)} disabled={updating} className="text-red-400 hover:text-red-600 disabled:opacity-30 cursor-pointer">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -264,15 +425,18 @@ export default function ManuscriptEditorPage() {
           <p className="text-sm text-[#667082] mb-4">No reviewers assigned yet.</p>
         )}
         <div className="flex gap-2">
-          <select value={selectedReviewer} onChange={(e) => setSelectedReviewer(e.target.value)} className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white">
+          <select value={selectedReviewer} onChange={(e) => setSelectedReviewer(e.target.value)} className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]">
             <option value="">Select a reviewer...</option>
-            {reviewers.filter((r) => !reviews.some((rv) => rv.reviewer_id === r.id)).map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.full_name} ({r.email}) {isExpertMatch(r) ? '★ Expert Match' : ''}
-              </option>
-            ))}
+            {reviewers.filter((r) => !reviews.some((rv) => rv.reviewer_id === r.id)).map((r) => {
+              const count = reviewerWorkloads[r.id] || 0;
+              return (
+                <option key={r.id} value={r.id}>
+                  {r.full_name} ({r.email}) - Workload: {count} active review{count !== 1 ? 's' : ''} {isExpertMatch(r) ? '★ Expert Match' : ''}
+                </option>
+              );
+            })}
           </select>
-          <button onClick={assignReviewer} disabled={!selectedReviewer || updating} className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30">
+          <button onClick={assignReviewer} disabled={!selectedReviewer || updating} className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30 cursor-pointer">
             <UserPlus size={16} /> Assign
           </button>
         </div>
