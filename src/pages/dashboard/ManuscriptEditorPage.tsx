@@ -19,6 +19,7 @@ export default function ManuscriptEditorPage() {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedReviewer, setSelectedReviewer] = useState('');
   const [selectedEditor, setSelectedEditor] = useState('');
+  const [editorWorkloads, setEditorWorkloads] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -39,6 +40,18 @@ export default function ManuscriptEditorPage() {
         if (eds) setEditors(eds as Profile[]);
         const { data: doms } = await supabase.from('domains').select('*');
         if (doms) setDomains(doms as Domain[]);
+
+        // Fetch workloads: count active papers (excluding rejected or published) for each editor
+        const { data: allMs } = await supabase.from('manuscripts').select('editor_id, status');
+        if (allMs) {
+          const workloads: Record<string, number> = {};
+          allMs.forEach((m) => {
+            if (m.editor_id && !['rejected', 'published'].includes(m.status)) {
+              workloads[m.editor_id] = (workloads[m.editor_id] || 0) + 1;
+            }
+          });
+          setEditorWorkloads(workloads);
+        }
       }
       setLoading(false);
     })();
@@ -200,11 +213,14 @@ export default function ManuscriptEditorPage() {
               className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
             >
               <option value="">Unassigned</option>
-              {editors.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.full_name} ({e.email}) - {e.role.replace(/_/g, ' ')}
-                </option>
-              ))}
+              {editors.map((e) => {
+                const count = editorWorkloads[e.id] || 0;
+                return (
+                  <option key={e.id} value={e.id}>
+                    {e.full_name} ({e.email}) - Workload: {count} active paper{count !== 1 ? 's' : ''}
+                  </option>
+                );
+              })}
             </select>
             <button
               onClick={assignEditor}
