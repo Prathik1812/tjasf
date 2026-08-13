@@ -25,7 +25,7 @@ export default function LoginPage() {
 
     // 1. Enforce strict @tjasf.com email usage
     if (emailLower.endsWith('@tjasf.com')) {
-      if (emailLower !== 'editor@tjasf.com' && emailLower !== 'admin@tjasf.com') {
+      if (emailLower !== 'editor@tjasf.com' && emailLower !== 'editorial@tjasf.com') {
         setError('Unauthorized email address under the @tjasf.com domain.');
         setLoading(false);
         return;

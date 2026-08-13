@@ -33,10 +33,10 @@ export default function RegisterPage() {
     if (emailLower.endsWith('@tjasf.com')) {
       if (emailLower === 'editor@tjasf.com') {
         dbRole = 'editor_in_chief';
-      } else if (emailLower === 'admin@tjasf.com') {
+      } else if (emailLower === 'editorial@tjasf.com') {
         dbRole = 'admin';
       } else {
-        setError('Only editor@tjasf.com and admin@tjasf.com are authorized under the @tjasf.com domain.');
+        setError('Only editor@tjasf.com and editorial@tjasf.com are authorized under the @tjasf.com domain.');
         return;
       }
     }

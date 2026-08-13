@@ -56,9 +56,9 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ## 🧪 Demo Portals
 
 For development and evaluation, click the **Quick Demo Access** buttons at the bottom of the sign-in page to log in as:
-* **Author Portal**: `author@tjasf.org`
-* **Reviewer Portal**: `reviewer@tjasf.org`
-* **Editor Portal**: `editor@tjasf.org` (Dr. Rajesh Thumma)
-* **Admin / Support**: `admin@tjasf.org` (Prathik Kumar)
+* **Author Portal**: `author@tjasf.com`
+* **Reviewer Portal**: `reviewer@tjasf.com`
+* **Editor Portal**: `editor@tjasf.com` (Dr. Rajesh Thumma)
+* **Admin / Support**: `editorial@tjasf.com` (Prathik Kumar)
 
 *Note: If these accounts don't exist yet in your Supabase Auth instance, clicking the buttons will auto-register them and build their profile relations on the fly.*
