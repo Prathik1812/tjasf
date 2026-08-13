@@ -8,8 +8,8 @@
           "value": "tjasf.vercel.app"
         }
       ],
-      "destination": "https://tjasf.com/:path*",
-      "permanent": true
+      "destination": "https://www.tjasf.com/:path*",
+      "statusCode": 301
     }
   ],
   "routes": [
