@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
+import { sendDecisionEmail, sendReviewerInvitation } from '@/lib/email';
 import type { Manuscript, Profile, Review, ManuscriptStatus, ReviewStatus, Domain } from '@/types';
 
 export default function ManuscriptEditorPage() {
@@ -50,6 +51,34 @@ export default function ManuscriptEditorPage() {
     setUpdating(true);
     await supabase.from('manuscripts').update({ status }).eq('id', manuscript.id);
     setManuscript({ ...manuscript, status });
+
+    // Send automated status update email to author
+    if (submitter && ['accepted', 'rejected', 'revision_requested', 'published'].includes(status)) {
+      let decisionFeedback = '';
+      if (status === 'rejected') {
+        decisionFeedback = 'The editorial board has completed desk screening. Regrettably, the manuscript was not accepted for publication at this time.';
+      } else if (status === 'accepted') {
+        decisionFeedback = 'Congratulations! Your manuscript has been officially accepted for publication. Our production team will contact you regarding formatting and billing.';
+      } else if (status === 'revision_requested') {
+        decisionFeedback = 'Reviewers have requested revisions. Please log into your author portal to view comments and upload your revised file.';
+      } else if (status === 'published') {
+        decisionFeedback = 'We are proud to notify you that your article has been officially published and is now live on our website!';
+      }
+
+      try {
+        await sendDecisionEmail(
+          submitter.full_name,
+          submitter.email || '',
+          manuscript.title,
+          manuscript.id.substring(0, 8).toUpperCase(),
+          status,
+          decisionFeedback
+        );
+      } catch (err) {
+        console.error('Failed to send status update email:', err);
+      }
+    }
+
     setUpdating(false);
   };
 
@@ -63,6 +92,23 @@ export default function ManuscriptEditorPage() {
       invited_at: new Date().toISOString(),
       due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     });
+
+    // Send automated reviewer invitation email
+    const revProfile = reviewers.find((p) => p.id === selectedReviewer);
+    if (revProfile) {
+      try {
+        await sendReviewerInvitation(
+          revProfile.full_name,
+          revProfile.email || '',
+          manuscript.title,
+          manuscript.id.substring(0, 8).toUpperCase(),
+          manuscript.abstract || ''
+        );
+      } catch (err) {
+        console.error('Failed to send reviewer invitation email:', err);
+      }
+    }
+
     const { data: revs } = await supabase.from('reviews').select('*').eq('manuscript_id', manuscript.id);
     if (revs) setReviews(revs as Review[]);
     setSelectedReviewer('');

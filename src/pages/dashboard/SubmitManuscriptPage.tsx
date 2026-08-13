@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, ChevronLeft, Upload, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { sendSubmissionEmail } from '@/lib/email';
 import type { Domain, Profile } from '@/types';
 
 interface Author {
@@ -216,6 +217,18 @@ export default function SubmitManuscriptPage() {
         });
       }
     }
+
+    try {
+      await sendSubmissionEmail(
+        profile.full_name,
+        profile.email || '',
+        title,
+        data.id.substring(0, 8).toUpperCase()
+      );
+    } catch (err) {
+      console.error('Failed to send confirmation email:', err);
+    }
+
     navigate('/dashboard/manuscripts');
   };
 
