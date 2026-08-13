@@ -38,7 +38,7 @@ TJASF is a self-funded academic journal committed to keeping scientific research
 
 | REGISTRATION FEE | SERVICES |
 | :---: | :---: |
-| **USD 40 $**<br>(DOI Included) | Includes Paper Handling Charges, Publication Charges, Soft copy of Certificates, Review Report+DOI (Digital Object Identifier) |
+| **USD 40 $**<br>(DOI Included) | Includes Paper Handling Charges, Soft copy of Certificates, Review Report+DOI (Digital Object Identifier) |
 
 ### 2. Payment Methods
 All payments must be made using the following method:
