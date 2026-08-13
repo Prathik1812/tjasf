@@ -39,13 +39,9 @@ export default function IssueDetailPage() {
   return (
     <div className="max-w-[1160px] mx-auto px-8 py-20">
       <Link to="/archives" className="text-xs font-bold text-[#eb5526] hover:text-[#d7461c] mb-6 inline-block">&larr; Back to Archives</Link>
-      <div className="text-[#eb5526] uppercase tracking-[0.14em] text-[10px] font-bold mb-4">Volume {volume?.number || ''}, Issue {issue.number}</div>
-      <h1 className="font-['Playfair_Display'] font-medium text-[clamp(36px,5vw,56px)] leading-[1.08] text-[#102342] mb-2">
-        {issue.title || `Volume ${volume?.number}, Issue ${issue.number}`}
+      <h1 className="font-['Playfair_Display'] font-medium text-[clamp(36px,5vw,56px)] leading-[1.08] text-[#102342] mb-12">
+        Volume {volume?.number || ''}, Issue {issue.number}
       </h1>
-      <p className="text-[#667082] text-lg mb-12">
-        {issue.publication_date ? new Date(issue.publication_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Forthcoming'}
-      </p>
       {articles.length === 0 ? (
         <div className="bg-[#f1f0ec] rounded-lg p-12 text-center">
           <p className="text-[#667082] text-lg">No articles in this issue.</p>

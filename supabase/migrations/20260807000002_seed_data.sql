@@ -25,7 +25,7 @@ INSERT INTO volumes (number, year, title) VALUES
 ON CONFLICT DO NOTHING;
 
 INSERT INTO issues (volume_id, number, title, publication_date, is_published)
-SELECT v.id, 1, 'Frontiers in Science', '2026-01-15', true
+SELECT v.id, 1, 'Inaugural Issue', '2026-01-15', true
 FROM volumes v WHERE v.number = 1 AND v.year = 2026
 AND NOT EXISTS (SELECT 1 FROM issues WHERE volume_id = v.id AND number = 1);
 

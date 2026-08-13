@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tjasf.vercel.app/sitemap.xml
+Sitemap: https://tjasf.com/sitemap.xml
