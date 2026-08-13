@@ -29,14 +29,14 @@ export default function RegisterPage() {
     const emailLower = email.toLowerCase().trim();
     let dbRole: 'author' | 'reviewer' | 'editor_in_chief' | 'admin' = 'author';
 
-    // Auto-assign roles only for the 2 authorized email addresses, block other @tjasf.org emails
-    if (emailLower.endsWith('@tjasf.org')) {
-      if (emailLower === 'editor@tjasf.org') {
+    // Auto-assign roles only for the 2 authorized email addresses, block other @tjasf.com emails
+    if (emailLower.endsWith('@tjasf.com')) {
+      if (emailLower === 'editor@tjasf.com') {
         dbRole = 'editor_in_chief';
-      } else if (emailLower === 'admin@tjasf.org') {
+      } else if (emailLower === 'admin@tjasf.com') {
         dbRole = 'admin';
       } else {
-        setError('Only editor@tjasf.org and admin@tjasf.org are authorized under the @tjasf.org domain.');
+        setError('Only editor@tjasf.com and admin@tjasf.com are authorized under the @tjasf.com domain.');
         return;
       }
     }

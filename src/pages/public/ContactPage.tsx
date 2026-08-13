@@ -36,8 +36,8 @@ export default function ContactPage() {
             </div>
             <div>
               <h3 className="font-semibold text-[#102342] text-sm">Email</h3>
-              <p className="text-[#667082] text-sm">editor@tjasf.org</p>
-              <p className="text-[#667082] text-sm">admin@tjasf.org</p>
+              <p className="text-[#667082] text-sm">editor@tjasf.com</p>
+              <p className="text-[#667082] text-sm">admin@tjasf.com</p>
             </div>
           </div>
         </div>

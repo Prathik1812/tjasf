@@ -23,10 +23,10 @@ export default function LoginPage() {
 
     const emailLower = email.toLowerCase().trim();
 
-    // 1. Enforce strict @tjasf.org email usage
-    if (emailLower.endsWith('@tjasf.org')) {
-      if (emailLower !== 'editor@tjasf.org' && emailLower !== 'admin@tjasf.org') {
-        setError('Unauthorized email address under the @tjasf.org domain.');
+    // 1. Enforce strict @tjasf.com email usage
+    if (emailLower.endsWith('@tjasf.com')) {
+      if (emailLower !== 'editor@tjasf.com' && emailLower !== 'admin@tjasf.com') {
+        setError('Unauthorized email address under the @tjasf.com domain.');
         setLoading(false);
         return;
       }
