@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail } from 'lucide-react';
+import { sendEmail } from '@/lib/email';
 
 export default function ContactPage() {
   const [name, setName] = useState('');
@@ -7,15 +8,42 @@ export default function ContactPage() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
-    setName('');
-    setEmail('');
-    setSubject('');
-    setMessage('');
-    setTimeout(() => setSent(false), 5000);
+    setSending(true);
+    try {
+      await sendEmail({
+        to: 'editorial@tjasf.com',
+        subject: `TJASF Contact Form Inquiry: ${subject}`,
+        html: `
+          <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+            <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">New Contact Inquiry</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px;">
+              <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+            </div>
+            <p style="margin-top: 24px; font-size: 12px; color: #667082; border-top: 1px solid #f1f0ec; padding-top: 12px;">
+              <strong>TJASF Contact Form Service</strong>
+            </p>
+          </div>
+        `
+      });
+      setSent(true);
+      setName('');
+      setEmail('');
+      setSubject('');
+      setMessage('');
+      setTimeout(() => setSent(false), 5000);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to send message. Please try again later.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -65,8 +93,8 @@ export default function ContactPage() {
               <label className="block text-sm font-semibold text-[#102342] mb-1">Message</label>
               <textarea required rows={5} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
             </div>
-            <button type="submit" className="px-6 py-3 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c] transition-colors">
-              Send Message
+            <button type="submit" disabled={sending} className="px-6 py-3 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c] transition-colors disabled:opacity-50 cursor-pointer">
+              {sending ? 'Sending Message...' : 'Send Message'}
             </button>
           </form>
         </div>
