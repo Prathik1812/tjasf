@@ -18,7 +18,6 @@ export default function ManuscriptEditorPage() {
   const [editors, setEditors] = useState<Profile[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedReviewer, setSelectedReviewer] = useState('');
-  const [selectedEditor, setSelectedEditor] = useState('');
   const [editorWorkloads, setEditorWorkloads] = useState<Record<string, number>>({});
   const [reviewerWorkloads, setReviewerWorkloads] = useState<Record<string, number>>({});
   const [reviewerStats, setReviewerStats] = useState<Record<string, { total: number, completed: number, declined: number }>>({});
@@ -35,6 +34,7 @@ export default function ManuscriptEditorPage() {
   const [hIndexFilter, setHIndexFilter] = useState<number | null>(null);
   const [minPubsFilter, setMinPubsFilter] = useState<number | null>(null);
   const [showShortlistModal, setShowShortlistModal] = useState(false);
+  const [editorAssignments, setEditorAssignments] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -42,7 +42,6 @@ export default function ManuscriptEditorPage() {
       const { data: ms } = await supabase.from('manuscripts').select('*').eq('id', id).maybeSingle();
       if (ms) {
         setManuscript(ms as Manuscript);
-        setSelectedEditor((ms as Manuscript).editor_id || '');
         if ((ms as Manuscript).keywords) {
           setRefineKeywords((ms as Manuscript).keywords);
         }
@@ -56,6 +55,8 @@ export default function ManuscriptEditorPage() {
         if (eds) setEditors(eds as Profile[]);
         const { data: doms } = await supabase.from('domains').select('*');
         if (doms) setDomains(doms as Domain[]);
+        const { data: eas } = await supabase.from('editor_assignments').select('*').eq('manuscript_id', id);
+        if (eas) setEditorAssignments(eas);
 
         // Fetch editor workloads: count active papers (excluding rejected or published) for each editor
         const { data: allMs } = await supabase.from('manuscripts').select('editor_id, status');
@@ -143,15 +144,18 @@ export default function ManuscriptEditorPage() {
     setUpdating(false);
   };
 
-  const assignEditor = async () => {
+  const inviteEditor = async (editorId: string) => {
     if (!manuscript) return;
     setUpdating(true);
-    const edId = selectedEditor || null;
-    await supabase.from('manuscripts').update({ editor_id: edId }).eq('id', manuscript.id);
-    setManuscript({ ...manuscript, editor_id: edId });
+    try {
+      const { error } = await supabase.from('editor_assignments').insert({
+        manuscript_id: manuscript.id,
+        editor_id: editorId,
+        status: 'pending'
+      });
+      if (error) throw error;
 
-    if (edId) {
-      const selectedEd = editors.find((e) => e.id === edId);
+      const selectedEd = editors.find((e) => e.id === editorId);
       if (selectedEd) {
         try {
           await sendEditorAssignmentEmail(
@@ -164,7 +168,19 @@ export default function ManuscriptEditorPage() {
           console.error('Failed to send editor assignment email:', err);
         }
       }
+
+      const { data: eas } = await supabase.from('editor_assignments').select('*').eq('manuscript_id', manuscript.id);
+      if (eas) setEditorAssignments(eas);
+    } catch (err: any) {
+      alert(err.message || 'Failed to invite editor');
     }
+    setUpdating(false);
+  };
+
+  const removeEditorAssignment = async (assignmentId: string) => {
+    setUpdating(true);
+    await supabase.from('editor_assignments').delete().eq('id', assignmentId);
+    setEditorAssignments(editorAssignments.filter((ea) => ea.id !== assignmentId));
     setUpdating(false);
   };
 
@@ -339,10 +355,6 @@ ${referencesXml}
     URL.revokeObjectURL(url);
   };
 
-  const filteredEditors = editors.filter((e) =>
-    e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) ||
-    (e.email || '').toLowerCase().includes(editorSearch.toLowerCase())
-  );
 
   const filteredReviewers = reviewers
     .filter((r) => !reviews.some((rv) => rv.reviewer_id === r.id))
@@ -831,39 +843,128 @@ ${referencesXml}
 
       {/* Assign Editor - Only for Editor-in-Chief and Admin */}
       {activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role) && (
-        <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
-          <div className="mb-3">
-            <input
-              type="text"
-              placeholder="Search editor by name or email..."
-              value={editorSearch}
-              onChange={(e) => setEditorSearch(e.target.value)}
-              className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
-            />
+        <div className="bg-white rounded-lg border border-[#e6e5e0] p-6 space-y-6">
+          <div>
+            <h2 className="font-semibold text-[#102342] text-base mb-1">Editorial Assignment Invitations</h2>
+            <p className="text-xs text-[#667082]">Invite Section Editors to manage the review process. Invited editors can accept or decline assignments.</p>
           </div>
-          <div className="flex gap-2">
-            <select
-              value={selectedEditor}
-              onChange={(e) => setSelectedEditor(e.target.value)}
-              className="flex-1 border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
-            >
-              <option value="">Unassigned</option>
-              {filteredEditors.map((e) => {
-                const count = editorWorkloads[e.id] || 0;
-                return (
-                  <option key={e.id} value={e.id}>
-                    {e.full_name} ({e.email}) - Workload: {count} active paper{count !== 1 ? 's' : ''}
-                  </option>
-                );
-              })}
-            </select>
-            <button
-              onClick={assignEditor}
-              disabled={updating}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30 cursor-pointer"
-            >
-              Update Assignment
-            </button>
+
+          {/* Current Invitations List */}
+          {editorAssignments.length > 0 && (
+            <div className="border border-[#e6e5e0] rounded-lg p-4 bg-[#fbfaf8]/50 space-y-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#102342] block">Current Invitation Statuses</span>
+              <div className="divide-y divide-[#f1f0ec]">
+                {editorAssignments.map((ea) => {
+                  const editor = editors.find((e) => e.id === ea.editor_id);
+                  return (
+                    <div key={ea.id} className="py-2 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-semibold text-[#102342]">{editor?.full_name || 'Editor'}</span>
+                        <span className="text-[#667082] ml-2">({editor?.email})</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          ea.status === 'accepted' ? 'bg-green-50 text-green-700' :
+                          ea.status === 'declined' ? 'bg-red-50 text-red-700' :
+                          'bg-amber-50 text-amber-700'
+                        }`}>
+                          {ea.status}
+                        </span>
+                        <button onClick={() => removeEditorAssignment(ea.id)} disabled={updating} className="text-xs text-red-500 hover:text-red-700 cursor-pointer">
+                          Withdraw
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Match & Invite new editor */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#102342]">Find and Invite Editors</span>
+              <div className="w-64 relative">
+                <input
+                  type="text"
+                  placeholder="Filter editors by name..."
+                  value={editorSearch}
+                  onChange={(e) => setEditorSearch(e.target.value)}
+                  className="w-full border border-[#d8d8d1] rounded-lg pl-3 pr-8 py-1.5 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+                />
+                <Search size={12} className="absolute right-2.5 top-2.5 text-[#667082]" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1">
+              {(() => {
+                const recommendedEditors = editors.map((e) => {
+                  const reviewerKeywords = e.keywords || [];
+                  const paperKeywords = manuscript.keywords || [];
+                  const matchCount = paperKeywords.filter(tag => 
+                    reviewerKeywords.some((k: string) => k.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(k.toLowerCase()))
+                  ).length;
+                  return { ...e, matchScore: matchCount * 10 };
+                }).filter((e) => {
+                  if (editorSearch && !e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) && !(e.email || '').toLowerCase().includes(editorSearch.toLowerCase())) {
+                    return false;
+                  }
+                  return true;
+                }).sort((a, b) => b.matchScore - a.matchScore);
+
+                return recommendedEditors.map((e) => {
+                  const isInvited = editorAssignments.some(ea => ea.editor_id === e.id);
+                  const activeCount = editorWorkloads[e.id] || 0;
+                  
+                  return (
+                    <div key={e.id} className="border border-[#e6e5e0] rounded-lg p-4 space-y-3 bg-white hover:border-[#102342] transition-colors flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-[#102342]">{e.full_name}</span>
+                          {e.matchScore > 0 && (
+                            <span className="bg-amber-50 border border-amber-200 text-amber-900 text-[8px] font-bold px-1.5 py-0.5 rounded">
+                              {e.matchScore >= 20 ? 'Strong Match' : 'Keyword Match'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-[#667082] mt-0.5">{e.affiliation || 'Department of Research'}</p>
+                        
+                        {e.keywords && e.keywords.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {e.keywords.slice(0, 3).map(kw => {
+                              const isMatch = (manuscript.keywords || []).some(tk => kw.toLowerCase().includes(tk.toLowerCase()));
+                              return (
+                                <span key={kw} className={`text-[8px] px-1 py-0.5 rounded ${isMatch ? 'bg-amber-100 text-amber-900 font-semibold' : 'bg-gray-100 text-gray-700'}`}>
+                                  {kw}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-[#f1f0ec] pt-2 mt-2">
+                        <span className="text-[10px] text-[#667082]">
+                          Workload: <strong>{activeCount}</strong> active paper{activeCount !== 1 ? 's' : ''}
+                        </span>
+                        <button
+                          onClick={() => inviteEditor(e.id)}
+                          disabled={isInvited || updating}
+                          className={`px-3 py-1 text-[10px] font-bold rounded cursor-pointer ${
+                            isInvited
+                              ? 'bg-gray-100 text-gray-400 border border-gray-200'
+                              : 'bg-[#eb5526] hover:bg-[#d7461c] text-white'
+                          }`}
+                        >
+                          {isInvited ? 'Invited' : 'Invite'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
           </div>
         </div>
       )}
