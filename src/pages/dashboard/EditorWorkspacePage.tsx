@@ -67,6 +67,13 @@ export default function EditorWorkspacePage() {
         .eq('id', manuscriptId);
       if (err2) throw err2;
 
+      // 3. Delete other pending invitations for this manuscript
+      await supabase
+        .from('editor_assignments')
+        .delete()
+        .eq('manuscript_id', manuscriptId)
+        .neq('id', invitationId);
+
       alert('Invitation accepted! You are now handling this manuscript.');
       window.location.reload();
     } catch (err: any) {
