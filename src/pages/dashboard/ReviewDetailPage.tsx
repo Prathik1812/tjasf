@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
-import type { Review, Manuscript, ReviewDecision, ReviewStatus } from '@/types';
+import { sendReviewerResponseEmail } from '@/lib/email';
+import type { Review, Manuscript, ReviewDecision, ReviewStatus, Profile } from '@/types';
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
@@ -18,6 +19,8 @@ export default function ReviewDetailPage() {
   const [decision, setDecision] = useState<ReviewDecision | ''>('');
   const [comments, setComments] = useState('');
   const [confidentialNotes, setConfidentialNotes] = useState('');
+  const [editor, setEditor] = useState<Profile | null>(null);
+  const [reviewer, setReviewer] = useState<Profile | null>(null);
   
   const [originality, setOriginality] = useState(5);
   const [methodology, setMethodology] = useState(5);
@@ -56,7 +59,15 @@ export default function ReviewDetailPage() {
         }
 
         const { data: ms } = await supabase.from('manuscripts').select('*').eq('id', (rev as Review).manuscript_id).maybeSingle();
-        if (ms) setManuscript(ms as Manuscript);
+        if (ms) {
+          setManuscript(ms as Manuscript);
+          if ((ms as Manuscript).editor_id) {
+            const { data: ed } = await supabase.from('profiles').select('*').eq('id', (ms as Manuscript).editor_id).maybeSingle();
+            if (ed) setEditor(ed as Profile);
+          }
+        }
+        const { data: revwr } = await supabase.from('profiles').select('*').eq('id', (rev as Review).reviewer_id).maybeSingle();
+        if (revwr) setReviewer(revwr as Profile);
       }
       setLoading(false);
     })();
@@ -67,6 +78,22 @@ export default function ReviewDetailPage() {
     setSaving(true);
     await supabase.from('reviews').update({ status: 'in_progress' as ReviewStatus, responded_at: new Date().toISOString() }).eq('id', review.id);
     setReview({ ...review, status: 'in_progress' });
+    
+    try {
+      const emailTo = editor?.email || 'editorial@tjasf.com';
+      const edName = editor?.full_name || 'Editorial Board';
+      await sendReviewerResponseEmail(
+        reviewer?.full_name || 'Reviewer',
+        emailTo,
+        edName,
+        manuscript.title,
+        manuscript.id.substring(0, 8).toUpperCase(),
+        'accepted'
+      );
+    } catch (mailErr) {
+      console.error('Failed to send reviewer accept email:', mailErr);
+    }
+
     setSaving(false);
   };
 
@@ -75,6 +102,22 @@ export default function ReviewDetailPage() {
     setSaving(true);
     await supabase.from('reviews').update({ status: 'declined' as ReviewStatus, responded_at: new Date().toISOString() }).eq('id', review.id);
     setReview({ ...review, status: 'declined' });
+
+    try {
+      const emailTo = editor?.email || 'editorial@tjasf.com';
+      const edName = editor?.full_name || 'Editorial Board';
+      await sendReviewerResponseEmail(
+        reviewer?.full_name || 'Reviewer',
+        emailTo,
+        edName,
+        manuscript?.title || 'Manuscript',
+        review.manuscript_id.substring(0, 8).toUpperCase(),
+        'declined'
+      );
+    } catch (mailErr) {
+      console.error('Failed to send reviewer decline email:', mailErr);
+    }
+
     setSaving(false);
   };
 
@@ -90,6 +133,22 @@ export default function ReviewDetailPage() {
       submitted_at: new Date().toISOString(),
     }).eq('id', review.id);
     setReview({ ...review, status: 'submitted', decision: decision as ReviewDecision });
+
+    try {
+      const emailTo = editor?.email || 'editorial@tjasf.com';
+      const edName = editor?.full_name || 'Editorial Board';
+      await sendReviewerResponseEmail(
+        reviewer?.full_name || 'Reviewer',
+        emailTo,
+        edName,
+        manuscript?.title || 'Manuscript',
+        review.manuscript_id.substring(0, 8).toUpperCase(),
+        'submitted'
+      );
+    } catch (mailErr) {
+      console.error('Failed to send reviewer submit email:', mailErr);
+    }
+
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

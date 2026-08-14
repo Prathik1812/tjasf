@@ -238,3 +238,62 @@ export async function sendCoAuthorConsentEmail(coAuthorName: string, coAuthorEma
   );
   return sendEmail({ to: coAuthorEmail, subject, html });
 }
+
+// Editor response notification to editorial board
+export async function sendEditorResponseEmail(editorName: string, manuscriptTitle: string, manuscriptId: string, action: 'accepted' | 'declined') {
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Editorial Assignment ${action === 'accepted' ? 'Accepted' : 'Declined'}</h2>
+      <p>Dear Editorial Office,</p>
+      <p>This is to notify you that Section Editor <strong>${editorName}</strong> has <strong>${action}</strong> the assignment to handle the following manuscript:</p>
+      <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px;">
+        <p style="margin: 0;"><strong>Manuscript ID:</strong> ${manuscriptId}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Title:</strong> ${manuscriptTitle}</p>
+      </div>
+      <p>The status of this editorial assignment is now updated in your dashboard.</p>
+      <p style="margin-top: 24px;">Kind regards,</p>
+      <p><strong>TJASF System Notification</strong><br><a href="https://www.tjasf.com">www.tjasf.com</a></p>
+    </div>
+  `;
+  return sendEmail({
+    to: 'editorial@tjasf.com',
+    subject: `TJASF: Editor Invitation ${action === 'accepted' ? 'Accepted' : 'Declined'} - ${manuscriptId}`,
+    html
+  });
+}
+
+// Reviewer response notification to handling editor
+export async function sendReviewerResponseEmail(reviewerName: string, editorEmail: string, editorName: string, manuscriptTitle: string, manuscriptId: string, action: 'accepted' | 'declined' | 'submitted') {
+  let actionText = '';
+  let statusText = '';
+  if (action === 'accepted') {
+    actionText = 'accepted the invitation to review';
+    statusText = 'is now In Progress';
+  } else if (action === 'declined') {
+    actionText = 'declined the invitation to review';
+    statusText = 'is marked as Declined';
+  } else {
+    actionText = 'submitted their peer-review report';
+    statusText = 'is now Submitted';
+  }
+
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Reviewer Response: ${action.toUpperCase()}</h2>
+      <p>Dear ${editorName},</p>
+      <p>This is to notify you that reviewer <strong>${reviewerName}</strong> has <strong>${actionText}</strong> the following manuscript under your management:</p>
+      <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px;">
+        <p style="margin: 0;"><strong>Manuscript ID:</strong> ${manuscriptId}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Title:</strong> ${manuscriptTitle}</p>
+      </div>
+      <p>The review status ${statusText} in your editor details panel.</p>
+      <p style="margin-top: 24px;">Kind regards,</p>
+      <p><strong>TJASF System Notification</strong><br><a href="https://www.tjasf.com">www.tjasf.com</a></p>
+    </div>
+  `;
+  return sendEmail({
+    to: editorEmail,
+    subject: `TJASF: Reviewer ${action.toUpperCase()} - ${manuscriptId}`,
+    html
+  });
+}

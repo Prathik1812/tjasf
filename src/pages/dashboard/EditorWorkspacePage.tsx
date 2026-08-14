@@ -4,6 +4,7 @@ import { BookOpen } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
+import { sendEditorResponseEmail } from '@/lib/email';
 import type { Manuscript, Domain, Profile } from '@/types';
 
 export default function EditorWorkspacePage() {
@@ -74,6 +75,21 @@ export default function EditorWorkspacePage() {
         .eq('manuscript_id', manuscriptId)
         .neq('id', invitationId);
 
+      const ms = manuscripts.find((m) => m.id === manuscriptId);
+      const title = ms ? ms.title : 'Manuscript';
+      if (currentUser) {
+        try {
+          await sendEditorResponseEmail(
+            currentUser.full_name,
+            title,
+            manuscriptId.substring(0, 8).toUpperCase(),
+            'accepted'
+          );
+        } catch (mailErr) {
+          console.error('Failed to send editor accept email:', mailErr);
+        }
+      }
+
       alert('Invitation accepted! You are now handling this manuscript.');
       window.location.reload();
     } catch (err: any) {
@@ -85,11 +101,27 @@ export default function EditorWorkspacePage() {
   const handleDeclineInvitation = async (invitationId: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data: ea, error } = await supabase
         .from('editor_assignments')
         .update({ status: 'declined' })
-        .eq('id', invitationId);
+        .eq('id', invitationId)
+        .select('*, manuscripts(title)')
+        .single();
       if (error) throw error;
+
+      if (ea && currentUser) {
+        const msTitle = (ea as any).manuscripts?.title || 'Manuscript';
+        try {
+          await sendEditorResponseEmail(
+            currentUser.full_name,
+            msTitle,
+            ea.manuscript_id.substring(0, 8).toUpperCase(),
+            'declined'
+          );
+        } catch (mailErr) {
+          console.error('Failed to send editor decline email:', mailErr);
+        }
+      }
 
       alert('Invitation declined.');
       window.location.reload();

@@ -841,12 +841,12 @@ ${referencesXml}
         </div>
       </div>
 
-      {/* Assign Editor - Only for Editor-in-Chief and Admin */}
-      {activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role) && (
+      {/* Assign Editor - Only for Editor-in-Chief, Managing Editor, and Admin */}
+      {activeUser && ['editor_in_chief', 'managing_editor', 'admin'].includes(activeUser.role) && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6 space-y-6">
           <div>
             <h2 className="font-semibold text-[#102342] text-base mb-1">Editorial Assignment Invitations</h2>
-            <p className="text-xs text-[#667082]">Invite Section Editors to manage the review process. Invited editors can accept or decline assignments.</p>
+            <p className="text-xs text-[#667082]">Invite Section Editors or Associate Editors to manage the review process. Invited editors can accept or decline assignments.</p>
           </div>
 
           {/* Current Invitations List */}
@@ -907,6 +907,14 @@ ${referencesXml}
                   ).length;
                   return { ...e, matchScore: matchCount * 10 };
                 }).filter((e) => {
+                  // Managing Editors (Associate Editors) can only invite Section Editors
+                  if (activeUser.role === 'managing_editor' && e.role !== 'section_editor') {
+                    return false;
+                  }
+                  // Hide self
+                  if (e.id === activeUser.id) {
+                    return false;
+                  }
                   if (editorSearch && !e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) && !(e.email || '').toLowerCase().includes(editorSearch.toLowerCase())) {
                     return false;
                   }
