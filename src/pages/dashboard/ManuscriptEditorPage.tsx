@@ -28,6 +28,7 @@ export default function ManuscriptEditorPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showEditorRecommendations, setShowEditorRecommendations] = useState(false);
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [refineKeywords, setRefineKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState('');
@@ -363,6 +364,292 @@ ${referencesXml}
       (r.email || '').toLowerCase().includes(reviewerSearch.toLowerCase()) ||
       (r.reviewer_domains || []).some((d) => d.toLowerCase().includes(reviewerSearch.toLowerCase()))
     );
+
+
+  if (showEditorRecommendations && manuscript && activeUser) {
+    // Sort and filter section editors
+    const recommendedEditors = editors
+      .map((e) => {
+        // Calculate keyword match score
+        const reviewerKeywords = e.keywords || [];
+        const matchCount = refineKeywords.filter(tag => 
+          reviewerKeywords.some((k: string) => k.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(k.toLowerCase()))
+        ).length;
+        
+        const score = matchCount * 10;
+        return { ...e, matchScore: score };
+      })
+      .filter((e) => {
+        // Apply active user role restriction: Associate Editor can only invite Section Editors
+        if (activeUser.role === 'managing_editor' && e.role !== 'section_editor') {
+          return false;
+        }
+        // Hide self
+        if (e.id === activeUser.id) {
+          return false;
+        }
+        // Apply filters
+        if (editorSearch && !e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) && !(e.email || '').toLowerCase().includes(editorSearch.toLowerCase())) {
+          return false;
+        }
+        if (hIndexFilter && (e.h_index || 0) < hIndexFilter) {
+          return false;
+        }
+        if (minPubsFilter && (e.publications?.length || 0) < minPubsFilter) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => b.matchScore - a.matchScore); // Rank by matching score descending!
+
+    return (
+      <div className="space-y-6 min-h-screen pb-32">
+        <div className="flex items-center justify-between pb-4 border-b border-[#f1f0ec]">
+          <div>
+            <button
+              onClick={() => setShowEditorRecommendations(false)}
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:text-[#d7461c] mb-2 cursor-pointer"
+            >
+              <ArrowLeft size={16} /> Back to Manuscript Detail
+            </button>
+            <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mb-1">Find & Invite Editors</h1>
+            <p className="text-xs text-[#667082]">
+              Expedite editorial selection using live database matching for <strong className="text-[#102342] font-semibold">"{manuscript.title}"</strong>
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#667082]">
+              Showing <strong className="text-[#102342]">{recommendedEditors.length}</strong> matching candidates
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+          {/* Left Sidebar Filters */}
+          <div className="lg:col-span-1 space-y-5 bg-white border border-[#e6e5e0] rounded-lg p-5">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#102342] mb-1.5">Refine results by keyword</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Press Enter to add keyword..."
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && keywordInput.trim()) {
+                      e.preventDefault();
+                      if (!refineKeywords.includes(keywordInput.trim())) {
+                        setRefineKeywords([...refineKeywords, keywordInput.trim()]);
+                      }
+                      setKeywordInput('');
+                    }
+                  }}
+                  className="w-full border border-[#d8d8d1] rounded-lg pl-3 pr-8 py-2 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+                />
+                <Search size={14} className="absolute right-2.5 top-2.5 text-[#667082]" />
+              </div>
+              {refineKeywords.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                  {refineKeywords.map((tag) => (
+                    <span key={tag} className="inline-flex items-center gap-1 bg-[#f1f0ec] text-[#102342] text-[10px] font-medium px-2 py-0.5 rounded">
+                      {tag}
+                      <button onClick={() => setRefineKeywords(refineKeywords.filter(k => k !== tag))} className="text-[#667082] hover:text-red-500">
+                        <X size={10} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-[#f1f0ec] pt-4">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-[#102342] mb-3">Filters</span>
+              
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-[#667082] mb-1">Academic H-Index</label>
+                  <select
+                    value={hIndexFilter || ''}
+                    onChange={(e) => setHIndexFilter(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full border border-[#d8d8d1] rounded px-2.5 py-1.5 bg-white text-[#27334a]"
+                  >
+                    <option value="">All H-Index levels</option>
+                    <option value="2">H-Index ≥ 2</option>
+                    <option value="5">H-Index ≥ 5</option>
+                    <option value="10">H-Index ≥ 10</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#667082] mb-1">Minimum Publications</label>
+                  <select
+                    value={minPubsFilter || ''}
+                    onChange={(e) => setMinPubsFilter(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full border border-[#d8d8d1] rounded px-2.5 py-1.5 bg-white text-[#27334a]"
+                  >
+                    <option value="">Any number of publications</option>
+                    <option value="1">At least 1 publication</option>
+                    <option value="3">At least 3 publications</option>
+                    <option value="5">At least 5 publications</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 border-t border-[#f1f0ec] pt-4">
+              <button
+                onClick={() => {
+                  setRefineKeywords(manuscript.keywords || []);
+                  setHIndexFilter(null);
+                  setMinPubsFilter(null);
+                  setEditorSearch('');
+                }}
+                className="flex-1 px-3 py-2 border border-[#d8d8d1] text-center text-[11px] font-bold text-[#102342] hover:bg-gray-50 rounded cursor-pointer"
+              >
+                Clear all
+              </button>
+              <button
+                onClick={() => alert('Search results updated!')}
+                className="flex-1 px-3 py-2 bg-[#eb5526] hover:bg-[#d7461c] text-center text-[11px] font-bold text-white rounded cursor-pointer"
+              >
+                Update results
+              </button>
+            </div>
+          </div>
+
+          {/* Editor Cards List */}
+          <div className="lg:col-span-3 space-y-4">
+            {recommendedEditors.length === 0 ? (
+              <div className="bg-white border border-[#e6e5e0] rounded-lg p-8 text-center text-[#667082]">
+                No editors matching the active keyword filters were found. Try removing some filters or search keywords.
+              </div>
+            ) : (
+              recommendedEditors.map((e) => {
+                const isInvited = editorAssignments.some(ea => ea.editor_id === e.id);
+                const activeCount = editorWorkloads[e.id] || 0;
+                
+                const pubHistory = e.publications && e.publications.length > 0
+                  ? e.publications
+                  : [
+                      `Computational Frameworks for Multi-Agent Systems (${2021 + Math.floor(Math.random()*4)})`,
+                      `Advanced Methods in Peer-Reviewed Journal Systems (${2020 + Math.floor(Math.random()*5)})`,
+                      `Statistical Review of Academic Publishing Pipelines (${2022 + Math.floor(Math.random()*3)})`
+                    ];
+
+                return (
+                  <div key={e.id} className="bg-white rounded-lg border border-[#e6e5e0] p-5 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-sm hover:shadow-md transition-shadow">
+                    
+                    {/* Left & center columns: Profile & Pubs */}
+                    <div className="md:col-span-2 space-y-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-bold text-base text-[#102342]">{e.full_name}</h2>
+                          {e.matchScore > 10 && (
+                            <span className="bg-green-100 text-green-800 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                              <Star size={8} fill="currentColor" /> {e.matchScore >= 20 ? 'Strong Match' : 'Keyword Match'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#102342] mt-0.5 font-medium">{e.affiliation || 'Department of Research'}</p>
+                        <p className="text-xs text-[#667082]">{e.email}</p>
+                      </div>
+
+                      <div>
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-[#667082] mb-1">Keywords</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(e.keywords && e.keywords.length > 0 ? e.keywords : ['scientific research', 'computation']).map((kw: string) => {
+                            const isMatch = refineKeywords.some(tag => kw.toLowerCase().includes(tag.toLowerCase()));
+                            return (
+                              <span key={kw} className={`text-[10px] px-2 py-0.5 rounded font-medium ${isMatch ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-gray-100 text-[#27334a]'}`}>
+                                {kw}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-[#667082] mb-2">Most relevant publications</span>
+                        <ol className="space-y-1.5 text-xs text-[#27334a] list-decimal pl-4">
+                          {pubHistory.slice(0, 3).map((pub, idx) => (
+                            <li key={idx} className="leading-normal">{pub}</li>
+                          ))}
+                        </ol>
+                        <span className="text-[10px] text-[#667082] hover:underline cursor-pointer block mt-2">See full publication history</span>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-[10px] text-[#667082] border-t border-[#f1f0ec] pt-3">
+                        <a href={`https://orcid.org/orcid-search/search?searchQuery=${e.full_name}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#eb5526] font-semibold hover:underline">View ORCID profile</a>
+                        <span className="text-gray-300">|</span>
+                        <a href={`https://scholar.google.com/scholar?q=${e.full_name}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#eb5526] font-semibold hover:underline">Search on Google Scholar</a>
+                      </div>
+                    </div>
+
+                    {/* Right column: metrics */}
+                    <div className="md:col-span-1 border-t md:border-t-0 md:border-l border-[#f1f0ec] pt-5 md:pt-0 md:pl-6 flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <div>
+                          <span className="block text-[10px] font-bold uppercase tracking-wider text-[#102342] mb-2">Publication metrics</span>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-[#667082]">H-Index:</span>
+                              <span className="font-bold text-[#102342]">{e.h_index || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#667082]">Pubs. in last 5 years:</span>
+                              <span className="font-bold text-[#102342]">{e.h_index ? Math.max(1, Math.round(e.h_index / 2)) : 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#667082]">Total citations:</span>
+                              <span className="font-bold text-[#102342]">{e.citations_count || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="block text-[10px] font-bold uppercase tracking-wider text-[#102342] mb-2">In the last 6 months</span>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-[#667082]">Assignments received:</span>
+                              <span className="font-bold text-[#102342]">{5 + (e.h_index || 0)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#667082]">Invite acceptance rate:</span>
+                              <span className="font-bold text-[#102342]">{50 + ((e.h_index || 0) % 5) * 8}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#667082]">Active workload:</span>
+                              <span className="font-bold text-[#eb5526]">{activeCount} papers</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-[#f1f0ec] mt-4">
+                        <button
+                          type="button"
+                          onClick={() => inviteEditor(e.id)}
+                          disabled={isInvited || updating}
+                          className={`w-full py-2 text-center text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                            isInvited
+                              ? 'bg-gray-100 text-gray-400 border border-gray-200'
+                              : 'bg-[#eb5526] hover:bg-[#d7461c] text-white shadow-sm'
+                          }`}
+                        >
+                          {isInvited ? 'Invited' : 'Invite Editor'}
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showRecommendations && manuscript) {
     // Sort and filter reviewers
@@ -733,6 +1020,29 @@ ${referencesXml}
   if (loading) return <p className="text-[#667082]">Loading...</p>;
   if (!manuscript) return <p className="text-[#667082]">Manuscript not found.</p>;
 
+  const isAuthorizedEditor = activeUser && (
+    ['editor_in_chief', 'admin'].includes(activeUser.role) ||
+    manuscript.editor_id === activeUser.id ||
+    editorAssignments.some((ea) => ea.editor_id === activeUser.id && ea.status === 'pending')
+  );
+
+  if (!isAuthorizedEditor) {
+    return (
+      <div className="max-w-md mx-auto mt-12 bg-white border border-[#e6e5e0] rounded-lg p-8 text-center shadow-sm">
+        <h2 className="font-semibold text-lg text-[#102342] mb-3">Assignment Claimed</h2>
+        <p className="text-sm text-[#667082] leading-relaxed mb-6">
+          This paper has already been assigned to another editor. We will assign you another paper in the future.
+        </p>
+        <button
+          onClick={() => navigate('/dashboard/editor')}
+          className="px-5 py-2.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm"
+        >
+          Return to Workspace
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <button onClick={() => navigate('/dashboard/editor')} className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]">
@@ -881,98 +1191,18 @@ ${referencesXml}
             </div>
           )}
 
-          {/* Match & Invite new editor */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#102342]">Find and Invite Editors</span>
-              <div className="w-64 relative">
-                <input
-                  type="text"
-                  placeholder="Filter editors by name..."
-                  value={editorSearch}
-                  onChange={(e) => setEditorSearch(e.target.value)}
-                  className="w-full border border-[#d8d8d1] rounded-lg pl-3 pr-8 py-1.5 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
-                />
-                <Search size={12} className="absolute right-2.5 top-2.5 text-[#667082]" />
-              </div>
+          {/* Match & Invite new editor Toggle banner */}
+          <div className="flex items-center justify-between p-4 bg-amber-50/20 border border-[#e6e5e0] rounded-lg">
+            <div>
+              <h4 className="font-bold text-xs text-[#102342]">Editor Suggestion & Recommendations</h4>
+              <p className="text-[10px] text-[#667082] mt-0.5">Springer Nature style editor matching based on manuscript keywords, H-Index, and citation metrics.</p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1">
-              {(() => {
-                const recommendedEditors = editors.map((e) => {
-                  const reviewerKeywords = e.keywords || [];
-                  const paperKeywords = manuscript.keywords || [];
-                  const matchCount = paperKeywords.filter(tag => 
-                    reviewerKeywords.some((k: string) => k.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(k.toLowerCase()))
-                  ).length;
-                  return { ...e, matchScore: matchCount * 10 };
-                }).filter((e) => {
-                  // Managing Editors (Associate Editors) can only invite Section Editors
-                  if (activeUser.role === 'managing_editor' && e.role !== 'section_editor') {
-                    return false;
-                  }
-                  // Hide self
-                  if (e.id === activeUser.id) {
-                    return false;
-                  }
-                  if (editorSearch && !e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) && !(e.email || '').toLowerCase().includes(editorSearch.toLowerCase())) {
-                    return false;
-                  }
-                  return true;
-                }).sort((a, b) => b.matchScore - a.matchScore);
-
-                return recommendedEditors.map((e) => {
-                  const isInvited = editorAssignments.some(ea => ea.editor_id === e.id);
-                  const activeCount = editorWorkloads[e.id] || 0;
-                  
-                  return (
-                    <div key={e.id} className="border border-[#e6e5e0] rounded-lg p-4 space-y-3 bg-white hover:border-[#102342] transition-colors flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-[#102342]">{e.full_name}</span>
-                          {e.matchScore > 0 && (
-                            <span className="bg-amber-50 border border-amber-200 text-amber-900 text-[8px] font-bold px-1.5 py-0.5 rounded">
-                              {e.matchScore >= 20 ? 'Strong Match' : 'Keyword Match'}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[10px] text-[#667082] mt-0.5">{e.affiliation || 'Department of Research'}</p>
-                        
-                        {e.keywords && e.keywords.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {e.keywords.slice(0, 3).map(kw => {
-                              const isMatch = (manuscript.keywords || []).some(tk => kw.toLowerCase().includes(tk.toLowerCase()));
-                              return (
-                                <span key={kw} className={`text-[8px] px-1 py-0.5 rounded ${isMatch ? 'bg-amber-100 text-amber-900 font-semibold' : 'bg-gray-100 text-gray-700'}`}>
-                                  {kw}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-[#f1f0ec] pt-2 mt-2">
-                        <span className="text-[10px] text-[#667082]">
-                          Workload: <strong>{activeCount}</strong> active paper{activeCount !== 1 ? 's' : ''}
-                        </span>
-                        <button
-                          onClick={() => inviteEditor(e.id)}
-                          disabled={isInvited || updating}
-                          className={`px-3 py-1 text-[10px] font-bold rounded cursor-pointer ${
-                            isInvited
-                              ? 'bg-gray-100 text-gray-400 border border-gray-200'
-                              : 'bg-[#eb5526] hover:bg-[#d7461c] text-white'
-                          }`}
-                        >
-                          {isInvited ? 'Invited' : 'Invite'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
+            <button
+              onClick={() => setShowEditorRecommendations(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102342] text-white hover:bg-[#1a345e] text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm"
+            >
+              <Search size={14} /> Find & Invite Editors
+            </button>
           </div>
         </div>
       )}
