@@ -18,6 +18,10 @@ export interface Profile {
   bio: string;
   avatar_url: string;
   reviewer_domains: string[];
+  h_index?: number;
+  citations_count?: number;
+  publications?: string[];
+  keywords?: string[];
   is_active: boolean;
   email_verified: boolean;
   created_at: string;
