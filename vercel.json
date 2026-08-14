@@ -13,6 +13,8 @@
     }
   ],
   "routes": [
+    { "src": "/api/oai", "dest": "/api/oai.ts" },
+    { "src": "/api/send-email", "dest": "/api/send-email.ts" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
