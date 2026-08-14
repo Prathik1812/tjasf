@@ -28,20 +28,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Read SMTP settings from server environment variables
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const smtpPort = Number(process.env.SMTP_PORT) || 465;
   const smtpEmail = process.env.SMTP_EMAIL || 'editorial@tjasf.com';
   const smtpPassword = process.env.SMTP_PASSWORD;
+  const smtpUser = process.env.SMTP_USER || (smtpHost.includes('resend.com') ? 'resend' : smtpEmail);
 
   if (!smtpPassword) {
-    return res.status(500).json({ error: 'SMTP server password not configured in environment variables' });
+    return res.status(500).json({ error: 'SMTP server password/API key not configured in environment variables (SMTP_PASSWORD)' });
   }
 
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
-        user: smtpEmail,
+        user: smtpUser,
         pass: smtpPassword,
       },
     });
