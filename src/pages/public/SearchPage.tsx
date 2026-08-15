@@ -26,7 +26,6 @@ export default function SearchPage() {
 
   const fastFilters = [
     'Physical Sciences',
-    'Life Sciences',
     'Computational Science',
     'Environmental Systems',
     'Engineering',

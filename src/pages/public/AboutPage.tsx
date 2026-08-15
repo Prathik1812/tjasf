@@ -34,7 +34,7 @@ export default function AboutPage() {
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Aims &amp; Scope</h2>
         <p className="whitespace-pre-line">
-          {content.about_aims || 'Our mission is to advance scientific knowledge by publishing rigorous, original research that crosses disciplinary boundaries. We welcome work from the physical sciences, life sciences, computational science, environmental systems, engineering, and social sciences.'}
+          {content.about_aims || 'Our mission is to advance scientific knowledge by publishing rigorous, original research that crosses disciplinary boundaries. We welcome work from the physical sciences, computational science, environmental systems, engineering, and social sciences.'}
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Editorial Policy</h2>
         <p className="whitespace-pre-line">

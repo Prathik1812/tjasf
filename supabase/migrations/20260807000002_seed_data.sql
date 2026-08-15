@@ -1,7 +1,6 @@
 -- ============ SEED DOMAINS ============
 INSERT INTO domains (name, slug, description) VALUES
   ('Physical Sciences', 'physical-sciences', 'Research in physics, chemistry, and materials science'),
-  ('Life Sciences', 'life-sciences', 'Biology, genetics, ecology, and biomedical research'),
   ('Computational Science', 'computational-science', 'AI, machine learning, algorithms, and data science'),
   ('Environmental Systems', 'environmental-systems', 'Climate, sustainability, and earth systems'),
   ('Engineering', 'engineering', 'Mechanical, electrical, civil, and biomedical engineering'),
