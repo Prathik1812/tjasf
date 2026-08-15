@@ -9,7 +9,7 @@ ALTER TABLE manuscript_authors ADD COLUMN IF NOT EXISTS orcid text DEFAULT '';
 
 -- 2. Update About Page Indexing Text
 UPDATE homepage_content
-SET value = 'TJASF is committed to achieving broad indexing coverage. In the future, we are planning to include ourselves in major databases including Scopus, Web of Science, and DOAJ.'
+SET value = 'TJASF is committed to achieving broad indexing coverage. In the future, we are rigorously working to include ourselves in major databases.'
 WHERE key = 'about_indexing';
 
 -- 3. Update Plagiarism Policy (slug: plagiarism-policy)

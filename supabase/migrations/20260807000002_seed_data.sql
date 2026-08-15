@@ -67,7 +67,7 @@ INSERT INTO homepage_content (key, value) VALUES
 - Engineering Management and Innovation Policy'),
   ('about_editorial', 'All manuscripts undergo rigorous peer review by qualified experts in the field. We follow a double-blind review process to ensure fairness and objectivity. Our editorial board comprises distinguished researchers from institutions worldwide.'),
   ('about_open_access', 'TJASF is fully open access. All published articles are freely available to readers worldwide without subscription fees. Authors retain copyright of their work under a Creative Commons license.'),
-  ('about_indexing', 'TJASF is committed to achieving broad indexing coverage. We are working toward inclusion in major databases including Scopus, Web of Science, and DOAJ.'),
+  ('about_indexing', 'TJASF is committed to achieving broad indexing coverage. In the future, we are rigorously working to include ourselves in major databases.'),
   ('hero_title', 'Where bold ideas move science forward.'),
   ('hero_subtitle', 'Open access. Multidisciplinary research.'),
   ('hero_lede', 'TJASF is an international, peer-reviewed journal for research that crosses boundaries, challenges assumptions, and opens new scientific frontiers.')

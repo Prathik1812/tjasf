@@ -46,7 +46,7 @@ export default function AboutPage() {
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Indexing &amp; Impact</h2>
         <p className="whitespace-pre-line">
-          {content.about_indexing || 'TJASF is committed to achieving broad indexing coverage. In the future, we are planning to include ourselves in major databases including Scopus, Web of Science, and DOAJ.'}
+          {content.about_indexing || 'TJASF is committed to achieving broad indexing coverage. In the future, we are rigorously working to include ourselves in major databases.'}
         </p>
       </div>
     </div>
