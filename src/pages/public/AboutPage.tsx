@@ -51,7 +51,6 @@ export default function AboutPage() {
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Publisher Imprint</h2>
         <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
           <strong>Publisher:</strong> TJASF Editorial Office<br />
-          <strong>Address:</strong> Anurag University Campus, Venkatapur, Ghatkesar, Hyderabad, Telangana, India - 500088<br />
           <strong>Contact:</strong> editor@tjasf.com | editorial@tjasf.com
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Indexing &amp; Impact</h2>
