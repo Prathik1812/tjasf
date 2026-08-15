@@ -31,19 +31,19 @@ const EXPERIENCE_OPTIONS = [
 const ROLES = [
   {
     name: "Associate Editor",
-    desc: "Supports the Editor-in-Chief in desk screening, quality control, handling appeals, and overseeing special issues."
+    desc: "Handles assigned manuscripts throughout the editorial process, including initial evaluation, reviewer selection, assessment of peer-review reports, and recommendation of editorial decisions to the Editor-in-Chief. Ensures that manuscripts meet the journal's quality, ethical, and scientific standards."
   },
   {
     name: "Section Editor",
-    desc: "Handles manuscripts for a specific scientific domain, assigns double-blind reviewers, monitors timelines, and recommends decisions."
+    desc: "Manages manuscripts within a designated subject area. Performs preliminary scope and quality checks, assigns qualified peer reviewers, monitors review progress, and provides editorial recommendations to the Associate Editor or Editor-in-Chief."
   },
   {
     name: "Editorial Board Member",
-    desc: "Reviews submissions in their specialty, recommends decisions, and offers guidance on general journal policies."
+    desc: "Supports the journal by reviewing manuscripts within their area of expertise, recommending qualified reviewers, advising on editorial policies, promoting the journal internationally, and contributing to its academic development and visibility."
   },
   {
     name: "Peer Reviewer",
-    desc: "Evaluates submissions in their area of expertise, provides detailed double-blind review reports, and recommends decisions to the editors."
+    desc: "Conducts objective, confidential, and constructive double-blind peer reviews. Evaluates manuscripts for originality, scientific quality, methodology, significance, clarity, and ethical compliance, and submits recommendations to the handling editor within the specified review period."
   }
 ];
 
@@ -60,10 +60,10 @@ const CONTRIBUTION_OPTIONS = [
 
 const STEPS = [
   { num: 1, label: 'Personal Info' },
-  { num: 2, label: 'Academic IDs' },
-  { num: 3, label: 'Research Expertise' },
+  { num: 2, label: 'Research IDs' },
+  { num: 3, label: 'Research Profile' },
   { num: 4, label: 'Editorial Role' },
-  { num: 5, label: 'CV & Ethics' }
+  { num: 5, label: 'Ethics & CV' }
 ];
 
 export default function JoinUsPage() {
@@ -72,31 +72,41 @@ export default function JoinUsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Form State
-  // Step 1
+  // Form States
+  // Section 1: Contact Info
+  const [title, setTitle] = useState('');
   const [fullName, setFullName] = useState('');
+  const [highestQualification, setHighestQualification] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [department, setDepartment] = useState('');
+  const [designation, setDesignation] = useState('');
   const [email, setEmail] = useState('');
+  const [alternativeEmail, setAlternativeEmail] = useState('');
   const [country, setCountry] = useState('');
   const [phone, setPhone] = useState('');
 
-  // Step 2
-  const [designation, setDesignation] = useState('');
-  const [institution, setInstitution] = useState('');
-  const [department, setDepartment] = useState('');
+  // Section 2: Research IDs
   const [wosId, setWosId] = useState('');
-  const [scholarId, setScholarId] = useState('');
   const [scopusId, setScopusId] = useState('');
+  const [scholarId, setScholarId] = useState('');
   const [orcidId, setOrcidId] = useState('');
+  const [linkedinProfile, setLinkedinProfile] = useState('');
+  const [researchgateProfile, setResearchgateProfile] = useState('');
+  const [scopusHIndex, setScopusHIndex] = useState('');
+  const [googleScholarHIndex, setGoogleScholarHIndex] = useState('');
 
-  // Step 3
+  // Section 3: Research Profile
+  const [experienceYears, setExperienceYears] = useState('');
   const [primaryDomain, setPrimaryDomain] = useState('');
   const [otherPrimary, setOtherPrimary] = useState('');
-  const [secondaryDomain, setSecondaryDomain] = useState('');
-  const [otherSecondary, setOtherSecondary] = useState('');
-  const [keywords, setKeywords] = useState('');
-  const [experienceYears, setExperienceYears] = useState('');
+  const [keywords, setKeywords] = useState(''); // Areas of Research Expertise
+  const [researchInterests, setResearchInterests] = useState('');
+  const [totalPublications, setTotalPublications] = useState('');
+  const [recentPublications, setRecentPublications] = useState('');
 
-  // Step 4
+  // Section 4: Editorial Role
+  const [servedEditorialBoard, setServedEditorialBoard] = useState('');
+  const [editorialBoardDetails, setEditorialBoardDetails] = useState('');
   const [proposedRole, setProposedRole] = useState('');
   const [preferredDomain, setPreferredDomain] = useState('');
   const [otherPreferred, setOtherPreferred] = useState('');
@@ -104,7 +114,7 @@ export default function JoinUsPage() {
   const [contributions, setContributions] = useState<string[]>([]);
   const [otherContribution, setOtherContribution] = useState('');
 
-  // Step 5
+  // Section 5: Ethics & CV
   const [cvFileName, setCvFileName] = useState('');
   const [cvFileUrl, setCvFileUrl] = useState('');
   const [uploadingCv, setUploadingCv] = useState(false);
@@ -112,6 +122,8 @@ export default function JoinUsPage() {
   const [agreedConfidentiality, setAgreedConfidentiality] = useState<string>('');
   const [agreedEthics, setAgreedEthics] = useState<string>('');
   const [agreedRecusal, setAgreedRecusal] = useState<string>('');
+  const [agreedGrowth, setAgreedGrowth] = useState<string>('');
+  const [finalDeclaration, setFinalDeclaration] = useState(false);
 
   const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -155,18 +167,53 @@ export default function JoinUsPage() {
 
   const validateStep = () => {
     if (step === 1) {
-      return fullName.trim() !== '' && email.trim() !== '' && country.trim() !== '' && phone.trim() !== '';
+      return (
+        title.trim() !== '' &&
+        fullName.trim() !== '' &&
+        highestQualification.trim() !== '' &&
+        institution.trim() !== '' &&
+        department.trim() !== '' &&
+        designation.trim() !== '' &&
+        email.trim() !== '' &&
+        alternativeEmail.trim() !== '' &&
+        country.trim() !== '' &&
+        phone.trim() !== ''
+      );
     }
     if (step === 2) {
-      return designation.trim() !== '' && institution.trim() !== '' && department.trim() !== '' && orcidId.trim() !== '';
+      return (
+        wosId.trim() !== '' &&
+        scopusId.trim() !== '' &&
+        scholarId.trim() !== '' &&
+        orcidId.trim() !== '' &&
+        linkedinProfile.trim() !== '' &&
+        researchgateProfile.trim() !== '' &&
+        scopusHIndex.trim() !== '' &&
+        googleScholarHIndex.trim() !== ''
+      );
     }
     if (step === 3) {
       const primValid = primaryDomain === 'Other' ? otherPrimary.trim() !== '' : primaryDomain !== '';
-      return primValid && keywords.trim() !== '' && experienceYears !== '';
+      return (
+        experienceYears !== '' &&
+        primValid &&
+        keywords.trim() !== '' &&
+        researchInterests.trim() !== '' &&
+        totalPublications.trim() !== '' &&
+        recentPublications.trim() !== ''
+      );
     }
     if (step === 4) {
       const prefValid = preferredDomain === 'Other' ? otherPreferred.trim() !== '' : preferredDomain !== '';
-      return proposedRole !== '' && prefValid && motivation.trim() !== '' && (contributions.length > 0 || otherContribution.trim() !== '');
+      const servedValid = servedEditorialBoard === 'No' || (servedEditorialBoard === 'Yes' && editorialBoardDetails.trim() !== '');
+      return (
+        servedEditorialBoard !== '' &&
+        servedValid &&
+        proposedRole !== '' &&
+        prefValid &&
+        motivation.trim() !== '' &&
+        (contributions.length > 0 || otherContribution.trim() !== '')
+      );
     }
     if (step === 5) {
       return (
@@ -174,7 +221,9 @@ export default function JoinUsPage() {
         hasConflict !== '' &&
         agreedConfidentiality === 'Yes' &&
         agreedEthics === 'Yes' &&
-        agreedRecusal === 'Yes'
+        agreedRecusal === 'Yes' &&
+        agreedGrowth === 'Yes' &&
+        finalDeclaration === true
       );
     }
     return false;
@@ -190,15 +239,20 @@ export default function JoinUsPage() {
         return;
       }
 
-      const cleanPhone = phone.trim();
-      if (!cleanPhone.startsWith('+')) {
-        setError('Phone number must start with a "+" followed by your country code (e.g. +91 98765 43210).');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        setError('Please enter a valid official institutional email.');
+        return;
+      }
+      if (!emailRegex.test(alternativeEmail.trim())) {
+        setError('Please enter a valid alternative email.');
         return;
       }
 
+      const cleanPhone = phone.trim();
       const phoneDigits = cleanPhone.replace(/[^0-9]/g, '');
       if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-        setError('Please enter a valid phone number including country code (8 to 15 digits total).');
+        setError('Please enter a valid phone number (8 to 15 digits total).');
         return;
       }
     }
@@ -211,7 +265,6 @@ export default function JoinUsPage() {
     setError('');
 
     const finalPrimary = primaryDomain === 'Other' ? `Other: ${otherPrimary}` : primaryDomain;
-    const finalSecondary = secondaryDomain === 'Other' ? `Other: ${otherSecondary}` : secondaryDomain;
     const finalPreferred = preferredDomain === 'Other' ? `Other: ${otherPreferred}` : preferredDomain;
 
     let finalContributions = [...contributions];
@@ -221,21 +274,32 @@ export default function JoinUsPage() {
 
     try {
       const { error: insErr } = await supabase.from('recruitment_applications').insert({
+        title,
         full_name: fullName,
-        email,
-        country,
-        phone,
-        designation,
+        highest_qualification: highestQualification,
         institution,
         department,
+        designation,
+        email,
+        alternative_email: alternativeEmail,
+        country,
+        phone,
         web_of_science_id: wosId,
-        google_scholar_id: scholarId,
         scopus_id: scopusId,
+        google_scholar_id: scholarId,
         orcid_id: orcidId,
-        primary_domain: finalPrimary,
-        secondary_domain: finalSecondary,
-        research_keywords: keywords,
+        linkedin_profile: linkedinProfile,
+        researchgate_profile: researchgateProfile,
+        scopus_h_index: scopusHIndex,
+        google_scholar_h_index: googleScholarHIndex,
         experience_years: experienceYears,
+        primary_domain: finalPrimary,
+        research_keywords: keywords,
+        research_interests: researchInterests,
+        total_publications: totalPublications,
+        recent_publications: recentPublications,
+        served_editorial_board: servedEditorialBoard === 'Yes',
+        editorial_board_details: editorialBoardDetails,
         proposed_role: proposedRole,
         preferred_domain: finalPreferred,
         motivation_text: motivation,
@@ -245,6 +309,8 @@ export default function JoinUsPage() {
         agreed_confidentiality: agreedConfidentiality === 'Yes',
         agreed_ethics: agreedEthics === 'Yes',
         agreed_recusal: agreedRecusal === 'Yes',
+        agreed_growth: agreedGrowth === 'Yes',
+        final_declaration: finalDeclaration,
         status: 'pending'
       });
 
@@ -265,9 +331,9 @@ export default function JoinUsPage() {
         </div>
         <h1 className="font-['Playfair_Display'] font-medium text-4xl text-[#102342] mb-4">Application Submitted!</h1>
         <p className="text-[#667082] text-base leading-relaxed max-w-[550px] mx-auto mb-8">
-          Thank you for your interest in joining the Editorial Board of **The Journal of Advanced Scientific Frontiers (TJASF)**.
+          Thank you for applying to join the Editorial Board of **The Journal of Advanced Scientific Frontiers (TJASF)**.
           <br /><br />
-          Our editorial team will screen your academic CV and verify your research credentials. Shortlisted candidates will be contacted via their professional email regarding the next steps.
+          Our editorial team will evaluate your credentials, research record, and academic CV. Shortlisted candidates will be contacted via their official institutional email regarding the next steps.
         </p>
         <Link to="/" className="inline-flex px-6 py-3 bg-[#102342] text-white text-xs font-bold rounded-lg hover:bg-[#eb5526] transition-colors">
           Return to Home
@@ -283,7 +349,7 @@ export default function JoinUsPage() {
         Editorial Board Recruitment
       </h1>
       <p className="text-[#667082] text-sm leading-relaxed mb-10 max-w-[720px]">
-        The Journal of Advanced Scientific Frontiers (TJASF) is inviting qualified academics, researchers, and scientific leaders to join its Editorial Board. Help shape peer review criteria, oversee submission tracks, and guide scientific communication across emerging frontiers.
+        The Journal of Advanced Scientific Frontiers (TJASF) is inviting qualified academics, researchers, scientists, and industry leaders to join its Editorial Board. Please complete the form below.
       </p>
 
       {/* Stepper */}
@@ -309,106 +375,104 @@ export default function JoinUsPage() {
         {/* Step 1: Personal Info */}
         {step === 1 && (
           <div className="space-y-5">
-            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 1: Contact Information</h2>
+            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 1: Personal & Contact Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Full Name *</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="e.g. Dr. Jane Smith" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Title *</label>
+                <select value={title} onChange={e => setTitle(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white">
+                  <option value="">-- Select Title --</option>
+                  <option value="Dr.">Dr.</option>
+                  <option value="Prof.">Prof.</option>
+                  <option value="Mr.">Mr.</option>
+                  <option value="Ms.">Ms.</option>
+                </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Professional Email *</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. j.smith@university.edu" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Full Name *</label>
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="e.g. Jane Smith" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Highest Qualification *</label>
+                <input type="text" value={highestQualification} onChange={e => setHighestQualification(e.target.value)} placeholder="e.g. Ph.D. in Computer Science" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Designation *</label>
+                <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="e.g. Associate Professor" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Institution / University *</label>
+                <input type="text" value={institution} onChange={e => setInstitution(e.target.value)} placeholder="e.g. Anurag University" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Department *</label>
+                <input type="text" value={department} onChange={e => setDepartment(e.target.value)} placeholder="e.g. Computer Science and Engineering" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Official Institutional Email *</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. j.smith@university.edu" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Alternative Email *</label>
+                <input type="email" value={alternativeEmail} onChange={e => setAlternativeEmail(e.target.value)} placeholder="e.g. janesmith@gmail.com" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Country *</label>
-                <input type="text" value={country} onChange={e => setCountry(e.target.value)} placeholder="e.g. India" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+                <input type="text" value={country} onChange={e => setCountry(e.target.value)} placeholder="e.g. India" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Phone / WhatsApp *</label>
-                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 2: Academic Identifiers */}
+        {/* Step 2: Research IDs */}
         {step === 2 && (
           <div className="space-y-5">
-            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 2: Professional Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-1">
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Current Designation *</label>
-                <input type="text" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="e.g. Associate Professor" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 2: Research Identifiers</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">ORCID ID *</label>
+                <input type="text" value={orcidId} onChange={e => setOrcidId(e.target.value)} placeholder="0000-XXXX-XXXX-XXXX" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
-              <div className="md:col-span-1">
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Institution / University *</label>
-                <input type="text" value={institution} onChange={e => setInstitution(e.target.value)} placeholder="e.g. Anurag University" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Web of Science ResearcherID *</label>
+                <input type="text" value={wosId} onChange={e => setWosId(e.target.value)} placeholder="e.g. A-XXXX-YYYY" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
-              <div className="md:col-span-1">
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Department *</label>
-                <input type="text" value={department} onChange={e => setDepartment(e.target.value)} placeholder="e.g. Computer Science" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Scopus Author ID *</label>
+                <input type="text" value={scopusId} onChange={e => setScopusId(e.target.value)} placeholder="e.g. 57204983400" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
-            </div>
-
-            <div className="border-t border-[#f1f0ec] pt-4 space-y-4">
-              <span className="block text-xs font-bold text-[#102342] uppercase tracking-wider mb-2">Research Registry Identifiers</span>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-[#667082] uppercase tracking-wide mb-1">ORCID ID (Required) *</label>
-                  <input type="text" value={orcidId} onChange={e => setOrcidId(e.target.value)} placeholder="0000-XXXX-XXXX-XXXX" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-[#667082] uppercase tracking-wide mb-1">Web of Science ResearcherID (Optional)</label>
-                  <input type="text" value={wosId} onChange={e => setWosId(e.target.value)} placeholder="A-XXXX-YYYY" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-[#667082] uppercase tracking-wide mb-1">Google Scholar ID (Optional)</label>
-                  <input type="text" value={scholarId} onChange={e => setScholarId(e.target.value)} placeholder="e.g. h1YpE80AAAAJ" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-[#667082] uppercase tracking-wide mb-1">Scopus Author ID (Optional)</label>
-                  <input type="text" value={scopusId} onChange={e => setScopusId(e.target.value)} placeholder="e.g. 57204983400" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Google Scholar ID *</label>
+                <input type="text" value={scholarId} onChange={e => setScholarId(e.target.value)} placeholder="e.g. h1YpE80AAAAJ" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">LinkedIn Profile Link *</label>
+                <input type="text" value={linkedinProfile} onChange={e => setLinkedinProfile(e.target.value)} placeholder="https://linkedin.com/in/username" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">ResearchGate Profile Link *</label>
+                <input type="text" value={researchgateProfile} onChange={e => setResearchgateProfile(e.target.value)} placeholder="https://researchgate.net/profile/username" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Scopus H-Index *</label>
+                <input type="text" value={scopusHIndex} onChange={e => setScopusHIndex(e.target.value)} placeholder="e.g. 15" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Google Scholar H-index, i10-Index *</label>
+                <input type="text" value={googleScholarHIndex} onChange={e => setGoogleScholarHIndex(e.target.value)} placeholder="e.g. H-index: 18, i10-index: 25" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 3: Expertise */}
+        {/* Step 3: Research Profile */}
         {step === 3 && (
           <div className="space-y-5">
-            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 3: Academic Fields &amp; Expertise</h2>
+            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 3: Research Profile</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Primary Domain *</label>
-                <select value={primaryDomain} onChange={e => setPrimaryDomain(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] bg-white">
-                  <option value="">-- Select Domain --</option>
-                  {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
-                  <option value="Other">Other</option>
-                </select>
-                {primaryDomain === 'Other' && (
-                  <input type="text" value={otherPrimary} onChange={e => setOtherPrimary(e.target.value)} placeholder="Please specify your primary domain" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] mt-2" />
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Secondary Domain (Optional)</label>
-                <select value={secondaryDomain} onChange={e => setSecondaryDomain(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] bg-white">
-                  <option value="">-- Select Domain --</option>
-                  {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
-                  <option value="Other">Other</option>
-                </select>
-                {secondaryDomain === 'Other' && (
-                  <input type="text" value={otherSecondary} onChange={e => setOtherSecondary(e.target.value)} placeholder="Please specify your secondary domain" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] mt-2" />
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Research Keywords *</label>
-              <input type="text" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="e.g. Deep Learning, Sensor Networks, Power Electronics (comma separated)" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526]" />
-            </div>
-
             <div>
               <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-2.5">Years of Research Experience *</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -420,17 +484,65 @@ export default function JoinUsPage() {
                 ))}
               </div>
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Primary Research Domain *</label>
+              <select value={primaryDomain} onChange={e => setPrimaryDomain(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white">
+                <option value="">-- Select Domain --</option>
+                {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
+                <option value="Other">Other</option>
+              </select>
+              {primaryDomain === 'Other' && (
+                <input type="text" value={otherPrimary} onChange={e => setOtherPrimary(e.target.value)} placeholder="Please specify your primary domain" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526] mt-2" />
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Areas of Research Expertise *</label>
+              <input type="text" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="e.g. Deep Learning, Sensor Networks, Power Electronics (comma separated)" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Current Research Interests *</label>
+              <textarea rows={3} value={researchInterests} onChange={e => setResearchInterests(e.target.value)} placeholder="Describe your current research interest areas..." className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Total Journal Publications *</label>
+              <input type="text" value={totalPublications} onChange={e => setTotalPublications(e.target.value)} placeholder="e.g. 24" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">List your five most recent peer-reviewed journal publications *</label>
+              <textarea rows={5} value={recentPublications} onChange={e => setRecentPublications(e.target.value)} placeholder="1. Title, Journal, Year&#10;2. Title, Journal, Year..." className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none font-mono" />
+            </div>
           </div>
         )}
 
-        {/* Step 4: Proposed Role */}
+        {/* Step 4: Editorial Role */}
         {step === 4 && (
           <div className="space-y-6">
-            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 4: Proposed Role &amp; Contributions</h2>
+            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 4: Proposed Editorial Role</h2>
             
+            {/* Served editorial board options */}
+            <div>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wider mb-2">Have you served on an Editorial Board? *</label>
+              <div className="flex gap-4 mb-2">
+                {['No', 'Yes'].map(opt => (
+                  <label key={opt} className="flex items-center gap-2 text-sm text-[#27334a] cursor-pointer">
+                    <input type="radio" name="servedBoard" checked={servedEditorialBoard === opt} onChange={() => setServedEditorialBoard(opt)} />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+              {servedEditorialBoard === 'Yes' && (
+                <textarea rows={3} value={editorialBoardDetails} onChange={e => setEditorialBoardDetails(e.target.value)} placeholder="Please provide the journal name(s), your role, publisher, and duration of service." className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] resize-none mt-1" />
+              )}
+            </div>
+
             {/* Roles selector with descriptions */}
             <div>
-              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wider mb-3">Proposed Editorial Role *</label>
+              <label className="block text-xs font-bold text-[#102342] uppercase tracking-wider mb-3">Proposed Role *</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {ROLES.map(role => (
                   <label key={role.name} className={`flex items-start gap-3 border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -448,7 +560,7 @@ export default function JoinUsPage() {
 
             <div>
               <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">Preferred Editorial Domain / Section *</label>
-              <select value={preferredDomain} onChange={e => setPreferredDomain(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] bg-white">
+              <select value={preferredDomain} onChange={e => setPreferredDomain(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white">
                 <option value="">-- Select Section --</option>
                 {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
                 <option value="Other">Other</option>
@@ -460,7 +572,7 @@ export default function JoinUsPage() {
 
             <div>
               <label className="block text-xs font-bold text-[#102342] uppercase tracking-wide mb-1.5">What interests you about joining the TJASF Editorial Board? *</label>
-              <textarea rows={4} value={motivation} onChange={e => setMotivation(e.target.value)} placeholder="Share your motivation and key scientific alignment..." className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] resize-none" />
+              <textarea rows={3} value={motivation} onChange={e => setMotivation(e.target.value)} placeholder="Share your motivation..." className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#eb5526] resize-none" />
             </div>
 
             <div>
@@ -475,16 +587,16 @@ export default function JoinUsPage() {
               </div>
               <div className="mt-3">
                 <label className="block text-[10px] font-bold text-[#667082] uppercase tracking-wide mb-1">Other contribution:</label>
-                <input type="text" value={otherContribution} onChange={e => setOtherContribution(e.target.value)} placeholder="e.g. Hosting conferences, indexing contacts" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2 text-xs outline-none focus:border-[#eb5526]" />
+                <input type="text" value={otherContribution} onChange={e => setOtherContribution(e.target.value)} placeholder="e.g. hosting special issues, promoting to networks" className="w-full border border-[#d8d8d1] rounded-lg px-3.5 py-2.5 text-xs outline-none focus:border-[#eb5526]" />
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 5: CV & Ethics */}
+        {/* Step 5: Ethics & CV */}
         {step === 5 && (
           <div className="space-y-6">
-            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 5: Academic Profile &amp; Ethics</h2>
+            <h2 className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl pb-2 border-b border-[#f1f0ec]">Section 5: Ethics &amp; Conflict of Interest</h2>
             
             {/* CV PDF upload */}
             <div>
@@ -519,7 +631,7 @@ export default function JoinUsPage() {
             {/* Ethics & Conflict declarations */}
             <div className="border-t border-[#f1f0ec] pt-5 space-y-5">
               <div>
-                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wider mb-2">Do you have any conflict of interest that may affect your editorial responsibilities? *</label>
+                <label className="block text-xs font-bold text-[#102342] uppercase tracking-wider mb-2">Do you currently have any professional, financial, personal, institutional, or other conflict of interest that may affect your ability to perform editorial responsibilities impartially? *</label>
                 <div className="flex gap-4">
                   {['No', 'Yes'].map(opt => (
                     <label key={opt} className="flex items-center gap-2 text-sm text-[#27334a] cursor-pointer">
@@ -554,6 +666,22 @@ export default function JoinUsPage() {
                   <input type="checkbox" id="agreed-rec" checked={agreedRecusal === 'Yes'} onChange={e => setAgreedRecusal(e.target.checked ? 'Yes' : '')} className="mt-1" />
                   <label htmlFor="agreed-rec" className="text-xs text-[#667082] leading-relaxed cursor-pointer select-none">
                     Are you willing to recuse yourself from handling manuscripts where a conflict of interest or other circumstance could compromise impartial editorial judgment? *
+                  </label>
+                </div>
+
+                {/* Agreement 4 */}
+                <div className="flex items-start gap-3 border border-[#e6e5e0] rounded-lg p-4 bg-[#fbfaf8]">
+                  <input type="checkbox" id="agreed-growth" checked={agreedGrowth === 'Yes'} onChange={e => setAgreedGrowth(e.target.checked ? 'Yes' : '')} className="mt-1" />
+                  <label htmlFor="agreed-growth" className="text-xs text-[#667082] leading-relaxed cursor-pointer select-none">
+                    Are you willing to actively contribute to the growth and international visibility of TJASF by promoting the journal, recommending qualified reviewers, and supporting high publication standards? *
+                  </label>
+                </div>
+
+                {/* Final Declaration */}
+                <div className="flex items-start gap-3 border border-amber-200 rounded-lg p-4 bg-amber-50/30 mt-6">
+                  <input type="checkbox" id="final-decl" checked={finalDeclaration} onChange={e => setFinalDeclaration(e.target.checked)} className="mt-1" />
+                  <label htmlFor="final-decl" className="text-xs text-[#102342] leading-relaxed cursor-pointer select-none font-medium">
+                    I certify that the information provided in this application is true and accurate to the best of my knowledge. I agree to abide by the editorial policies, publication ethics, confidentiality requirements, and conflict-of-interest policies of The Journal of Advanced Scientific Frontiers (TJASF) if appointed to the Editorial Team. *
                   </label>
                 </div>
               </div>
