@@ -33,19 +33,29 @@ export default function AboutPage() {
           {content.about_intro || 'TJASF is an international, open-access, peer-reviewed journal dedicated to publishing high-quality research across all scientific disciplines.'}
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Aims &amp; Scope</h2>
-        <p className="whitespace-pre-line">
-          {content.about_aims || 'Our mission is to advance scientific knowledge by publishing rigorous, original research that crosses disciplinary boundaries. We welcome work from the physical sciences, computational science, environmental systems, engineering, and social sciences.'}
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
+          {content.about_aims || 'Our mission is to advance scientific knowledge by publishing rigorous, original research that crosses disciplinary boundaries. We welcome work across emerging scientific and technological fields, including: Artificial Intelligence, Computer Science, Data Science, Cybersecurity, Electronics & Communication Engineering, Electrical Engineering, Mechanical Engineering, Civil Engineering, Robotics, Internet of Things, Physics, Mathematics, Environmental Science, and Materials Science.'}
         </p>
-        <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Editorial Policy</h2>
-        <p className="whitespace-pre-line">
-          {content.about_editorial || 'All manuscripts undergo rigorous peer review by qualified experts in the field. We follow a double-blind review process to ensure fairness and objectivity. Our editorial board comprises distinguished researchers from institutions worldwide.'}
+        <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Editorial &amp; Peer Review Policy</h2>
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
+          {content.about_editorial || 'All manuscripts undergo a rigorous double-blind peer review process to ensure academic integrity and objectivity. The initial screening by editorial board members takes 7–10 days. Shortlisted manuscripts are evaluated by two independent subject matter expert reviewers for double-blind peer review (approx. 4–6 weeks). Final decisions are made by the handling editor or Editor-in-Chief based on reviewer feedback.'}
+        </p>
+        <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Publication Frequency</h2>
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
+          TJASF is published tri-annually with three issues per year (every 4 months), ensuring regular, consistent, and timely dissemination of cutting-edge scientific research.
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Open Access</h2>
-        <p className="whitespace-pre-line">
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
           {content.about_open_access || 'TJASF is fully open access. All published articles are freely available to readers worldwide without subscription fees. Authors retain copyright of their work under a Creative Commons license.'}
         </p>
+        <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Publisher Imprint</h2>
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
+          <strong>Publisher:</strong> TJASF Editorial Office<br />
+          <strong>Address:</strong> Anurag University Campus, Venkatapur, Ghatkesar, Hyderabad, Telangana, India - 500088<br />
+          <strong>Contact:</strong> editor@tjasf.com | editorial@tjasf.com
+        </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Indexing &amp; Impact</h2>
-        <p className="whitespace-pre-line">
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
           {content.about_indexing || 'TJASF is committed to achieving broad indexing coverage. In the future, we are rigorously working to include ourselves in major databases.'}
         </p>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail } from 'lucide-react';
+import { Mail, MapPin } from 'lucide-react';
 import { sendEmail } from '@/lib/email';
 
 export default function ContactPage() {
@@ -66,6 +66,22 @@ export default function ContactPage() {
               <h3 className="font-semibold text-[#102342] text-sm">Email</h3>
               <p className="text-[#667082] text-sm">editor@tjasf.com</p>
               <p className="text-[#667082] text-sm">editorial@tjasf.com</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 border-t border-[#f1f0ec] pt-6">
+            <div className="w-10 h-10 bg-[#f1f0ec] rounded-lg flex items-center justify-center text-[#eb5526] flex-shrink-0">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-[#102342] text-sm">Editorial Office Address</h3>
+              <p className="text-[#667082] text-sm leading-relaxed">
+                TJASF Editorial Board Office,<br />
+                Anurag University Campus,<br />
+                Venkatapur, Ghatkesar,<br />
+                Hyderabad, Telangana, India<br />
+                PIN - 500088
+              </p>
             </div>
           </div>
         </div>
