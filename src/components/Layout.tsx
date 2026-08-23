@@ -59,7 +59,7 @@ export default function Layout() {
                 Dashboard
               </NavLink>
             )}
-            <a href="/assets/templates/TJASF_Paper_Template.docx" download className="text-[#27334a] border-l border-[#d8d8d1] pl-7 flex items-center gap-2 hover:text-[#eb5526] transition-colors">
+            <a href="/assets/templates/TJASF_PaperTemplate.docx" download className="text-[#27334a] border-l border-[#d8d8d1] pl-7 flex items-center gap-2 hover:text-[#eb5526] transition-colors">
               <Download size={15} /> Download Template
             </a>
             <Link to="/dashboard/submit" className="text-[#eb5526] border-l border-[#d8d8d1] pl-7 flex items-center gap-2 hover:text-[#d7461c] transition-colors">
@@ -77,7 +77,7 @@ export default function Layout() {
             {profile && (
               <NavLink to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-[#eb5526]">Dashboard</NavLink>
             )}
-            <a href="/assets/templates/TJASF_Paper_Template.docx" download className="text-[#27334a] flex items-center gap-2 hover:text-[#eb5526] transition-colors">
+            <a href="/assets/templates/TJASF_PaperTemplate.docx" download className="text-[#27334a] flex items-center gap-2 hover:text-[#eb5526] transition-colors">
               <Download size={15} /> Download Template
             </a>
             <Link to="/dashboard/submit" onClick={() => setMenuOpen(false)} className="text-[#eb5526]">Submit your paper</Link>

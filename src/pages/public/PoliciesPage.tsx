@@ -280,7 +280,7 @@ export default function PoliciesPage() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#102342] mb-2">Author Template</h4>
               <p className="text-xs text-[#667082] mb-4">Please download and use our official Word template to format your manuscript before submission.</p>
               <a
-                href="/assets/templates/TJASF_Paper_Template.docx"
+                href="/assets/templates/TJASF_PaperTemplate.docx"
                 download
                 className="inline-flex w-full justify-center items-center gap-1.5 px-4 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c] transition-colors text-center font-semibold"
               >

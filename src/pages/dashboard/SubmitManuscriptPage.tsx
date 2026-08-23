@@ -635,7 +635,7 @@ export default function SubmitManuscriptPage() {
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-semibold text-[#102342]">Manuscript File</label>
                 <a
-                  href="/assets/templates/TJASF_Paper_Template.docx"
+                  href="/assets/templates/TJASF_PaperTemplate.docx"
                   download
                   className="text-xs font-bold text-[#eb5526] hover:underline"
                 >

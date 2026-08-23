@@ -240,7 +240,7 @@ export default function HomePage() {
                 <Link to="/dashboard/submit" className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] hover:underline">
                   Submit a manuscript <ArrowRight size={15} />
                 </Link>
-                <a href="/assets/templates/TJASF_Paper_Template.docx" download className="inline-flex items-center gap-2 text-xs font-bold text-[#102342] hover:text-[#eb5526] transition-colors">
+                <a href="/assets/templates/TJASF_PaperTemplate.docx" download className="inline-flex items-center gap-2 text-xs font-bold text-[#102342] hover:text-[#eb5526] transition-colors">
                   <Download size={14} /> Download Word Template (.docx)
                 </a>
               </div>
