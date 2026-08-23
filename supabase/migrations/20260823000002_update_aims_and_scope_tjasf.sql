@@ -1,10 +1,10 @@
 -- ============ UPDATE HOMEPAGE CONTENT FOR TJASF AIMS & SCOPE ============
--- Update Intro
+-- Update Intro (without non-profit, set to tri-annually published)
 UPDATE homepage_content
-SET value = 'The Journal of Advanced Scientific Frontiers (TJASF) is a non-profit, quarterly published, open-access journal. TJASF operates an online submission and peer review system, allowing authors to submit articles online and track their progress via its web interface. TJASF accepts the DOAJ''s definition of open access. In addition, TJASF''s publication ethics and publication malpractice statement is mainly based on the Code of Conduct and Best Practice Guidelines for Journal Editors (Committee on Publication Ethics (COPE), 2011). The TJASF journal aims for a publication speed of 90 days from submission to final publication. It uses the LOCKSS archival system.'
+SET value = 'The Journal of Advanced Scientific Frontiers (TJASF) is a tri-annually published, open-access journal. TJASF operates an online submission and peer review system, allowing authors to submit articles online and track their progress via its web interface. TJASF accepts the DOAJ''s definition of open access. In addition, TJASF''s publication ethics and publication malpractice statement is mainly based on the Code of Conduct and Best Practice Guidelines for Journal Editors (Committee on Publication Ethics (COPE), 2011). The TJASF journal aims for a publication speed of 90 days from submission to final publication. It uses the LOCKSS archival system.'
 WHERE key = 'about_intro';
 
--- Update Aims & Scope
+-- Update Aims & Scope (TJASF custom multidisciplinary aims)
 UPDATE homepage_content
 SET value = 'The Journal of Advanced Scientific Frontiers (TJASF) is an international, peer-reviewed journal dedicated to publishing high-quality original research articles, review papers, short communications, and case studies that advance the theory, methodologies, and practical applications of modern science, engineering, and technology. The journal serves as a multidisciplinary platform for researchers, academics, industry professionals, and practitioners to disseminate innovative findings and emerging developments across scientific frontiers.
 
