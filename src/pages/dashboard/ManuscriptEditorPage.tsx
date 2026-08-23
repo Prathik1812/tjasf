@@ -384,6 +384,13 @@ ${referencesXml}
         if (e.id === activeUser.id) {
           return false;
         }
+        
+        // EIC/Admin can invite Section Editors, Associate Editors, and Editorial Board Members
+        // Section Editors can ONLY invite Editorial Board Members
+        if (activeUser.role === 'section_editor' && e.role !== 'editorial_board_member') {
+          return false;
+        }
+
         // Apply filters
         if (editorSearch && !e.full_name.toLowerCase().includes(editorSearch.toLowerCase()) && !(e.email || '').toLowerCase().includes(editorSearch.toLowerCase())) {
           return false;
@@ -1136,23 +1143,33 @@ ${referencesXml}
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
-        <h2 className="font-semibold text-[#102342] mb-4">Update Status</h2>
-        <div className="flex flex-wrap gap-2">
-          {(['submitted', 'technical_screening', 'desk_review', 'under_review', 'revision_requested', 'accepted', 'rejected', 'published'] as ManuscriptStatus[]).map((s) => (
-            <button key={s} onClick={() => updateStatus(s)} disabled={updating || manuscript.status === s} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${manuscript.status === s ? 'bg-[#eb5526] text-white' : 'bg-[#f1f0ec] text-[#667082] hover:bg-[#eeece7]'} disabled:opacity-50`}>
-              {s.replace(/_/g, ' ')}
-            </button>
-          ))}
+      {activeUser?.role !== 'editorial_board_member' && (
+        <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
+          <h2 className="font-semibold text-[#102342] mb-4">Update Status</h2>
+          <div className="flex flex-wrap gap-2">
+            {(
+              activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role)
+                ? ['submitted', 'technical_screening', 'desk_review', 'under_review', 'revision_requested', 'accepted', 'rejected', 'published']
+                : ['submitted', 'technical_screening', 'desk_review', 'under_review', 'revision_requested']
+            ).map((s) => (
+              <button key={s} onClick={() => updateStatus(s as any)} disabled={updating || manuscript.status === s} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${manuscript.status === s ? 'bg-[#eb5526] text-white' : 'bg-[#f1f0ec] text-[#667082] hover:bg-[#eeece7]'} disabled:opacity-50`}>
+                {s.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Assign Editor - Only for Editor-in-Chief, Managing Editor, and Admin */}
-      {activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role) && (
+      {/* Assign Editor - Only for Editor-in-Chief, Admin, and Section Editors */}
+      {activeUser && ['editor_in_chief', 'admin', 'section_editor'].includes(activeUser.role) && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6 space-y-6">
           <div>
             <h2 className="font-semibold text-[#102342] text-base mb-1">Editorial Assignment Invitations</h2>
-            <p className="text-xs text-[#667082]">Invite Section Editors or Associate Editors to manage the review process. Invited editors can accept or decline assignments.</p>
+            <p className="text-xs text-[#667082]">
+              {activeUser.role === 'section_editor' 
+                ? 'Invite Editorial Board Members to coordinate the review process.' 
+                : 'Invite Section Editors or Associate Editors to manage the review process.'}
+            </p>
           </div>
 
           {/* Current Invitations List */}
