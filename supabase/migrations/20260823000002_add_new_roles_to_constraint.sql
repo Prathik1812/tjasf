@@ -4,4 +4,4 @@
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
-CHECK (role IN ('author','reviewer','section_editor','managing_editor','editor_in_chief','admin','associate_editor','editorial_board_member'));
+CHECK (role IN ('author','reviewer','section_editor','editor_in_chief','admin','associate_editor','editorial_board_member'));
