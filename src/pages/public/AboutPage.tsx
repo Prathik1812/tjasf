@@ -29,12 +29,18 @@ export default function AboutPage() {
         {content.about_title || 'The Journal of Advanced Scientific Frontiers'}
       </h1>
       <div className="prose prose-lg max-w-none text-[#27334a] leading-[1.7] space-y-6">
-        <p className="text-xl text-[#667082] whitespace-pre-line">
-          {content.about_intro || 'TJASF is an international, open-access, peer-reviewed journal dedicated to publishing high-quality research across all scientific disciplines.'}
+        <p className="text-xl text-[#667082] whitespace-pre-line text-justify">
+          {content.about_intro || "The Journal of Advanced Scientific Frontiers (TJASF) is a non-profit, quarterly published, open-access journal. TJASF operates an online submission and peer review system, allowing authors to submit articles online and track their progress via its web interface. TJASF accepts the DOAJ's definition of open access. In addition, TJASF's publication ethics and publication malpractice statement is mainly based on the Code of Conduct and Best Practice Guidelines for Journal Editors (Committee on Publication Ethics (COPE), 2011). The TJASF journal aims for a publication speed of 90 days from submission to final publication. It uses the LOCKSS archival system."}
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Aims &amp; Scope</h2>
-        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
-          {content.about_aims || 'Our mission is to advance scientific knowledge by publishing rigorous, original research that crosses disciplinary boundaries. We welcome work across emerging scientific and technological fields, including: Artificial Intelligence, Computer Science, Data Science, Cybersecurity, Electronics & Communication Engineering, Electrical Engineering, Mechanical Engineering, Civil Engineering, Robotics, Internet of Things, Physics, Mathematics, Environmental Science, and Materials Science.'}
+        <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed text-justify">
+          {content.about_aims || `The Journal of Advanced Scientific Frontiers (TJASF) is an international, peer-reviewed journal dedicated to publishing high-quality original research articles, review papers, short communications, and case studies that advance the theory, methodologies, and practical applications of modern science, engineering, and technology. The journal serves as a multidisciplinary platform for researchers, academics, industry professionals, and practitioners to disseminate innovative findings and emerging developments across scientific frontiers.
+
+The journal welcomes contributions spanning a broad range of topics, including physical sciences, computational sciences, environmental systems, engineering disciplines, artificial intelligence, data science, cybersecurity, robotics, materials science, mathematics, renewable energy, and smart technologies. We encourage submissions that bridge traditional boundaries and offer new perspectives on scientific challenges.
+
+TJASF particularly encourages research that demonstrates a transformative impact across diverse application domains. These include engineering and technology, healthcare and medical diagnostics, renewable energy and smart grids, transportation and autonomous mobility, smart cities, agriculture, environmental sustainability, education, finance, manufacturing, industrial automation, and public services.
+
+By fostering the exchange of novel ideas, advanced methodologies, and real-world implementations, TJASF aims to promote the responsible development and deployment of scientific and technological innovations that contribute to scientific advancement, technological innovation, economic growth, and societal well-being.`}
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Editorial &amp; Peer Review Policy</h2>
         <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
@@ -42,7 +48,7 @@ export default function AboutPage() {
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Publication Frequency</h2>
         <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
-          TJASF is published tri-annually with three issues per year (every 4 months), ensuring regular, consistent, and timely dissemination of cutting-edge scientific research.
+          TJASF is published quarterly (four issues per year), ensuring regular, consistent, and timely dissemination of cutting-edge scientific research.
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Open Access</h2>
         <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed">
