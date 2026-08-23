@@ -196,7 +196,7 @@ export default function EditorWorkspacePage() {
 
       <div className="flex gap-2 flex-wrap">
         {['all', 'submitted', 'technical_screening', 'desk_review', 'under_review', 'revision_requested', 'accepted', 'rejected', 'published'].map((s) => (
-          <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${filter === s ? 'bg-[#eb5526] text-white' : 'bg-white border border-[#e6e5e0] text-[#667082] hover:bg-[#f1f0ec]'}`}>
+          <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors capitalize ${filter === s ? 'bg-[#eb5526] text-white' : 'bg-white border border-[#e6e5e0] text-[#667082] hover:bg-[#f1f0ec]'}`}>
             {s === 'all' ? 'All' : s.replace(/_/g, ' ')}
           </button>
         ))}

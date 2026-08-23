@@ -1152,7 +1152,7 @@ ${referencesXml}
                 ? ['submitted', 'technical_screening', 'desk_review', 'under_review', 'revision_requested', 'accepted', 'rejected', 'published']
                 : ['submitted', 'technical_screening', 'desk_review', 'under_review', 'revision_requested']
             ).map((s) => (
-              <button key={s} onClick={() => updateStatus(s as any)} disabled={updating || manuscript.status === s} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${manuscript.status === s ? 'bg-[#eb5526] text-white' : 'bg-[#f1f0ec] text-[#667082] hover:bg-[#eeece7]'} disabled:opacity-50`}>
+              <button key={s} onClick={() => updateStatus(s as any)} disabled={updating || manuscript.status === s} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors capitalize ${manuscript.status === s ? 'bg-[#eb5526] text-white' : 'bg-[#f1f0ec] text-[#667082] hover:bg-[#eeece7]'} disabled:opacity-50`}>
                 {s.replace(/_/g, ' ')}
               </button>
             ))}
@@ -1237,7 +1237,7 @@ ${referencesXml}
                     </p>
                     <div className="flex gap-3 text-xs text-[#667082] mt-0.5">
                       <StatusBadge status={r.status} />
-                      {r.decision && <span className="font-semibold text-[#102342]">Decision: {r.decision.replace(/_/g, ' ')}</span>}
+                      {r.decision && <span className="font-semibold text-[#102342] capitalize">Decision: {r.decision.replace(/_/g, ' ')}</span>}
                     </div>
                     {r.status === 'submitted' && (
                       <div className="mt-3 bg-[#fbfaf8] border border-[#e6e5e0] rounded-lg p-3.5 space-y-2 text-xs text-[#27334a] max-w-[700px]">
