@@ -3,9 +3,7 @@ INSERT INTO domains (name, slug, description) VALUES
   ('Physical Sciences', 'physical-sciences', 'Research in physics, chemistry, and materials science'),
   ('Computational Science', 'computational-science', 'AI, machine learning, algorithms, and data science'),
   ('Environmental Systems', 'environmental-systems', 'Climate, sustainability, and earth systems'),
-  ('Engineering', 'engineering', 'Mechanical, electrical, civil, and biomedical engineering'),
-  ('Social Sciences', 'social-sciences', 'Psychology, sociology, economics, and policy research'),
-  ('Management', 'management', 'Business administration, operations, finance, and engineering management')
+  ('Engineering', 'engineering', 'Mechanical, electrical, civil, and biomedical engineering')
 ON CONFLICT (slug) DO NOTHING;
 
 -- ============ SEED EDITORIAL BOARD ============
@@ -63,8 +61,7 @@ INSERT INTO homepage_content (key, value) VALUES
 - Pharmaceutical and Cosmetic Science
 - Renewable Energy and Smart Grid Systems
 - Internet of Things (IoT) and Embedded Systems
-- Data Science and Cloud Computing
-- Engineering Management and Innovation Policy'),
+- Data Science and Cloud Computing'),
   ('about_editorial', 'All manuscripts undergo rigorous peer review by qualified experts in the field. We follow a double-blind review process to ensure fairness and objectivity. Our editorial board comprises distinguished researchers from institutions worldwide.'),
   ('about_open_access', 'TJASF is fully open access. All published articles are freely available to readers worldwide without subscription fees. Authors retain copyright of their work under a Creative Commons license.'),
   ('about_indexing', 'TJASF is committed to achieving broad indexing coverage. In the future, we are rigorously working to include ourselves in major databases.'),

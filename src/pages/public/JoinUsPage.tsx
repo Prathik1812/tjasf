@@ -17,8 +17,7 @@ const DOMAINS = [
   "Physics",
   "Mathematics",
   "Environmental Science",
-  "Materials Science",
-  "Management"
+  "Materials Science"
 ];
 
 const EXPERIENCE_OPTIONS = [
