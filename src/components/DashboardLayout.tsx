@@ -110,7 +110,13 @@ function getNavItems(role?: UserRole): NavItem[] {
     items.push({ to: '/dashboard/reviews', label: 'My Reviews', icon: ClipboardList });
   }
 
-  if (role === 'section_editor' || role === 'managing_editor' || role === 'editor_in_chief') {
+  if (
+    role === 'section_editor' ||
+    role === 'managing_editor' ||
+    role === 'editor_in_chief' ||
+    role === 'associate_editor' ||
+    role === 'editorial_board_member'
+  ) {
     items.push({ to: '/dashboard/editor', label: 'Editor Workspace', icon: BookOpen });
   }
 

@@ -64,7 +64,7 @@ export default function ManageUsersPage() {
     setUpdatingId(null);
   };
 
-  const rolesList: UserRole[] = ['author', 'reviewer', 'section_editor', 'managing_editor', 'editor_in_chief', 'admin'];
+  const rolesList: UserRole[] = ['author', 'reviewer', 'section_editor', 'managing_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'];
 
   return (
     <div className="space-y-6">

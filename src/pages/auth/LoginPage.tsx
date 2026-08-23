@@ -45,7 +45,12 @@ export default function LoginPage() {
           const getMappedRoleGroup = (dbRole: string): 'author' | 'reviewer' | 'editor' | 'admin' => {
             if (dbRole === 'admin') return 'admin';
             if (dbRole === 'reviewer') return 'reviewer';
-            if (dbRole.includes('editor') || dbRole.includes('chief')) return 'editor';
+            if (
+              dbRole.includes('editor') ||
+              dbRole.includes('chief') ||
+              dbRole.includes('board') ||
+              dbRole.includes('member')
+            ) return 'editor';
             return 'author';
           };
 

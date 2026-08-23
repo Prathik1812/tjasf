@@ -4,7 +4,9 @@ export type UserRole =
   | 'section_editor'
   | 'managing_editor'
   | 'editor_in_chief'
-  | 'admin';
+  | 'admin'
+  | 'associate_editor'
+  | 'editorial_board_member';
 
 export interface Profile {
   id: string;
