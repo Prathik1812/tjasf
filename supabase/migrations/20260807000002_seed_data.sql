@@ -4,7 +4,8 @@ INSERT INTO domains (name, slug, description) VALUES
   ('Computational Science', 'computational-science', 'AI, machine learning, algorithms, and data science'),
   ('Environmental Systems', 'environmental-systems', 'Climate, sustainability, and earth systems'),
   ('Engineering', 'engineering', 'Mechanical, electrical, civil, and biomedical engineering'),
-  ('Social Sciences', 'social-sciences', 'Psychology, sociology, economics, and policy research')
+  ('Social Sciences', 'social-sciences', 'Psychology, sociology, economics, and policy research'),
+  ('Management', 'management', 'Business administration, operations, finance, and engineering management')
 ON CONFLICT (slug) DO NOTHING;
 
 -- ============ SEED EDITORIAL BOARD ============

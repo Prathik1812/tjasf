@@ -29,7 +29,8 @@ export default function SearchPage() {
     'Computational Science',
     'Environmental Systems',
     'Engineering',
-    'Social Sciences'
+    'Social Sciences',
+    'Management'
   ];
 
   const handleFastFilter = async (filter: string) => {
