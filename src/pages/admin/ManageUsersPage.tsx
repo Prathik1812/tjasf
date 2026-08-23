@@ -16,6 +16,22 @@ export default function ManageUsersPage() {
   }, []);
 
   const changeRole = async (userId: string, role: UserRole) => {
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const formattedOldRole = targetUser.role.replace(/_/g, ' ').toUpperCase();
+    const formattedNewRole = role.replace(/_/g, ' ').toUpperCase();
+    
+    const confirmChange = window.confirm(
+      `Are you sure you want to permanently change the role of ${targetUser.full_name} from "${formattedOldRole}" to "${formattedNewRole}"?`
+    );
+
+    if (!confirmChange) {
+      // Re-trigger re-rendering to reset the select option state to the current active value
+      setUsers([...users]);
+      return;
+    }
+
     setUpdatingId(userId);
     const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
     if (!error) {
