@@ -7,6 +7,15 @@ export default function ManageUsersPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  // Custom Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+    oldRole: UserRole;
+    newRole: UserRole;
+  } | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from('profiles').select('*').order('full_name');
@@ -16,34 +25,40 @@ export default function ManageUsersPage() {
   }, []);
 
   const changeRole = async (userId: string, role: UserRole) => {
-    const targetUser = users.find(u => u.id === userId);
-    if (!targetUser) return;
-
-    const formattedOldRole = targetUser.role.replace(/_/g, ' ').toUpperCase();
-    const formattedNewRole = role.replace(/_/g, ' ').toUpperCase();
-    
-    const confirmChange = window.confirm(
-      `Are you sure you want to permanently change the role of ${targetUser.full_name} from "${formattedOldRole}" to "${formattedNewRole}"?`
-    );
-
-    if (!confirmChange) {
-      // Re-trigger re-rendering to reset the select option state to the current active value
-      setUsers([...users]);
-      return;
-    }
-
     setUpdatingId(userId);
     const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
-    if (!error) {
+    
+    if (error) {
+      alert(`Failed to save role update permanently: ${error.message}\nEnsure you have run the admin update SQL policy in Supabase.`);
+      // Force state update to trigger list reload
+      const { data } = await supabase.from('profiles').select('*').order('full_name');
+      if (data) setUsers(data as Profile[]);
+    } else {
       setUsers(users.map((u) => u.id === userId ? { ...u, role } : u));
     }
     setUpdatingId(null);
   };
 
+  const handleRoleSelect = (userId: string, newRole: UserRole) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    if (user.role === newRole) return;
+
+    setConfirmModal({
+      isOpen: true,
+      userId,
+      userName: user.full_name,
+      oldRole: user.role,
+      newRole
+    });
+  };
+
   const toggleUserActive = async (user: Profile) => {
     setUpdatingId(user.id);
     const { error } = await supabase.from('profiles').update({ is_active: !user.is_active }).eq('id', user.id);
-    if (!error) {
+    if (error) {
+      alert(`Failed to toggle status: ${error.message}`);
+    } else {
       setUsers(users.map((u) => u.id === user.id ? { ...u, is_active: !user.is_active } : u));
     }
     setUpdatingId(null);
@@ -79,10 +94,10 @@ export default function ManageUsersPage() {
                     <td className="p-4 text-[#667082]">{u.email}</td>
                     <td className="p-4">
                       <select
-                        value={u.role}
-                        onChange={(e) => changeRole(u.id, e.target.value as UserRole)}
-                        disabled={updatingId === u.id}
-                        className="border border-[#d8d8d1] rounded px-2.5 py-1 bg-white text-xs outline-none focus:border-[#eb5526] disabled:opacity-50"
+                         value={u.role}
+                         onChange={(e) => handleRoleSelect(u.id, e.target.value as UserRole)}
+                         disabled={updatingId === u.id}
+                         className="border border-[#d8d8d1] rounded px-2.5 py-1 bg-white text-xs outline-none focus:border-[#eb5526] disabled:opacity-50"
                       >
                         {rolesList.map((r) => (
                           <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>
@@ -106,6 +121,39 @@ export default function ManageUsersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Web Modal */}
+      {confirmModal && confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-[#08172f]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg border border-[#e6e5e0] shadow-xl max-w-[440px] w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6">
+              <h3 className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] mb-2">
+                Confirm Role Change
+              </h3>
+              <p className="text-sm text-[#667082] leading-relaxed">
+                Are you sure you want to permanently change the role of <strong>{confirmModal.userName}</strong> from <span className="font-bold text-[#102342] uppercase text-xs">{confirmModal.oldRole.replace(/_/g, ' ')}</span> to <span className="font-bold text-[#eb5526] uppercase text-xs">{confirmModal.newRole.replace(/_/g, ' ')}</span>?
+              </p>
+            </div>
+            <div className="bg-[#f1f0ec] px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 border border-[#d8d8d1] rounded-lg text-xs font-bold text-[#102342] bg-white hover:bg-[#fbfaf8] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  changeRole(confirmModal.userId, confirmModal.newRole);
+                  setConfirmModal(null);
+                }}
+                className="px-5 py-2.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+              >
+                Confirm Update
+              </button>
+            </div>
           </div>
         </div>
       )}
