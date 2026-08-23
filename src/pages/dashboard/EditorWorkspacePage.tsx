@@ -135,7 +135,7 @@ export default function EditorWorkspacePage() {
   const filtered = filter === 'all' ? manuscripts : manuscripts.filter((m) => m.status === filter);
   
   // EIC/Admin can view all papers; Section Editors see only papers assigned to them
-  const isEicOrAdmin = currentUser && ['editor_in_chief', 'managing_editor', 'admin'].includes(currentUser.role);
+  const isEicOrAdmin = currentUser && ['editor_in_chief', 'admin'].includes(currentUser.role);
   const visibleManuscripts = isEicOrAdmin
     ? filtered
     : filtered.filter((m) => m.editor_id === currentUser?.id);

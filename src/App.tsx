@@ -80,7 +80,7 @@ export default function App() {
               <Route path="/dashboard/editor/:id" element={<ManuscriptEditorPage />} />
               
               {/* Submit (author/reviewer/editor/admin only) */}
-              <Route element={<ProtectedRoute allowedRoles={['author', 'reviewer', 'section_editor', 'managing_editor', 'editor_in_chief', 'admin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['author', 'reviewer', 'section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member']} />}>
                 <Route path="/dashboard/submit" element={<SubmitManuscriptPage />} />
               </Route>
 

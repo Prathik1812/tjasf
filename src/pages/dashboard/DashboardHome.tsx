@@ -27,7 +27,7 @@ export default function DashboardHome() {
       if (ms) setManuscripts(ms as Manuscript[]);
       const { data: rv } = await supabase.from('reviews').select('*').eq('reviewer_id', targetUserId).order('created_at', { ascending: false });
       if (rv) setReviews(rv as Review[]);
-      if (activeProfile && ['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(activeProfile.role)) {
+      if (activeProfile && ['section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role)) {
         const { data: em } = await supabase.from('manuscripts').select('*').order('created_at', { ascending: false }).limit(10);
         if (em) setEditorManuscripts(em as Manuscript[]);
       }
@@ -40,9 +40,10 @@ export default function DashboardHome() {
     author: 'Author',
     reviewer: 'Reviewer',
     section_editor: 'Section Editor',
-    managing_editor: 'Managing Editor',
     editor_in_chief: 'Editor in Chief',
     admin: 'Administrator',
+    associate_editor: 'Associate Editor',
+    editorial_board_member: 'Editorial Board Member',
   };
 
   return (
@@ -57,7 +58,7 @@ export default function DashboardHome() {
         {(activeProfile.role === 'reviewer' || activeProfile.role === 'admin') && (
           <StatCard label="Reviews" value={reviews.length} icon={ClipboardList} />
         )}
-        {['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(activeProfile.role) && (
+        {['section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role) && (
           <StatCard label="In Editorial" value={editorManuscripts.length} icon={BookOpen} />
         )}
         {activeProfile.role === 'author' && (
@@ -113,7 +114,7 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {['section_editor', 'managing_editor', 'editor_in_chief', 'admin'].includes(activeProfile.role) && (
+      {['section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role) && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-[#102342]">Recent Submissions (Editorial)</h2>

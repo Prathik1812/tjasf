@@ -23,9 +23,10 @@ export default function DashboardLayout() {
     author: 'Author',
     reviewer: 'Reviewer',
     section_editor: 'Section Editor',
-    managing_editor: 'Managing Editor',
     editor_in_chief: 'Editor in Chief',
     admin: 'Administrator',
+    associate_editor: 'Associate Editor',
+    editorial_board_member: 'Editorial Board Member',
   };
 
   const navItems = getNavItems(activeProfile?.role);
@@ -112,7 +113,6 @@ function getNavItems(role?: UserRole): NavItem[] {
 
   if (
     role === 'section_editor' ||
-    role === 'managing_editor' ||
     role === 'editor_in_chief' ||
     role === 'associate_editor' ||
     role === 'editorial_board_member'

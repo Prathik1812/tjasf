@@ -2,7 +2,6 @@ export type UserRole =
   | 'author'
   | 'reviewer'
   | 'section_editor'
-  | 'managing_editor'
   | 'editor_in_chief'
   | 'admin'
   | 'associate_editor'

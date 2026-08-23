@@ -52,7 +52,7 @@ export default function ManuscriptEditorPage() {
         if (revs) setReviews(revs as Review[]);
         const { data: revwrs } = await supabase.from('profiles').select('*').in('role', ['reviewer', 'section_editor']);
         if (revwrs) setReviewers(revwrs as Profile[]);
-        const { data: eds } = await supabase.from('profiles').select('*').in('role', ['section_editor', 'managing_editor', 'editor_in_chief']);
+        const { data: eds } = await supabase.from('profiles').select('*').in('role', ['section_editor', 'editor_in_chief', 'associate_editor', 'editorial_board_member']);
         if (eds) setEditors(eds as Profile[]);
         const { data: doms } = await supabase.from('domains').select('*');
         if (doms) setDomains(doms as Domain[]);
@@ -380,10 +380,6 @@ ${referencesXml}
         return { ...e, matchScore: score };
       })
       .filter((e) => {
-        // Apply active user role restriction: Associate Editor can only invite Section Editors
-        if (activeUser.role === 'managing_editor' && e.role !== 'section_editor') {
-          return false;
-        }
         // Hide self
         if (e.id === activeUser.id) {
           return false;
@@ -1152,7 +1148,7 @@ ${referencesXml}
       </div>
 
       {/* Assign Editor - Only for Editor-in-Chief, Managing Editor, and Admin */}
-      {activeUser && ['editor_in_chief', 'managing_editor', 'admin'].includes(activeUser.role) && (
+      {activeUser && ['editor_in_chief', 'admin'].includes(activeUser.role) && (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-6 space-y-6">
           <div>
             <h2 className="font-semibold text-[#102342] text-base mb-1">Editorial Assignment Invitations</h2>
