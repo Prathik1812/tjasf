@@ -19,6 +19,8 @@ import CoAuthorConsentPage from '@/pages/public/CoAuthorConsentPage';
 
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 
 import DashboardHome from '@/pages/dashboard/DashboardHome';
 import MyManuscripts from '@/pages/dashboard/MyManuscripts';
@@ -64,6 +66,8 @@ export default function App() {
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Dashboard */}
           <Route element={<ProtectedRoute />}>
