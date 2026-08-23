@@ -115,7 +115,8 @@ function getNavItems(role?: UserRole): NavItem[] {
     role === 'section_editor' ||
     role === 'editor_in_chief' ||
     role === 'associate_editor' ||
-    role === 'editorial_board_member'
+    role === 'editorial_board_member' ||
+    role === 'admin'
   ) {
     items.push({ to: '/dashboard/editor', label: 'Editor Workspace', icon: BookOpen });
   }
