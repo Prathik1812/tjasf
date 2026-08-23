@@ -30,7 +30,7 @@ export default function AboutPage() {
       </h1>
       <div className="prose prose-lg max-w-none text-[#27334a] leading-[1.7] space-y-6">
         <p className="text-xl text-[#667082] whitespace-pre-line text-justify">
-          {content.about_intro || "The Journal of Advanced Scientific Frontiers (TJASF) is a tri-annually published, open-access journal. TJASF operates an online submission and peer review system, allowing authors to submit articles online and track their progress via its web interface. TJASF accepts the DOAJ's definition of open access. In addition, TJASF's publication ethics and publication malpractice statement is mainly based on the Code of Conduct and Best Practice Guidelines for Journal Editors (Committee on Publication Ethics (COPE), 2011). The TJASF journal aims for a publication speed of 90 days from submission to final publication. It uses the LOCKSS archival system."}
+          {content.about_intro || "The Journal of Advanced Scientific Frontiers (TJASF) is a tri-annually published, open-access journal dedicated to publishing high-quality research across science, engineering, and technology."}
         </p>
         <h2 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mt-10 mb-3">Aims &amp; Scope</h2>
         <p className="whitespace-pre-line text-sm text-[#667082] leading-relaxed text-justify">

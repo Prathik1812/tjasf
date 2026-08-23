@@ -1,7 +1,7 @@
 -- ============ UPDATE HOMEPAGE CONTENT FOR TJASF AIMS & SCOPE ============
--- Update Intro (without non-profit, set to tri-annually published)
+-- Update Intro (shortened, tri-annually published)
 UPDATE homepage_content
-SET value = 'The Journal of Advanced Scientific Frontiers (TJASF) is a tri-annually published, open-access journal. TJASF operates an online submission and peer review system, allowing authors to submit articles online and track their progress via its web interface. TJASF accepts the DOAJ''s definition of open access. In addition, TJASF''s publication ethics and publication malpractice statement is mainly based on the Code of Conduct and Best Practice Guidelines for Journal Editors (Committee on Publication Ethics (COPE), 2011). The TJASF journal aims for a publication speed of 90 days from submission to final publication. It uses the LOCKSS archival system.'
+SET value = 'The Journal of Advanced Scientific Frontiers (TJASF) is a tri-annually published, open-access journal dedicated to publishing high-quality research across science, engineering, and technology.'
 WHERE key = 'about_intro';
 
 -- Update Aims & Scope (TJASF custom multidisciplinary aims)
