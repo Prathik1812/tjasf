@@ -308,7 +308,7 @@ export default function ManuscriptEditorPage() {
       <journal-title-group>
         <journal-title>The Journal of Advanced Scientific Frontiers</journal-title>
       </journal-title-group>
-      <issn pub-type="epub">3062-8822</issn>
+      <!-- <issn pub-type="epub">XXXX-XXXX</issn> -->
       <publisher>
         <publisher-name>TJASF Publications</publisher-name>
       </publisher>
