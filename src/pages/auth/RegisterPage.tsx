@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { sendInvitationAcceptedNotification } from '@/lib/email';
 
 export default function RegisterPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const emailParam = searchParams.get('email') || '';
+  const roleParam = searchParams.get('role') || '';
 
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -53,6 +57,13 @@ export default function RegisterPage() {
       setError(signUpError);
       setLoading(false);
     } else {
+      if (roleParam) {
+        try {
+          await sendInvitationAcceptedNotification(fullName, email, roleParam);
+        } catch (err) {
+          console.error('Failed to send registration notification email to admin:', err);
+        }
+      }
       navigate('/dashboard');
     }
   };

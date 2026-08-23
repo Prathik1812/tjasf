@@ -297,3 +297,29 @@ export async function sendReviewerResponseEmail(reviewerName: string, editorEmai
     html
   });
 }
+
+// Notification when invited member accepts invitation (registers on the platform)
+export async function sendInvitationAcceptedNotification(name: string, email: string, role: string) {
+  const formattedRole = role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Invitation Accepted</h2>
+      <p>Dear Editorial Office,</p>
+      <p>This is to confirm that a nominee has accepted the invitation and registered on the website:</p>
+      <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px;">
+        <p style="margin: 0;"><strong>Name:</strong> ${name}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Email:</strong> ${email}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Proposed Role:</strong> ${formattedRole}</p>
+      </div>
+      <p>Please log into the Admin Dashboard under the <strong>Users</strong> workspace to promote this account permanently.</p>
+      <p style="margin-top: 24px; font-size: 11px; color: #667082; border-top: 1px solid #f1f0ec; padding-top: 12px;">
+        This email serves as official confirmation of acceptance.
+      </p>
+    </div>
+  `;
+  return sendEmail({
+    to: 'editorial@tjasf.com',
+    subject: `[TJASF] Invitation Accepted: ${name} (${formattedRole})`,
+    html
+  });
+}
