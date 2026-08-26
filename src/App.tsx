@@ -30,6 +30,7 @@ import MyReviewsPage from '@/pages/dashboard/MyReviewsPage';
 import ReviewDetailPage from '@/pages/dashboard/ReviewDetailPage';
 import EditorWorkspacePage from '@/pages/dashboard/EditorWorkspacePage';
 import ManuscriptEditorPage from '@/pages/dashboard/ManuscriptEditorPage';
+import ProfilePage from '@/pages/dashboard/ProfilePage';
 
 import ManageUsersPage from '@/pages/admin/ManageUsersPage';
 import ManageDomainsPage from '@/pages/admin/ManageDomainsPage';
@@ -76,6 +77,7 @@ export default function App() {
               <Route element={<DashboardLayout />}>
                 <Route path="/dashboard" element={<DashboardHome />} />
                 <Route path="/dashboard/manuscripts" element={<MyManuscripts />} />
+                <Route path="/dashboard/profile" element={<ProfilePage />} />
                 <Route path="/dashboard/reviews" element={<MyReviewsPage />} />
                 <Route path="/dashboard/reviews/:id" element={<ReviewDetailPage />} />
                 <Route path="/dashboard/editor" element={<EditorWorkspacePage />} />

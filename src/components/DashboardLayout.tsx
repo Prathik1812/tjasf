@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
-import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive, Mail } from 'lucide-react';
+import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive, Mail, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
 
@@ -100,7 +100,10 @@ function getNavItems(role?: UserRole): NavItem[] {
   ];
 
   if (role) {
-    items.push({ to: '/dashboard/manuscripts', label: 'My Manuscripts', icon: FileText });
+    items.push(
+      { to: '/dashboard/manuscripts', label: 'My Manuscripts', icon: FileText },
+      { to: '/dashboard/profile', label: 'My Profile', icon: User }
+    );
   }
 
   if (role === 'author') {
