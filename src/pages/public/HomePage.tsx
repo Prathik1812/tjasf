@@ -57,7 +57,7 @@ export default function HomePage() {
               Where bold ideas<br /><em className="text-[#eb5526] italic">move science forward.</em>
             </h1>
             <p className="text-[#596476] max-w-[550px] text-[17px] leading-[1.65] mb-8">
-              TJASF is an international, peer-reviewed journal for research that crosses boundaries, challenges assumptions, and opens new scientific frontiers.
+              TJASF is a peer-reviewed, open-access journal publishing high-quality research across science, engineering, and technology.
             </p>
             <div className="flex items-center gap-7">
               <Link to="/current-issue" className="inline-flex items-center gap-3 px-5 py-3.5 text-xs font-bold text-white bg-[#eb5526] hover:bg-[#d7461c] transition-all hover:-translate-y-0.5">
