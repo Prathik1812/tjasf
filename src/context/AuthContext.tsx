@@ -74,13 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) return { error: error.message };
     if (data.user) {
-      await supabase.from('profiles').delete().eq('id', data.user.id);
-      await supabase.from('profiles').insert({
+      await supabase.from('profiles').upsert({
         id: data.user.id,
         email,
         full_name: fullName,
         role,
       });
+      await fetchProfile(data.user.id);
     }
     return { error: null };
   };
