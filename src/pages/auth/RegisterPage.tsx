@@ -37,7 +37,11 @@ export default function RegisterPage() {
     }
 
     const emailLower = email.toLowerCase().trim();
-    let dbRole: 'author' | 'reviewer' | 'editor_in_chief' | 'admin' = 'author';
+    let dbRole: any = 'author';
+
+    if (roleParam === 'reviewer' || roleParam === 'section_editor' || roleParam === 'editorial_board_member' || roleParam === 'associate_editor') {
+      dbRole = roleParam;
+    }
 
     // Auto-assign roles only for the 2 authorized email addresses, block other @tjasf.com emails
     if (emailLower.endsWith('@tjasf.com')) {
