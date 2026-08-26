@@ -403,7 +403,7 @@ ${referencesXml}
         if (minPubsFilter && (e.publications?.length || 0) < minPubsFilter) {
           return false;
         }
-        return true;
+        return e.matchScore > 0;
       })
       .sort((a, b) => b.matchScore - a.matchScore); // Rank by matching score descending!
 
@@ -682,7 +682,7 @@ ${referencesXml}
         if (minPubsFilter && (r.publications?.length || 0) < minPubsFilter) {
           return false;
         }
-        return true;
+        return r.matchScore > 0;
       })
       .sort((a, b) => b.matchScore - a.matchScore); // Rank by matching score descending!
 
