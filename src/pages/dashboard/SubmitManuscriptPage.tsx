@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, ChevronLeft, Upload, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/Toast';
 import { supabase } from '@/lib/supabase';
 import { sendSubmissionEmail, sendCoAuthorConsentEmail } from '@/lib/email';
 import type { Domain, Profile } from '@/types';
@@ -26,6 +27,7 @@ const STEPS = [
 export default function SubmitManuscriptPage() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [step, setStep] = useState(1);
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -271,9 +273,9 @@ export default function SubmitManuscriptPage() {
       if (extracted.authors && extracted.authors.length > 0) {
         setAuthors(extracted.authors);
       }
-      alert('Success! Manuscript details extracted and forms auto-filled.');
+      toast.success('Success! Manuscript details extracted and forms auto-filled.');
     } else {
-      alert('Completed upload, but could not extract PDF details automatically. Please enter details manually.');
+      toast.info('Completed upload, but could not extract PDF details automatically. Please enter details manually.');
     }
     setAnalyzing(false);
   };

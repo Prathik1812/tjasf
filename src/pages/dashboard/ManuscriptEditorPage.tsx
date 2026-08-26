@@ -4,6 +4,7 @@ import { ArrowLeft, UserPlus, Trash2, Search, X, Star } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/Toast';
 import { sendDecisionEmail, sendEditorAssignmentEmail, sendReviewReminderEmail, sendReviewerInvitation } from '@/lib/email';
 import type { Manuscript, Profile, Review, ManuscriptStatus, ReviewStatus, Domain } from '@/types';
 
@@ -11,6 +12,7 @@ export default function ManuscriptEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { profile: activeUser } = useAuth();
+  const toast = useToast();
   const [manuscript, setManuscript] = useState<Manuscript | null>(null);
   const [submitter, setSubmitter] = useState<Profile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -173,7 +175,7 @@ export default function ManuscriptEditorPage() {
       const { data: eas } = await supabase.from('editor_assignments').select('*').eq('manuscript_id', manuscript.id);
       if (eas) setEditorAssignments(eas);
     } catch (err: any) {
-      alert(err.message || 'Failed to invite editor');
+      toast.error(err.message || 'Failed to invite editor');
     }
     setUpdating(false);
   };
@@ -237,7 +239,7 @@ export default function ManuscriptEditorPage() {
       }
     }
     
-    alert(`Successfully sent invitations to ${successCount} shortlisted reviewers!`);
+    toast.success(`Successfully sent invitations to ${successCount} shortlisted reviewers!`);
     
     const { data: revs } = await supabase.from('reviews').select('*').eq('manuscript_id', manuscript.id);
     if (revs) setReviews(revs as Review[]);
@@ -269,10 +271,10 @@ export default function ManuscriptEditorPage() {
         manuscript.id.substring(0, 8).toUpperCase(),
         rev.due_date || new Date().toISOString()
       );
-      alert(`Reminder email sent successfully to Dr. ${reviewer.full_name}!`);
+      toast.success(`Reminder email sent successfully to Dr. ${reviewer.full_name}!`);
     } catch (err) {
       console.error('Failed to send reminder email:', err);
-      alert('Failed to send reminder email. Please check your network or Vercel logs.');
+      toast.error('Failed to send reminder email. Please check your network or Vercel logs.');
     }
     setUpdating(false);
   };
@@ -512,7 +514,7 @@ ${referencesXml}
                 Clear all
               </button>
               <button
-                onClick={() => alert('Search results updated!')}
+                onClick={() => toast.info('Search results updated!')}
                 className="flex-1 px-3 py-2 bg-[#eb5526] hover:bg-[#d7461c] text-center text-[11px] font-bold text-white rounded cursor-pointer"
               >
                 Update results
@@ -791,7 +793,7 @@ ${referencesXml}
                 Clear all
               </button>
               <button
-                onClick={() => alert('Search results updated!')}
+                onClick={() => toast.info('Search results updated!')}
                 className="flex-1 px-3 py-2 bg-[#eb5526] hover:bg-[#d7461c] text-center text-[11px] font-bold text-white rounded cursor-pointer"
               >
                 Update results
