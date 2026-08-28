@@ -29,26 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select('*')
       .eq('id', uid)
       .maybeSingle();
-    if (data) {
-      const prof = data as Profile;
-      setProfile(prof);
-      
-      try {
-        if (prof.invitation_accepted === false) {
-          await supabase.from('profiles').update({ invitation_accepted: true }).eq('id', uid);
-          try {
-            const { sendInvitationAcceptedNotification } = await import('@/lib/email');
-            await sendInvitationAcceptedNotification(prof.full_name, prof.email, prof.role);
-          } catch (err) {
-            console.error('Failed to send invitation accepted email:', err);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to handle invitation_accepted logic:', err);
-      }
-    } else {
-      setProfile(null);
-    }
+    if (data) setProfile(data as Profile);
+    else setProfile(null);
   };
 
   const refreshProfile = async () => {
