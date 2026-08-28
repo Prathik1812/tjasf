@@ -24,7 +24,7 @@ export default function LoginPage() {
     try {
       const emailLower = email.toLowerCase().trim();
 
-      // 1. Enforce strict @tjasf.com email usage
+      // Enforce strict @tjasf.com email usage
       if (emailLower.endsWith('@tjasf.com')) {
         if (emailLower !== 'editor@tjasf.com' && emailLower !== 'editorial@tjasf.com') {
           setError('Unauthorized email address under the @tjasf.com domain.');
@@ -33,65 +33,16 @@ export default function LoginPage() {
         }
       }
 
-      // 2. Perform Supabase Sign In
+      // Perform Supabase Sign In
       const { error: signInError } = await signIn(email, password);
-      
+
       if (signInError) {
         setError(signInError);
         setLoading(false);
         return;
       }
 
-      // Small delay to ensure session JWT is fully propagated to the Supabase client
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const sessionUser = session?.user;
-      if (sessionUser) {
-        const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
-        
-        if (existingProfile) {
-          // Double-check database role matches selected role group to prevent unauthorized cross-sign-in
-          const getMappedRoleGroup = (dbRole: string): 'author' | 'reviewer' | 'editor' | 'admin' => {
-            if (dbRole === 'admin') return 'admin';
-            if (dbRole === 'reviewer') return 'reviewer';
-            if (
-              dbRole.includes('editor') ||
-              dbRole.includes('chief') ||
-              dbRole.includes('board') ||
-              dbRole.includes('member')
-            ) return 'editor';
-            return 'author';
-          };
-
-          const matchedGroup = getMappedRoleGroup(existingProfile.role || 'author');
-          if (matchedGroup !== selectedRole) {
-            await supabase.auth.signOut();
-            const formattedRole = (existingProfile.role || 'author').replace(/_/g, ' ');
-            setError(`Access Denied: You selected "${selectedRole.toUpperCase()}" but this account is registered as a ${formattedRole.toUpperCase()}.`);
-            setLoading(false);
-            return;
-          }
-        } else {
-          // Auto-insert profile row if missing, default to author
-          await supabase.from('profiles').insert({
-            id: sessionUser.id,
-            email,
-            full_name: sessionUser.user_metadata?.full_name || email.split('@')[0],
-            role: 'author',
-            is_active: true,
-            email_verified: true,
-          });
-          
-          if (selectedRole !== 'author') {
-            await supabase.auth.signOut();
-            setError('Access Denied: New profiles default to Author workspace.');
-            setLoading(false);
-            return;
-          }
-        }
-        await refreshProfile();
-      }
+      // AuthContext handles profile loading automatically after sign-in
       navigate(from);
     } catch (err: any) {
       console.error('Sign in error:', err);
