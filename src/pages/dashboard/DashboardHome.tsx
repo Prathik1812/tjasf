@@ -4,20 +4,15 @@ import { FileText, ClipboardList, BookOpen, FileEdit, Users, Megaphone } from 'l
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StatCard, StatusBadge } from '@/components/DashboardLayout';
-import type { Manuscript, Review, UserRole } from '@/types';
+import type { Manuscript, Review } from '@/types';
 
 export default function DashboardHome() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [editorManuscripts, setEditorManuscripts] = useState<Manuscript[]>([]);
 
-  const activeProfile = profile || (user ? {
-    id: user.id,
-    email: user.email || '',
-    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-    role: 'author' as UserRole,
-  } : null);
+  const activeProfile = profile;
 
   useEffect(() => {
     (async () => {
@@ -34,7 +29,9 @@ export default function DashboardHome() {
     })();
   }, [activeProfile?.id, activeProfile?.role]);
 
-  if (!user || !activeProfile) return null;
+  if (loading || !user || !activeProfile) return (
+    <div className="flex items-center justify-center h-64 text-[#667082] text-sm">Loading your dashboard...</div>
+  );
 
   const roleLabel: Record<UserRole, string> = {
     author: 'Author',
