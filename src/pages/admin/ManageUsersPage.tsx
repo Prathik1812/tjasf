@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Eye, X, User } from 'lucide-react';
 import type { Profile, UserRole } from '@/types';
 
 export default function ManageUsersPage() {
@@ -7,7 +8,7 @@ export default function ManageUsersPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  // Custom Modal State
+  // Custom Modal States
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     userId: string;
@@ -15,6 +16,8 @@ export default function ManageUsersPage() {
     oldRole: UserRole;
     newRole: UserRole;
   } | null>(null);
+
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -30,7 +33,6 @@ export default function ManageUsersPage() {
     
     if (error) {
       alert(`Failed to save role update permanently: ${error.message}\nEnsure you have run the admin update SQL policy in Supabase.`);
-      // Force state update to trigger list reload
       const { data } = await supabase.from('profiles').select('*').order('full_name');
       if (data) setUsers(data as Profile[]);
     } else {
@@ -66,11 +68,21 @@ export default function ManageUsersPage() {
 
   const rolesList: UserRole[] = ['author', 'reviewer', 'section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'];
 
+  const roleLabel: Record<UserRole, string> = {
+    author: 'Author',
+    reviewer: 'Reviewer',
+    section_editor: 'Section Editor',
+    editor_in_chief: 'Editor in Chief',
+    admin: 'Administrator',
+    associate_editor: 'Associate Editor',
+    editorial_board_member: 'Editorial Board Member',
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Manage Users</h1>
-        <p className="text-[#667082] text-sm mt-1">Assign system roles and control user account states</p>
+        <p className="text-[#667082] text-sm mt-1">Assign system roles, inspect academic profiles, and control account states</p>
       </div>
 
       {loading ? (
@@ -85,6 +97,7 @@ export default function ManageUsersPage() {
                   <th className="p-4">Email</th>
                   <th className="p-4">Role</th>
                   <th className="p-4">Status</th>
+                  <th className="p-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f0ec] text-sm">
@@ -108,7 +121,7 @@ export default function ManageUsersPage() {
                       <button
                         onClick={() => toggleUserActive(u)}
                         disabled={updatingId === u.id}
-                        className={`text-xs font-bold px-3 py-1 rounded-full ${
+                        className={`text-xs font-bold px-3 py-1 rounded-full cursor-pointer ${
                           u.is_active
                             ? 'bg-green-50 text-green-700 hover:bg-green-100'
                             : 'bg-red-50 text-red-700 hover:bg-red-100'
@@ -117,10 +130,118 @@ export default function ManageUsersPage() {
                         {u.is_active ? 'Active' : 'Inactive'}
                       </button>
                     </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => setSelectedProfile(u)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#eb5526] hover:text-[#d7461c] cursor-pointer"
+                      >
+                        <Eye size={14} /> Profile
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Details Modal */}
+      {selectedProfile && (
+        <div className="fixed inset-0 bg-[#08172f]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg border border-[#e6e5e0] shadow-xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-[#e6e5e0] flex items-center justify-between">
+              <h3 className="font-['Playfair_Display'] font-semibold text-lg text-[#102342] flex items-center gap-2">
+                <User size={18} className="text-[#eb5526]" /> {selectedProfile.title || ''} {selectedProfile.full_name}
+              </h3>
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
+              {/* Account Basic Info */}
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Email Address</span>
+                  <p className="text-sm font-medium text-[#102342] mt-0.5">{selectedProfile.email}</p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Current Role</span>
+                  <p className="text-sm font-medium mt-0.5">
+                    <span className="bg-[#f1f0ec] px-2 py-0.5 rounded text-xs font-semibold">
+                      {roleLabel[selectedProfile.role]}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Affiliation</span>
+                  <p className="text-sm font-medium text-[#102342] mt-0.5">{selectedProfile.affiliation || 'None'}</p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Department</span>
+                  <p className="text-sm font-medium text-[#102342] mt-0.5">{selectedProfile.department || 'None'}</p>
+                </div>
+              </div>
+
+              {/* Academic Identifiers Info */}
+              <div className="bg-[#fbfaf8] border border-[#e6e5e0] rounded-lg p-4 space-y-3">
+                <h4 className="font-bold text-[#102342] text-xs">Academic Identifiers</h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-gray-500 font-semibold">ORCID iD:</span>
+                    <p className="font-mono text-[#102342] mt-0.5">{selectedProfile.orcid || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-semibold">Google Scholar ID:</span>
+                    <p className="font-mono text-[#102342] mt-0.5">{selectedProfile.google_scholar_id || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-semibold">Scopus Author ID:</span>
+                    <p className="font-mono text-[#102342] mt-0.5">{selectedProfile.scopus_id || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-semibold">ResearcherID:</span>
+                    <p className="font-mono text-[#102342] mt-0.5">{selectedProfile.researcher_id || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Biography Section */}
+              <div className="space-y-1.5">
+                <h4 className="font-bold text-[#102342] text-xs">Biography & Research Focus</h4>
+                <p className="text-xs text-gray-700 leading-relaxed bg-[#fbfaf8] p-3 rounded-lg border border-[#e6e5e0] whitespace-pre-line">
+                  {selectedProfile.bio || 'No biography details provided.'}
+                </p>
+              </div>
+
+              {/* Keywords Section */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[#102342] text-xs">Expertise Keywords</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {(selectedProfile.keywords || []).map((keyword, idx) => (
+                    <span key={idx} className="bg-[#f1f0ec] border border-[#d8d8d1] px-2.5 py-0.5 rounded-full text-xs text-[#102342] font-semibold">
+                      {keyword}
+                    </span>
+                  ))}
+                  {(!selectedProfile.keywords || selectedProfile.keywords.length === 0) && (
+                    <p className="text-xs text-gray-400 italic">No expertise keywords specified.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-[#f1f0ec] px-6 py-4 flex justify-end">
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="px-4 py-2 bg-[#102342] hover:bg-[#1d3556] text-white text-xs font-bold rounded-lg cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -140,7 +261,7 @@ export default function ManageUsersPage() {
             <div className="bg-[#f1f0ec] px-6 py-4 flex justify-end gap-3">
               <button
                 onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 border border-[#d8d8d1] rounded-lg text-xs font-bold text-[#102342] bg-white hover:bg-[#fbfaf8] transition-colors"
+                className="px-4 py-2 border border-[#d8d8d1] rounded-lg text-xs font-bold text-[#102342] bg-white hover:bg-[#fbfaf8] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -149,7 +270,7 @@ export default function ManageUsersPage() {
                   changeRole(confirmModal.userId, confirmModal.newRole);
                   setConfirmModal(null);
                 }}
-                className="px-5 py-2.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+                className="px-5 py-2.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
               >
                 Confirm Update
               </button>
