@@ -4,7 +4,7 @@ import { FileText, ClipboardList, BookOpen, FileEdit, Users, Megaphone } from 'l
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StatCard, StatusBadge } from '@/components/DashboardLayout';
-import type { Manuscript, Review } from '@/types';
+import type { Manuscript, Review, UserRole } from '@/types';
 
 export default function DashboardHome() {
   const { user, profile, loading } = useAuth();
