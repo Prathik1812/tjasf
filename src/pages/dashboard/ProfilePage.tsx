@@ -16,6 +16,9 @@ export default function ProfilePage() {
     affiliation: '',
     department: '',
     orcid: '',
+    google_scholar_id: '',
+    scopus_id: '',
+    researcher_id: '',
     bio: '',
     keywords: [],
   });
@@ -36,6 +39,9 @@ export default function ProfilePage() {
         affiliation: authProfile.affiliation || '',
         department: authProfile.department || '',
         orcid: authProfile.orcid || '',
+        google_scholar_id: authProfile.google_scholar_id || '',
+        scopus_id: authProfile.scopus_id || '',
+        researcher_id: authProfile.researcher_id || '',
         bio: authProfile.bio || '',
         keywords: authProfile.keywords || [],
       });
@@ -55,6 +61,10 @@ export default function ProfilePage() {
           title: profileData.title,
           affiliation: profileData.affiliation,
           department: profileData.department,
+          orcid: profileData.orcid,
+          google_scholar_id: profileData.google_scholar_id,
+          scopus_id: profileData.scopus_id,
+          researcher_id: profileData.researcher_id,
           bio: profileData.bio,
           keywords: profileData.keywords,
         })
@@ -150,9 +160,9 @@ export default function ProfilePage() {
               General Information
             </h2>
 
-            {/* Read-Only/Mandatory Fields Badge Info */}
+            {/* Read-Only System Details */}
             <div className="bg-[#fcfbf9] border border-[#e6e5e0] rounded-lg p-4 space-y-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082]">Locked Verified Attributes</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082]">Account System Variables</span>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -169,14 +179,6 @@ export default function ProfilePage() {
                     <span className="bg-[#f1f0ec] px-2 py-0.5 rounded text-xs font-semibold">
                       {roleLabels[authProfile?.role || 'author']}
                     </span>
-                    <Lock size={13} className="text-[#a4b0c4]" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#667082] uppercase">ORCID iD</label>
-                  <div className="mt-1 flex items-center gap-2 text-sm text-[#27334a]">
-                    <span className="font-mono text-xs">{authProfile?.orcid || 'Not provided'}</span>
                     <Lock size={13} className="text-[#a4b0c4]" />
                   </div>
                 </div>
@@ -228,6 +230,60 @@ export default function ProfilePage() {
                   className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2 text-sm outline-none focus:border-[#eb5526]"
                   placeholder="e.g., Computer Science"
                 />
+              </div>
+            </div>
+
+            {/* Academic Identifiers Section */}
+            <div className="bg-[#fcfbf9] border border-[#e6e5e0] rounded-lg p-5 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#102342]">
+                Academic Identifiers
+              </h3>
+              <p className="text-xs text-[#667082] -mt-2">Provide your identifiers to connect your publications. These are optional for authors but recommended for peer-review matching.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#102342] mb-1">ORCID iD</label>
+                  <input
+                    type="text"
+                    value={profileData.orcid}
+                    onChange={(e) => setProfileData({ ...profileData, orcid: e.target.value })}
+                    className="w-full border border-[#d8d8d1] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#eb5526] font-mono"
+                    placeholder="e.g., 0000-0002-1825-0097"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#102342] mb-1">Google Scholar ID</label>
+                  <input
+                    type="text"
+                    value={profileData.google_scholar_id}
+                    onChange={(e) => setProfileData({ ...profileData, google_scholar_id: e.target.value })}
+                    className="w-full border border-[#d8d8d1] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#eb5526]"
+                    placeholder="e.g., M8t_hY8AAAAJ"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#102342] mb-1">Scopus Author ID</label>
+                  <input
+                    type="text"
+                    value={profileData.scopus_id}
+                    onChange={(e) => setProfileData({ ...profileData, scopus_id: e.target.value })}
+                    className="w-full border border-[#d8d8d1] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#eb5526]"
+                    placeholder="e.g., 57204938100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#102342] mb-1">ResearcherID (Web of Science)</label>
+                  <input
+                    type="text"
+                    value={profileData.researcher_id}
+                    onChange={(e) => setProfileData({ ...profileData, researcher_id: e.target.value })}
+                    className="w-full border border-[#d8d8d1] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[#eb5526]"
+                    placeholder="e.g., A-1234-2026"
+                  />
+                </div>
               </div>
             </div>
 

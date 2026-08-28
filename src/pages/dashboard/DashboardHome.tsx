@@ -46,8 +46,34 @@ export default function DashboardHome() {
     editorial_board_member: 'Editorial Board Member',
   };
 
+  const isProfileIncomplete = !profile?.affiliation || 
+    (['reviewer', 'section_editor', 'editor_in_chief', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role) && 
+     (!profile?.keywords || profile.keywords.length === 0));
+
   return (
     <div className="space-y-6">
+      {isProfileIncomplete && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 text-amber-800 text-sm shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <span className="text-lg mt-0.5">⚠️</span>
+          <div className="flex-1">
+            <h3 className="font-semibold text-amber-900">Please Complete Your Profile</h3>
+            <p className="text-xs text-amber-800 mt-1">
+              Your profile is missing crucial details.
+              {['reviewer', 'section_editor', 'editor_in_chief', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role) ? (
+                <span> To enable matching algorithms, please add your <strong>affiliation</strong> and <strong>expertise keywords</strong>.</span>
+              ) : (
+                <span> Please add your <strong>affiliation</strong> and <strong>ORCID iD</strong>.</span>
+              )}
+            </p>
+            <div className="mt-2">
+              <Link to="/dashboard/profile" className="text-xs font-bold text-amber-900 underline hover:text-orange-700 transition-colors">
+                Go to Profile Settings &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Welcome, {activeProfile.full_name.split(' ')[0]}</h1>
         <p className="text-[#667082] text-sm mt-1">You are signed in as {roleLabel[activeProfile.role]}</p>
