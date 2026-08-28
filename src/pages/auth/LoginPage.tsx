@@ -42,7 +42,11 @@ export default function LoginPage() {
         return;
       }
 
-      const { data: { user: sessionUser } } = await supabase.auth.getUser();
+      // Small delay to ensure session JWT is fully propagated to the Supabase client
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const sessionUser = session?.user;
       if (sessionUser) {
         const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
         
