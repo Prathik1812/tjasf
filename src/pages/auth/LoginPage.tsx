@@ -21,21 +21,27 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const emailLower = email.toLowerCase().trim();
+    try {
+      const emailLower = email.toLowerCase().trim();
 
-    // 1. Enforce strict @tjasf.com email usage
-    if (emailLower.endsWith('@tjasf.com')) {
-      if (emailLower !== 'editor@tjasf.com' && emailLower !== 'editorial@tjasf.com') {
-        setError('Unauthorized email address under the @tjasf.com domain.');
+      // 1. Enforce strict @tjasf.com email usage
+      if (emailLower.endsWith('@tjasf.com')) {
+        if (emailLower !== 'editor@tjasf.com' && emailLower !== 'editorial@tjasf.com') {
+          setError('Unauthorized email address under the @tjasf.com domain.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Perform Supabase Sign In
+      const { error: signInError } = await signIn(email, password);
+      
+      if (signInError) {
+        setError(signInError);
         setLoading(false);
         return;
       }
-    }
 
-    // 2. Perform Supabase Sign In
-    const { error: signInError } = await signIn(email, password);
-    
-    if (!signInError) {
       const { data: { user: sessionUser } } = await supabase.auth.getUser();
       if (sessionUser) {
         const { data: existingProfile } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle();
@@ -83,11 +89,11 @@ export default function LoginPage() {
         await refreshProfile();
       }
       navigate(from);
-      return;
+    } catch (err: any) {
+      console.error('Sign in error:', err);
+      setError(err.message || 'An unexpected error occurred during sign in.');
+      setLoading(false);
     }
-
-    setError(signInError);
-    setLoading(false);
   };
 
   return (
