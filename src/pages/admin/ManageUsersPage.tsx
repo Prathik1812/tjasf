@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Eye, X, User } from 'lucide-react';
+import { Eye, X, User, Trash2 } from 'lucide-react';
 import type { Profile, UserRole } from '@/types';
 
 export default function ManageUsersPage() {
@@ -15,6 +15,13 @@ export default function ManageUsersPage() {
     userName: string;
     oldRole: UserRole;
     newRole: UserRole;
+  } | null>(null);
+
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+    userEmail: string;
   } | null>(null);
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
@@ -39,6 +46,23 @@ export default function ManageUsersPage() {
       setUsers(users.map((u) => u.id === userId ? { ...u, role } : u));
     }
     setUpdatingId(null);
+  };
+
+  const deleteUser = async (userId: string) => {
+    setUpdatingId(userId);
+    try {
+      // Call secure postgres definer function to delete auth user + profile
+      const { error } = await supabase.rpc('delete_user_by_admin', { user_id: userId });
+      if (error) throw error;
+      
+      setUsers(users.filter((u) => u.id !== userId));
+      alert('User deleted successfully.');
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to delete user: ${err.message || err.details || 'Ensure you have executed the delete SQL trigger in Supabase.'}`);
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const handleRoleSelect = (userId: string, newRole: UserRole) => {
@@ -131,12 +155,26 @@ export default function ManageUsersPage() {
                       </button>
                     </td>
                     <td className="p-4">
-                      <button
-                        onClick={() => setSelectedProfile(u)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#eb5526] hover:text-[#d7461c] cursor-pointer"
-                      >
-                        <Eye size={14} /> Profile
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setSelectedProfile(u)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#eb5526] hover:text-[#d7461c] cursor-pointer"
+                        >
+                          <Eye size={14} /> Profile
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmModal({
+                            isOpen: true,
+                            userId: u.id,
+                            userName: u.full_name,
+                            userEmail: u.email
+                          })}
+                          disabled={updatingId === u.id}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer disabled:opacity-50"
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -246,7 +284,43 @@ export default function ManageUsersPage() {
         </div>
       )}
 
-      {/* Custom Confirmation Web Modal */}
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmModal && deleteConfirmModal.isOpen && (
+        <div className="fixed inset-0 bg-[#08172f]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg border border-[#e6e5e0] shadow-xl max-w-[440px] w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6">
+              <h3 className="font-['Playfair_Display'] font-semibold text-lg text-red-600 mb-2">
+                Delete Account Permanently
+              </h3>
+              <p className="text-sm text-[#667082] leading-relaxed">
+                Are you sure you want to permanently delete the account for <strong>{deleteConfirmModal.userName}</strong> ({deleteConfirmModal.userEmail})?
+              </p>
+              <p className="text-xs text-red-500 mt-2 font-medium">
+                ⚠️ WARNING: This action is irreversible and will delete all their papers, review history, and login access.
+              </p>
+            </div>
+            <div className="bg-[#f1f0ec] px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirmModal(null)}
+                className="px-4 py-2 border border-[#d8d8d1] rounded-lg text-xs font-bold text-[#102342] bg-white hover:bg-[#fbfaf8] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteUser(deleteConfirmModal.userId);
+                  setDeleteConfirmModal(null);
+                }}
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Role Confirmation Web Modal */}
       {confirmModal && confirmModal.isOpen && (
         <div className="fixed inset-0 bg-[#08172f]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg border border-[#e6e5e0] shadow-xl max-w-[440px] w-full overflow-hidden animate-in fade-in zoom-in duration-200">
