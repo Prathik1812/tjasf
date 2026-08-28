@@ -323,3 +323,38 @@ export async function sendInvitationAcceptedNotification(name: string, email: st
     html
   });
 }
+
+// Send board invitation credentials
+export async function sendBoardInvitationCredentials(name: string, email: string, role: string, tempPassword: string) {
+  const loginUrl = `${window.location.origin}/login`;
+  const formattedRole = role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const html = `
+    <div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #102342; border-bottom: 2px solid #eb5526; padding-bottom: 8px;">Editorial Team Recruitment Invitation</h2>
+      <p>Dear Dr./Prof. ${name},</p>
+      <p>We are pleased to invite you to join the editorial team of <strong>The Journal of Advanced Scientific Frontiers (TJASF)</strong> as an <strong>${formattedRole}</strong>.</p>
+      <p>To help you get started quickly, we have pre-created your account on our portal. Please use the temporary credentials below to log in:</p>
+      <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; padding: 16px; margin: 16px 0; border-radius: 6px; font-family: monospace; font-size: 13px; color: #27334a;">
+        <p style="margin: 0;"><strong>Portal URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+        <p style="margin: 4px 0 0 0;"><strong>Username/Email:</strong> ${email}</p>
+        <p style="margin: 4px 0 0 0;"><strong>Temporary Password:</strong> ${tempPassword}</p>
+      </div>
+      <p><strong>Crucial Next Steps:</strong></p>
+      <ol style="font-size: 13px; color: #27334a;">
+        <li>Log into the portal using the link above.</li>
+        <li>Go to <strong>My Profile Settings</strong> immediately to change your password.</li>
+        <li>Verify/update your affiliation and add your <strong>Research Keywords</strong> (areas of expertise) to activate peer-review selection and match suggestions.</li>
+      </ol>
+      <div style="margin: 24px 0; text-align: center;">
+        <a href="${loginUrl}" style="display: inline-block; padding: 12px 24px; background-color: #eb5526; color: white; text-decoration: none; font-weight: bold; border-radius: 6px; font-size: 14px;">Log In & Accept Invitation</a>
+      </div>
+      <p style="margin-top: 24px; font-size: 13px;">Kind regards,</p>
+      <p style="font-size: 13px;"><strong>TJASF Editorial Office</strong><br><a href="https://www.tjasf.com">www.tjasf.com</a></p>
+    </div>
+  `;
+  return sendEmail({
+    to: email,
+    subject: `[TJASF] Editorial Team Invitation - Account Pre-created`,
+    html
+  });
+}

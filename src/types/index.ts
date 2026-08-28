@@ -19,6 +19,7 @@ export interface Profile {
   google_scholar_id?: string;
   scopus_id?: string;
   researcher_id?: string;
+  invitation_accepted?: boolean;
   bio: string;
   avatar_url: string;
   reviewer_domains: string[];
