@@ -41,9 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        fetchProfile(data.session.user.id).finally(() => setLoading(false));
-      } else {
+      if (!data.session?.user) {
         setLoading(false);
       }
     });
@@ -51,15 +49,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        fetchProfile(newSession.user.id);
-      } else {
+      if (!newSession?.user) {
         setProfile(null);
+        setLoading(false);
       }
     });
 
     return () => authListener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      fetchProfile(user.id).finally(() => setLoading(false));
+    } else {
+      setProfile(null);
+      setLoading(false);
+    }
+  }, [user]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
