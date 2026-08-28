@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
-import { Lock, Save, Key, Tag, Plus, X } from 'lucide-react';
+import { Lock, Save, Key, Plus, X } from 'lucide-react';
 import type { Profile } from '@/types';
 
 export default function ProfilePage() {
-  const { user, profile: authProfile, fetchProfile } = useAuth();
+  const { user, profile: authProfile, refreshProfile } = useAuth();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,7 @@ export default function ProfilePage() {
 
       if (error) throw error;
 
-      await fetchProfile(user.id);
+      await refreshProfile();
       toast.success('Profile details updated successfully!');
     } catch (err: any) {
       console.error(err);
