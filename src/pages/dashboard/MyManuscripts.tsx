@@ -40,7 +40,7 @@ export default function MyManuscripts() {
       if (doms) setDomains(doms as Domain[]);
       setLoading(false);
     })();
-  }, [activeProfile]);
+  }, [activeProfile?.id, activeProfile?.role]);
 
   const domainName = (id: string | null) => domains.find((d) => d.id === id)?.name || 'Unassigned';
 

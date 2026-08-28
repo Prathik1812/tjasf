@@ -32,7 +32,7 @@ export default function DashboardHome() {
         if (em) setEditorManuscripts(em as Manuscript[]);
       }
     })();
-  }, [activeProfile]);
+  }, [activeProfile?.id, activeProfile?.role]);
 
   if (!user || !activeProfile) return null;
 
