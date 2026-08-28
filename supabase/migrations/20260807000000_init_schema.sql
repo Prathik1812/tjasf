@@ -164,11 +164,11 @@ CREATE TABLE IF NOT EXISTS homepage_content (
 
 -- ============ EMAIL TEMPLATES ============
 CREATE TABLE IF NOT EXISTS email_templates (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  event text UNIQUE NOT NULL,
+  slug text PRIMARY KEY,
+  title text NOT NULL,
   subject text NOT NULL,
   body text NOT NULL,
-  created_at timestamptz DEFAULT now()
+  variables text[] NOT NULL
 );
 
 -- ============ AUDIT LOG ============
