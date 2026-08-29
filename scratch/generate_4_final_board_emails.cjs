@@ -1,4 +1,37 @@
-<div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+const fs = require('fs');
+const path = require('path');
+
+const members = [
+  {
+    name: 'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
+    email: 'bvvs.kumarfet@kiit.ac.in',
+    filename: 'dr_veera_venkata_subrahmanya_kumar_bhajana.html'
+  },
+  {
+    name: 'Dr. Amrit Mukherjee',
+    email: 'amukherjee@jcu.cz',
+    filename: 'dr_amrit_mukherjee.html'
+  },
+  {
+    name: 'Dr. A. Pramod Kumar',
+    email: 'a.pramodkumar@cmrec.ac.in',
+    filename: 'dr_a_pramod_kumar.html'
+  },
+  {
+    name: 'Dr. Abdul Aleem',
+    email: 'aleemece@vjit.ac.in',
+    filename: 'dr_abdul_aleem.html'
+  }
+];
+
+const outputDir = path.join(__dirname, 'associate_editors');
+
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
+function generateHtml(name, email) {
+  return `<div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
   <!-- Header with SVG Branding -->
   <div style="background-color: #102342; padding: 28px 24px; text-align: center; border-bottom: 3px solid #eb5526;">
     <img src="https://www.tjasf.com/assets/images/TJASF_logo_light.svg" alt="TJASF Logo" style="width: 140px; height: auto; filter: brightness(0) invert(1);" />
@@ -7,7 +40,7 @@
 
   <!-- Body Content -->
   <div style="padding: 32px 24px; background-color: #ffffff;">
-    <p style="font-size: 15px; color: #102342; margin-top: 0;">Dear <strong>Dr. Amrit Mukherjee</strong>,</p>
+    <p style="font-size: 15px; color: #102342; margin-top: 0;">Dear <strong>${name}</strong>,</p>
 
     <h2 style="color: #eb5526; font-size: 18px; margin-top: 12px; margin-bottom: 16px;">Congratulations!</h2>
 
@@ -20,8 +53,8 @@
     <!-- Appointment & Pre-Configured Credentials Card -->
     <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; border-left: 4px solid #eb5526; padding: 18px 20px; border-radius: 6px; margin: 24px 0;">
       <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; color: #667082; font-weight: bold;">Your Pre-Configured Credentials</p>
-      <p style="margin: 0 0 4px 0; font-size: 14px; color: #102342;"><strong>Appointee:</strong> Dr. Amrit Mukherjee</p>
-      <p style="margin: 0 0 4px 0; font-size: 14px; color: #102342;"><strong>Login Email:</strong> <span style="color: #eb5526; font-weight: bold;">amukherjee@jcu.cz</span></p>
+      <p style="margin: 0 0 4px 0; font-size: 14px; color: #102342;"><strong>Appointee:</strong> ${name}</p>
+      <p style="margin: 0 0 4px 0; font-size: 14px; color: #102342;"><strong>Login Email:</strong> <span style="color: #eb5526; font-weight: bold;">${email}</span></p>
       <p style="margin: 0; font-size: 14px; color: #102342;"><strong>Temporary Password:</strong> <span style="font-weight: bold; background: #e6e5e0; padding: 2px 6px; border-radius: 3px;">TJASF@Associate2026!</span></p>
     </div>
 
@@ -54,4 +87,14 @@
       📧 <a href="mailto:editor@tjasf.com" style="color: #eb5526; text-decoration: none;">editor@tjasf.com</a>
     </p>
   </div>
-</div>
+</div>`;
+}
+
+members.forEach(m => {
+  const content = generateHtml(m.name, m.email);
+  const filePath = path.join(outputDir, m.filename);
+  fs.writeFileSync(filePath, content, 'utf8');
+  console.log(`Updated: ${filePath}`);
+});
+
+console.log("All 4 HTML email templates updated with standard body font for emails!");

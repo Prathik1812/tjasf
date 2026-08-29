@@ -130,7 +130,7 @@ export default function EditorialBoardPage() {
 
   const renderCard = (m: CustomBoardMember) => (
     <div key={m.name} className="bg-white rounded-lg border border-[#e6e5e0] p-6 shadow-sm hover:shadow-md transition-all space-y-2">
-      <div className="font-['Playfair_Display'] font-semibold text-[#102342] text-xl mb-3 border-b border-[#f1f0ec] pb-2 flex items-center justify-between">
+      <div className="font-['Playfair_Display'] font-semibold text-[#eb5526] text-xl mb-3 border-b border-[#f1f0ec] pb-2 flex items-center justify-between">
         <span>{m.name}</span>
       </div>
       
@@ -148,7 +148,7 @@ export default function EditorialBoardPage() {
       
       <div className="text-xs text-[#27334a]">
         <span className="font-semibold text-[#667082]">Email ID: </span>
-        <a href={`mailto:${m.email}`} className="font-medium text-[#eb5526] hover:underline font-mono">{m.email}</a>
+        <a href={`mailto:${m.email}`} className="font-medium text-[#eb5526] hover:underline">{m.email}</a>
       </div>
       
       <div className="text-xs text-[#27334a]">
