@@ -543,7 +543,7 @@ export default function SubmitManuscriptPage() {
                   <div className="font-bold text-xs text-[#102342] mb-1 flex items-center justify-between">
                     <span>Fast-Track</span>
                     <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
-                      $40 USD
+                      $49 USD
                     </span>
                   </div>
                   <div className="text-[11px] text-[#667082] leading-relaxed">Expedited peer-review cycle (approx. 4-8 weeks). Processing fee applies.</div>
