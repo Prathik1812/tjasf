@@ -58,7 +58,7 @@ const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
 const DEFAULT_MANAGING_EDITOR: CustomBoardMember = {
   name: 'B Prathik Kumar',
   role_title: 'Managing Editor',
-  institution: 'Anurag University',
+  institution: 'TJASF Editorial Office',
   email: 'editorial@tjasf.com',
   country: 'India'
 };
