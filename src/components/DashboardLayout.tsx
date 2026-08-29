@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
 
 export default function DashboardLayout() {
-  const { user, profile, signOut } = useAuth();
+  const { profile, loading, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -14,10 +14,7 @@ export default function DashboardLayout() {
     navigate('/');
   };
 
-  const activeProfile = profile || (user ? {
-    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-    role: 'author' as UserRole,
-  } : null);
+  const activeProfile = profile;
 
   const roleLabel: Record<UserRole, string> = {
     author: 'Author',
@@ -30,6 +27,14 @@ export default function DashboardLayout() {
   };
 
   const navItems = getNavItems(activeProfile?.role);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f5f4f0] flex items-center justify-center text-[#102342] font-medium text-sm">
+        Loading workspace...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f4f0] flex">

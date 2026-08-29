@@ -9,7 +9,7 @@ interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; profile: Profile | null }>;
   signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -23,14 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (uid: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .maybeSingle();
-    if (data) setProfile(data as Profile);
-    else setProfile(null);
+  const fetchProfile = async (uid: string): Promise<Profile | null> => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .maybeSingle();
+      if (data) {
+        setProfile(data as Profile);
+        return data as Profile;
+      }
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 200));
+    }
+    setProfile(null);
+    return null;
   };
 
   const refreshProfile = async () => {
@@ -69,8 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message, profile: null };
+    let loadedProfile: Profile | null = null;
+    if (data.user) {
+      loadedProfile = await fetchProfile(data.user.id);
+    }
+    return { error: null, profile: loadedProfile };
   };
 
   const signUp = async (email: string, password: string, fullName: string, role: UserRole = 'author') => {

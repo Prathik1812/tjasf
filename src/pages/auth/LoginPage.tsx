@@ -32,8 +32,8 @@ export default function LoginPage() {
         }
       }
 
-      // Perform Supabase Sign In
-      const { error: signInError } = await signIn(email, password);
+      // Perform Supabase Sign In and receive loaded profile directly
+      const { error: signInError, profile: userProfile } = await signIn(email, password);
 
       if (signInError) {
         setError(signInError);
@@ -41,7 +41,28 @@ export default function LoginPage() {
         return;
       }
 
-      // AuthContext handles profile loading automatically after sign-in
+      if (userProfile) {
+        const getMappedRoleGroup = (dbRole: string): 'author' | 'reviewer' | 'editor' | 'admin' => {
+          if (dbRole === 'admin') return 'admin';
+          if (dbRole === 'reviewer') return 'reviewer';
+          if (
+            dbRole.includes('editor') ||
+            dbRole.includes('chief') ||
+            dbRole.includes('board') ||
+            dbRole.includes('member')
+          ) return 'editor';
+          return 'author';
+        };
+
+        const matchedGroup = getMappedRoleGroup(userProfile.role || 'author');
+        // Admins can log into any workspace, otherwise enforce matched role group
+        if (userProfile.role !== 'admin' && matchedGroup !== selectedRole) {
+          setError(`Access Denied: You selected "${selectedRole.toUpperCase()}" but this account is registered as a ${userProfile.role.replace(/_/g, ' ').toUpperCase()}.`);
+          setLoading(false);
+          return;
+        }
+      }
+
       navigate(from);
     } catch (err: any) {
       console.error('Sign in error:', err);
