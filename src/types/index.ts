@@ -46,6 +46,9 @@ export interface EditorialBoardMember {
   name: string;
   role_title: string;
   affiliation: string;
+  designation?: string;
+  email?: string;
+  country?: string;
   domain: string;
   bio: string;
   photo_url: string;
