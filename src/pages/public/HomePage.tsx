@@ -11,15 +11,18 @@ export default function HomePage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [publishedVolumesCount, setPublishedVolumesCount] = useState<number>(1);
+
   useEffect(() => {
     (async () => {
+      // Fetch published issue
       const { data: issues } = await supabase
         .from('issues')
         .select('*')
-        .eq('is_published', true)
         .order('publication_date', { ascending: false })
         .limit(1)
         .maybeSingle();
+
       if (issues) {
         setCurrentIssue(issues as Issue);
         const { data: vol } = await supabase
@@ -28,19 +31,33 @@ export default function HomePage() {
           .eq('id', (issues as Issue).volume_id)
           .maybeSingle();
         if (vol) setCurrentVolume(vol as Volume);
+      } else {
+        // Fallback to initial Volume 1 & Issue 1
+        const { data: vol } = await supabase.from('volumes').select('*').limit(1).maybeSingle();
+        if (vol) {
+          setCurrentVolume(vol as Volume);
+          const { data: iss } = await supabase.from('issues').select('*').eq('volume_id', vol.id).limit(1).maybeSingle();
+          if (iss) setCurrentIssue(iss as Issue);
+        }
       }
+
+      const { data: vols } = await supabase.from('volumes').select('id');
+      if (vols && vols.length > 0) setPublishedVolumesCount(vols.length);
+
       const { data: arts } = await supabase
         .from('articles')
         .select('*')
         .order('publication_date', { ascending: false })
         .limit(3);
       if (arts) setArticles(arts as Article[]);
+
       const { data: anns } = await supabase
         .from('announcements')
         .select('*')
         .order('date', { ascending: false })
         .limit(3);
       if (anns) setAnnouncements(anns as Announcement[]);
+
       setLoading(false);
     })();
   }, []);
@@ -103,7 +120,7 @@ export default function HomePage() {
       <section className="bg-[#eb5526] text-white">
         <div className="max-w-[1160px] mx-auto px-8 grid grid-cols-2 md:grid-cols-4 py-6">
           {[
-            { v: '0', l: 'Volumes published' },
+            { v: String(publishedVolumesCount).padStart(2, '0'), l: 'Volumes published' },
             { v: '06', l: 'Scientific domains' },
             { v: '100%', l: 'Open access' },
             { v: 'Global', l: 'Editorial community' },
