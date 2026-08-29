@@ -90,7 +90,7 @@ export default function ManageUsersPage() {
     setUpdatingId(null);
   };
 
-  const rolesList: UserRole[] = ['author', 'reviewer', 'section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'];
+  const rolesList: UserRole[] = ['author', 'reviewer', 'section_editor', 'editor_in_chief', 'associate_editor', 'editorial_board_member'];
 
   const roleLabel: Record<UserRole, string> = {
     author: 'Author',
@@ -130,21 +130,27 @@ export default function ManageUsersPage() {
                     <td className="p-4 font-medium text-[#102342]">{u.full_name}</td>
                     <td className="p-4 text-[#667082]">{u.email}</td>
                     <td className="p-4">
-                      <select
-                         value={u.role}
-                         onChange={(e) => handleRoleSelect(u.id, e.target.value as UserRole)}
-                         disabled={updatingId === u.id}
-                         className="border border-[#d8d8d1] rounded px-2.5 py-1 bg-white text-xs outline-none focus:border-[#eb5526] disabled:opacity-50"
-                      >
-                        {rolesList.map((r) => (
-                          <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>
-                        ))}
-                      </select>
+                      {u.role === 'admin' ? (
+                        <span className="px-2.5 py-1 bg-[#102342] text-white rounded text-xs font-bold">
+                          Administrator (Protected)
+                        </span>
+                      ) : (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleSelect(u.id, e.target.value as UserRole)}
+                          disabled={updatingId === u.id}
+                          className="border border-[#d8d8d1] rounded px-2.5 py-1 bg-white text-xs outline-none focus:border-[#eb5526] disabled:opacity-50"
+                        >
+                          {rolesList.map((r) => (
+                            <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="p-4">
                       <button
                         onClick={() => toggleUserActive(u)}
-                        disabled={updatingId === u.id}
+                        disabled={updatingId === u.id || u.role === 'admin'}
                         className={`text-xs font-bold px-3 py-1 rounded-full cursor-pointer ${
                           u.is_active
                             ? 'bg-green-50 text-green-700 hover:bg-green-100'
@@ -162,18 +168,22 @@ export default function ManageUsersPage() {
                         >
                           <Eye size={14} /> Profile
                         </button>
-                        <button
-                          onClick={() => setDeleteConfirmModal({
-                            isOpen: true,
-                            userId: u.id,
-                            userName: u.full_name,
-                            userEmail: u.email
-                          })}
-                          disabled={updatingId === u.id}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer disabled:opacity-50"
-                        >
-                          <Trash2 size={14} /> Delete
-                        </button>
+                        {u.role !== 'admin' ? (
+                          <button
+                            onClick={() => setDeleteConfirmModal({
+                              isOpen: true,
+                              userId: u.id,
+                              userName: u.full_name,
+                              userEmail: u.email
+                            })}
+                            disabled={updatingId === u.id}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer disabled:opacity-50"
+                          >
+                            <Trash2 size={14} /> Delete
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-gray-400 italic font-medium">Protected System Admin</span>
+                        )}
                       </div>
                     </td>
                   </tr>

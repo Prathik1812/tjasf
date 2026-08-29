@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -80,13 +81,11 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-[#102342] mb-1">New Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters"
-                  className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]"
                 />
 
                 {/* Password Strength Indicator */}
@@ -154,13 +153,11 @@ export default function ResetPasswordPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-[#102342] mb-1">Confirm New Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter password"
-                  className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]"
                 />
               </div>
 

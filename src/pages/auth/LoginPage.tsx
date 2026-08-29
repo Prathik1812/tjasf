@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -94,7 +95,7 @@ export default function LoginPage() {
                 <label className="text-sm font-semibold text-[#102342]">Password</label>
                 <Link to="/forgot-password" className="text-xs text-[#eb5526] hover:underline font-semibold">Forgot password?</Link>
               </div>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
             {/* Role Selection Radio Buttons */}

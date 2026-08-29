@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import PasswordInput from '@/components/PasswordInput';
 import { sendInvitationAcceptedNotification } from '@/lib/email';
 
 export default function RegisterPage() {
@@ -107,7 +108,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1">Password</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} />
               
               {/* Password Strength Indicator */}
               {password.length > 0 && (
@@ -173,7 +174,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1">Confirm Password</label>
-              <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              <PasswordInput required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </div>
             <button type="submit" disabled={loading} className="w-full py-3 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] transition-colors disabled:opacity-50">
               {loading ? 'Creating account...' : 'Create Account'}
