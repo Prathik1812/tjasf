@@ -24,8 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (uid: string): Promise<Profile | null> => {
+    // 1. Try fetching profile by ID
     for (let attempt = 0; attempt < 3; attempt++) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', uid)
@@ -34,8 +35,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(data as Profile);
         return data as Profile;
       }
+      if (error) console.error('[AuthContext] fetchProfile ID error:', error.message);
       if (attempt < 2) await new Promise((r) => setTimeout(r, 200));
     }
+
+    // 2. Fallback: Try fetching profile by email if user is present
+    const currentEmail = user?.email || (await supabase.auth.getUser()).data.user?.email;
+    if (currentEmail) {
+      const { data: byEmail } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', currentEmail)
+        .maybeSingle();
+      if (byEmail) {
+        setProfile(byEmail as Profile);
+        return byEmail as Profile;
+      }
+
+      // 3. Fallback: Auto-create profile row if completely missing in database
+      const defaultRole: UserRole = (currentEmail.toLowerCase() === 'editorial@tjasf.com' || currentEmail.toLowerCase() === 'editor@tjasf.com') ? 'admin' : 'author';
+      const newProfile: Partial<Profile> = {
+        id: uid,
+        email: currentEmail,
+        full_name: user?.user_metadata?.full_name || currentEmail.split('@')[0],
+        role: defaultRole,
+        is_active: true,
+        email_verified: true,
+      };
+
+      await supabase.from('profiles').upsert(newProfile as any);
+      setProfile(newProfile as Profile);
+      return newProfile as Profile;
+    }
+
     setProfile(null);
     return null;
   };
