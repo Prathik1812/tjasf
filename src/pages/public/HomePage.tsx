@@ -34,13 +34,14 @@ export default function HomePage() {
         if (vol) setCurrentVolume(vol as Volume);
       }
 
-      // 2. Count volumes that have actually published issues
+      // 2. Count volumes that have published issues & articles
+      const { data: pubArticles } = await supabase.from('articles').select('id');
       const { data: pubIssues } = await supabase
         .from('issues')
         .select('volume_id')
         .eq('is_published', true);
 
-      if (pubIssues && pubIssues.length > 0) {
+      if (pubArticles && pubArticles.length > 0 && pubIssues && pubIssues.length > 0) {
         const uniqueVolIds = new Set(pubIssues.map(i => i.volume_id));
         setPublishedVolumesCount(uniqueVolIds.size);
       } else {
