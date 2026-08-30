@@ -11,6 +11,7 @@ export default function HomePage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   const [publishedVolumesCount, setPublishedVolumesCount] = useState<number>(0);
+  const [domainsCount, setDomainsCount] = useState<number>(4);
 
   useEffect(() => {
     (async () => {
@@ -44,6 +45,14 @@ export default function HomePage() {
         setPublishedVolumesCount(uniqueVolIds.size);
       } else {
         setPublishedVolumesCount(0);
+      }
+
+      // 3. Fetch domain count
+      const { data: doms } = await supabase.from('domains').select('id');
+      if (doms && doms.length > 0) {
+        setDomainsCount(doms.length);
+      } else {
+        setDomainsCount(4);
       }
 
       // 3. Fetch published articles
@@ -138,7 +147,7 @@ export default function HomePage() {
         <div className="max-w-[1160px] mx-auto px-8 grid grid-cols-2 md:grid-cols-4 py-6">
           {[
             { v: String(publishedVolumesCount).padStart(2, '0'), l: 'Volumes published' },
-            { v: '06', l: 'Scientific domains' },
+            { v: String(domainsCount).padStart(2, '0'), l: 'Scientific domains' },
             { v: '100%', l: 'Open access' },
             { v: 'Global', l: 'Editorial community' },
           ].map((s, i) => (
