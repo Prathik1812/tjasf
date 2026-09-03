@@ -1,0 +1,76 @@
+const fs = require('fs');
+const path = require('path');
+
+const member = {
+  name: 'Prof. Pascal Lorenz',
+  email: 'pascal.lorenz@uha.fr',
+  filename: 'prof_pascal_lorenz.html'
+};
+
+const outputDir = path.join(__dirname, 'associate_editors');
+
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
+function generateHtml(name, email) {
+  return `<div style="font-family: sans-serif; line-height: 1.6; color: #27334a; max-width: 600px; margin: 0 auto; border: 1px solid #e6e5e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+  <!-- Header with SVG Logo on Clean White Background -->
+  <div style="background-color: #ffffff; padding: 28px 24px 20px 24px; text-align: center; border-bottom: 2px solid #f1f0ec;">
+    <img src="https://www.tjasf.com/assets/images/TJASF_logo_light.svg" alt="TJASF Logo" style="width: 170px; height: auto;" />
+  </div>
+
+  <!-- Body Content -->
+  <div style="padding: 32px 24px; background-color: #ffffff;">
+    <p style="font-size: 15px; color: #102342; margin-top: 0;">Dear <strong>${name}</strong>,</p>
+
+    <p style="font-size: 15px; color: #102342; font-weight: bold; margin-top: 12px; margin-bottom: 16px;">Congratulations!</p>
+
+    <p style="font-size: 13.5px; color: #27334a;">Thank you for your interest in serving on the International Editorial Board of the The Journal of Advanced Scientific Frontiers (TJASF).</p>
+
+    <p style="font-size: 13.5px; color: #27334a;">After carefully reviewing your academic profile and research credentials, we are pleased to inform you that you have been appointed as an Editorial Board Member of TJASF.</p>
+
+    <p style="font-size: 13.5px; color: #27334a;">Your expertise and scholarly contributions will play an important role in maintaining the journal's academic quality, integrity, and international standards. We are delighted to welcome you to our growing global editorial community.</p>
+
+    <p style="font-size: 13.5px; color: #27334a;">To complete your onboarding process, please click the button below to activate your Editorial Board account.</p>
+    
+    <!-- Activate My Account Button -->
+    <div style="margin: 28px 0; text-align: center;">
+      <a href="https://www.tjasf.com/login" style="display: inline-block; padding: 14px 32px; background-color: #eb5526; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; font-size: 15px; box-shadow: 0 4px 12px rgba(235, 85, 38, 0.25);">Activate My Account</a>
+    </div>
+
+    <!-- Credentials Card -->
+    <div style="background-color: #fbfaf8; border: 1px solid #e6e5e0; border-left: 4px solid #eb5526; padding: 14px 18px; border-radius: 6px; margin: 20px 0;">
+      <p style="margin: 0 0 4px 0; font-size: 13px; color: #102342;"><strong>Login Email:</strong> <span style="color: #eb5526; font-weight: bold;">${email}</span></p>
+      <p style="margin: 0; font-size: 13px; color: #102342;"><strong>Temporary Password:</strong> <span style="font-weight: bold; background: #e6e5e0; padding: 2px 6px; border-radius: 3px;">TJASF@Associate2026!</span></p>
+    </div>
+
+    <p style="font-size: 13.5px; color: #102342; font-weight: bold; margin-bottom: 8px;">Once your account is activated, you will be able to:</p>
+    <ul style="padding-left: 20px; margin-top: 0; color: #27334a; font-size: 13.5px; line-height: 1.8;">
+      <li>Access the Editorial Dashboard.</li>
+      <li>Manage assigned manuscripts.</li>
+      <li>Update your editorial profile.</li>
+      <li>Participate in the peer-review and editorial process.</li>
+    </ul>
+
+    <p style="font-size: 13.5px; color: #27334a;">If you have any questions or require any assistance during the onboarding process, please feel free to reply to this email. Our Editorial Office will be happy to assist you.</p>
+
+    <p style="font-size: 13.5px; color: #27334a;">Once again, congratulations on your appointment. We sincerely appreciate your willingness to contribute to TJASF and look forward to working with you in advancing high-quality scientific research and scholarly publishing.</p>
+
+    <hr style="border: none; border-top: 1px solid #e6e5e0; margin: 28px 0 20px 0;" />
+    
+    <p style="font-size: 13.5px; color: #27334a; margin: 0; line-height: 1.6;">Warm regards,<br /><br />
+      <strong style="color: #102342; font-size: 14px;">Dr. Rajesh Thumma</strong><br />
+      <span style="color: #102342;">Editor-in-Chief</span><br />
+      <strong>The Journal of Advanced Scientific Frontiers (TJASF)</strong><br />
+      🌐 <a href="https://www.tjasf.com" style="color: #eb5526; text-decoration: none;">www.tjasf.com</a><br />
+      📧 <a href="mailto:editor@tjasf.com" style="color: #eb5526; text-decoration: none;">editor@tjasf.com</a>
+    </p>
+  </div>
+</div>`;
+}
+
+const content = generateHtml(member.name, member.email);
+const filePath = path.join(outputDir, member.filename);
+fs.writeFileSync(filePath, content, 'utf8');
+console.log(`Generated: ${filePath}`);

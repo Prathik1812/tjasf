@@ -19,13 +19,23 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     true
   ),
   (
+    'Prof. Pascal Lorenz',
+    'Editorial Board Member',
+    'Professor',
+    'University of Haute Alsace',
+    'pascal.lorenz@uha.fr',
+    'France',
+    2,
+    true
+  ),
+  (
     'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
     'Editorial Board Member',
     'Associate Professor',
     'Kalinga Institute of Industrial Technology (KIIT) Deemed to be University',
     'bvvs.kumarfet@kiit.ac.in',
     'India',
-    2,
+    3,
     true
   ),
   (
@@ -35,7 +45,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'University of South Bohemia',
     'amukherjee@jcu.cz',
     'Czech Republic',
-    3,
+    4,
     true
   ),
   (
@@ -45,7 +55,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'NIT Andhra Pradesh',
     'a.pramodkumar@cmrec.ac.in',
     'India',
-    4,
+    5,
     true
   ),
   (
@@ -55,7 +65,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'Vidya Jyothi Institute of Technology',
     'aleemece@vjit.ac.in',
     'India',
-    5,
+    6,
     true
   ),
   (
@@ -65,6 +75,6 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'TJASF Editorial Office',
     'editorial@tjasf.com',
     'India',
-    6,
+    7,
     true
   );

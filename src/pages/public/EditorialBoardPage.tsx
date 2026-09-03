@@ -22,6 +22,14 @@ const DEFAULT_EDITOR_IN_CHIEF: CustomBoardMember = {
 
 const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
   {
+    name: 'Prof. Pascal Lorenz',
+    role_title: 'Editorial Board Member',
+    designation: 'Professor',
+    institution: 'University of Haute Alsace',
+    email: 'pascal.lorenz@uha.fr',
+    country: 'France'
+  },
+  {
     name: 'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
     role_title: 'Editorial Board Member',
     designation: 'Associate Professor',
