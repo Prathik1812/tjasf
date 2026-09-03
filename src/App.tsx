@@ -63,6 +63,8 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/article/:id" element={<ArticleDetailPage />} />
               <Route path="/join" element={<JoinUsPage />} />
+              <Route path="/join-us" element={<JoinUsPage />} />
+              <Route path="/join-reviewer" element={<JoinUsPage />} />
               <Route path="/co-author-consent" element={<CoAuthorConsentPage />} />
             </Route>
 

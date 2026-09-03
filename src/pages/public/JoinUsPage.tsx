@@ -346,10 +346,10 @@ export default function JoinUsPage() {
     <div className="max-w-[850px] mx-auto px-8 py-16">
       <div className="text-[#eb5526] uppercase tracking-[0.14em] text-[10px] font-bold mb-4">Join Our Team</div>
       <h1 className="font-['Playfair_Display'] font-medium text-[clamp(32px,4.5vw,48px)] leading-[1.1] text-[#102342] mb-4">
-        Editorial Board Recruitment
+        Join the TJASF Editorial &amp; Reviewer Team
       </h1>
       <p className="text-[#667082] text-sm leading-relaxed mb-10 max-w-[720px]">
-        The Journal of Advanced Scientific Frontiers (TJASF) is inviting qualified academics, researchers, scientists, and industry leaders to join its Editorial Board. Please complete the form below.
+        The Journal of Advanced Scientific Frontiers (TJASF) invites qualified academics, researchers, scientists, and industry leaders to join its Editorial Board or Peer Reviewer Panel. Please complete the application below.
       </p>
 
       {/* Stepper */}
