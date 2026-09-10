@@ -31,11 +31,21 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
   (
     'Prof. Ali Wagdy Mohamed',
     'Editorial Board Member',
-    'Full Professor',
+    'Professor',
     'Zewail City of Science, Technology and Innovation',
     'awagdy@zewailcity.edu.eg',
     'Egypt',
     3,
+    true
+  ),
+  (
+    'Prof. Mario Versaci',
+    'Editorial Board Member',
+    'Associate Professor of Electrical Engineering',
+    'Università Mediterranea degli Studi di Reggio Calabria',
+    'mario.versaci@unirc.it',
+    'Italy',
+    4,
     true
   ),
   (
@@ -45,7 +55,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'Swinburne University of Technology',
     'pponnusamy@swin.edu.au',
     'Australia',
-    4,
+    5,
     true
   ),
   (

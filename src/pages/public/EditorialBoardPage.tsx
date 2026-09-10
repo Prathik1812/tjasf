@@ -32,10 +32,18 @@ const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
   {
     name: 'Prof. Ali Wagdy Mohamed',
     role_title: 'Editorial Board Member',
-    designation: 'Full Professor',
+    designation: 'Professor',
     institution: 'Zewail City of Science, Technology and Innovation',
     email: 'awagdy@zewailcity.edu.eg',
     country: 'Egypt'
+  },
+  {
+    name: 'Prof. Mario Versaci',
+    role_title: 'Editorial Board Member',
+    designation: 'Associate Professor of Electrical Engineering',
+    institution: 'Università Mediterranea degli Studi di Reggio Calabria',
+    email: 'mario.versaci@unirc.it',
+    country: 'Italy'
   },
   {
     name: 'Dr. Panneerselvam Ponnusamy',
