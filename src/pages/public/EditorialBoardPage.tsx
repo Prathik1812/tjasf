@@ -54,6 +54,14 @@ const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
     country: 'Australia'
   },
   {
+    name: 'Dr. Yelleti Vivek',
+    role_title: 'Editorial Board Member',
+    designation: 'Assistant Professor',
+    institution: 'Indian Institute of Management Ranchi (IIM Ranchi)',
+    email: 'yelleti.vivek@iimranchi.ac.in',
+    country: 'India'
+  },
+  {
     name: 'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
     role_title: 'Editorial Board Member',
     designation: 'Associate Professor',
@@ -115,8 +123,7 @@ export default function EditorialBoardPage() {
           const me = data.find(m => m.name?.toLowerCase().includes('prathik'));
           const membersList = data.filter(m => 
             !m.role_title?.toLowerCase().includes('chief') && 
-            !m.name?.toLowerCase().includes('prathik') &&
-            !m.name?.toLowerCase().includes('vivek')
+            !m.name?.toLowerCase().includes('prathik')
           );
 
           if (eic) {

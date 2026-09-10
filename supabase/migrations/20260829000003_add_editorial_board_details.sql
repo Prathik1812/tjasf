@@ -59,13 +59,23 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     true
   ),
   (
+    'Dr. Yelleti Vivek',
+    'Editorial Board Member',
+    'Assistant Professor',
+    'Indian Institute of Management Ranchi (IIM Ranchi)',
+    'yelleti.vivek@iimranchi.ac.in',
+    'India',
+    6,
+    true
+  ),
+  (
     'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
     'Editorial Board Member',
     'Associate Professor',
     'Kalinga Institute of Industrial Technology (KIIT) Deemed to be University',
     'bvvs.kumarfet@kiit.ac.in',
     'India',
-    5,
+    7,
     true
   ),
   (
@@ -75,7 +85,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'University of South Bohemia',
     'amukherjee@jcu.cz',
     'Czech Republic',
-    6,
+    8,
     true
   ),
   (
@@ -85,7 +95,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'NIT Andhra Pradesh',
     'a.pramodkumar@cmrec.ac.in',
     'India',
-    7,
+    9,
     true
   ),
   (
@@ -95,7 +105,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'Vidya Jyothi Institute of Technology',
     'aleemece@vjit.ac.in',
     'India',
-    8,
+    10,
     true
   ),
   (
@@ -105,6 +115,6 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'TJASF Editorial Office',
     'editorial@tjasf.com',
     'India',
-    9,
+    11,
     true
   );
