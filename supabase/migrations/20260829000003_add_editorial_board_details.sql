@@ -29,13 +29,33 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     true
   ),
   (
+    'Prof. Ali Wagdy Mohamed',
+    'Editorial Board Member',
+    'Full Professor',
+    'Zewail City of Science, Technology and Innovation',
+    'awagdy@zewailcity.edu.eg',
+    'Egypt',
+    3,
+    true
+  ),
+  (
+    'Dr. Panneerselvam Ponnusamy',
+    'Editorial Board Member',
+    'Researcher',
+    'Swinburne University of Technology',
+    'pponnusamy@swin.edu.au',
+    'Australia',
+    4,
+    true
+  ),
+  (
     'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
     'Editorial Board Member',
     'Associate Professor',
     'Kalinga Institute of Industrial Technology (KIIT) Deemed to be University',
     'bvvs.kumarfet@kiit.ac.in',
     'India',
-    3,
+    5,
     true
   ),
   (
@@ -45,7 +65,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'University of South Bohemia',
     'amukherjee@jcu.cz',
     'Czech Republic',
-    4,
+    6,
     true
   ),
   (
@@ -55,7 +75,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'NIT Andhra Pradesh',
     'a.pramodkumar@cmrec.ac.in',
     'India',
-    5,
+    7,
     true
   ),
   (
@@ -65,7 +85,7 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'Vidya Jyothi Institute of Technology',
     'aleemece@vjit.ac.in',
     'India',
-    6,
+    8,
     true
   ),
   (
@@ -75,6 +95,6 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     'TJASF Editorial Office',
     'editorial@tjasf.com',
     'India',
-    7,
+    9,
     true
   );

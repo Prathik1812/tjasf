@@ -30,6 +30,22 @@ const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
     country: 'France'
   },
   {
+    name: 'Prof. Ali Wagdy Mohamed',
+    role_title: 'Editorial Board Member',
+    designation: 'Full Professor',
+    institution: 'Zewail City of Science, Technology and Innovation',
+    email: 'awagdy@zewailcity.edu.eg',
+    country: 'Egypt'
+  },
+  {
+    name: 'Dr. Panneerselvam Ponnusamy',
+    role_title: 'Editorial Board Member',
+    designation: 'Researcher',
+    institution: 'Swinburne University of Technology',
+    email: 'pponnusamy@swin.edu.au',
+    country: 'Australia'
+  },
+  {
     name: 'Dr. Veera Venkata Subrahmanya Kumar Bhajana',
     role_title: 'Editorial Board Member',
     designation: 'Associate Professor',
