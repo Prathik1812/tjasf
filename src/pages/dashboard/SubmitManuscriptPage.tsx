@@ -86,7 +86,7 @@ export default function SubmitManuscriptPage() {
     if (step === 1) return title.trim().length > 0 && domainId.length > 0;
     if (step === 2) return authors.length > 0 && authors.every((a) => a.name.trim().length > 0);
     if (step === 3) return abstract.trim().length > 0;
-    if (step === 4) return fileName.length > 0 && plagiarismFileName.length > 0;
+    if (step === 4) return fileName.length > 0;
     if (step === 5) return originalWork && copyrightAgreement && policiesAgreement;
     return false;
   };
@@ -672,7 +672,7 @@ export default function SubmitManuscriptPage() {
             
             {/* Plagiarism Report File */}
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Plagiarism Report (Turnitin or iThenticate PDF)</label>
+              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Plagiarism Report (Turnitin or iThenticate PDF) <span className="text-[#667082] font-normal">(Optional)</span></label>
               <div className="border-2 border-dashed border-[#d8d8d1] rounded-lg p-8 text-center bg-[#fbfaf8]">
                 {uploadingPlagiarism ? (
                   <div className="py-4 space-y-3">
@@ -687,8 +687,8 @@ export default function SubmitManuscriptPage() {
                 ) : (
                   <>
                     <Upload size={32} className="mx-auto text-[#d8d8d1] mb-3" />
-                    <p className="text-sm text-[#667082] mb-2">Drag and drop or click to upload your similarity report</p>
-                    <p className="text-xs text-[#667082]">PDF format only (Similarity index must be ≤ 10%)</p>
+                    <p className="text-sm text-[#667082] mb-2">Drag and drop or click to upload your similarity report (Optional)</p>
+                    <p className="text-xs text-[#667082]">PDF format (Optional — If not uploaded, editorial desk screening will perform plagiarism check)</p>
                     <input type="file" accept=".pdf" onChange={handlePlagiarismUpload} className="hidden" id="plagiarism-upload" />
                     <label htmlFor="plagiarism-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-lg cursor-pointer hover:bg-[#eeece7]">
                       Choose Report PDF
