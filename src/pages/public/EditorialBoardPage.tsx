@@ -22,6 +22,22 @@ const DEFAULT_EDITOR_IN_CHIEF: CustomBoardMember = {
 
 const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
   {
+    name: 'Dr. V. Narasimha Nayak',
+    role_title: 'Editorial Board Member',
+    designation: 'Assistant Professor Grade-II',
+    institution: 'Dr. B. R. Ambedkar National Institute of Technology, Jalandhar',
+    email: 'nayakvn@nitj.ac.in',
+    country: 'India'
+  },
+  {
+    name: 'Prof. Nuno Domingues',
+    role_title: 'Editorial Board Member',
+    designation: 'Professor',
+    institution: 'Instituto Superior de Engenharia de Lisboa (ISEL)',
+    email: 'nndomingues@gmail.com',
+    country: 'Portugal'
+  },
+  {
     name: 'Prof. Arthur James Swart',
     role_title: 'Editorial Board Member',
     designation: 'Associate Professor',

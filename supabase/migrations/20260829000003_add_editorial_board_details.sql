@@ -19,13 +19,33 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     true
   ),
   (
+    'Dr. V. Narasimha Nayak',
+    'Editorial Board Member',
+    'Assistant Professor Grade-II',
+    'Dr. B. R. Ambedkar National Institute of Technology, Jalandhar',
+    'nayakvn@nitj.ac.in',
+    'India',
+    2,
+    true
+  ),
+  (
+    'Prof. Nuno Domingues',
+    'Editorial Board Member',
+    'Professor',
+    'Instituto Superior de Engenharia de Lisboa (ISEL)',
+    'nndomingues@gmail.com',
+    'Portugal',
+    3,
+    true
+  ),
+  (
     'Prof. Arthur James Swart',
     'Editorial Board Member',
     'Associate Professor',
     'Central University of Technology',
     'aswart@cut.ac.za',
     'South Africa',
-    2,
+    4,
     true
   ),
   (
