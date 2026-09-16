@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import PasswordInput from '@/components/PasswordInput';
+import { supabase } from '@/lib/supabase';
+import { sendInvitationAcceptedNotification } from '@/lib/email';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -63,6 +65,17 @@ export default function LoginPage() {
           return;
         }
 
+        // Send a one-time notification to editorial@tjasf.com on the member's first ever login (database verified)
+        if (['associate_editor', 'editorial_board_member', 'section_editor'].includes(userProfile.role)) {
+          if (!userProfile.invitation_accepted_notified) {
+            sendInvitationAcceptedNotification(userProfile.full_name, userProfile.email, userProfile.role).catch(console.error);
+            supabase
+              .from('profiles')
+              .update({ invitation_accepted_notified: true })
+              .eq('id', userProfile.id)
+              .then();
+          }
+        }
       }
 
       navigate(from);

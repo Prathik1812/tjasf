@@ -20,6 +20,7 @@ export interface Profile {
   scopus_id?: string;
   researcher_id?: string;
   invitation_accepted?: boolean;
+  invitation_accepted_notified?: boolean;
   bio: string;
   avatar_url: string;
   reviewer_domains: string[];
