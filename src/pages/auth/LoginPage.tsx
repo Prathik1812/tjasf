@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import PasswordInput from '@/components/PasswordInput';
-import { sendInvitationAcceptedNotification } from '@/lib/email';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -64,14 +63,6 @@ export default function LoginPage() {
           return;
         }
 
-        // Send a one-time notification to editorial@tjasf.com on the member's first login
-        if (['associate_editor', 'editorial_board_member', 'section_editor'].includes(userProfile.role)) {
-          const notifKey = `board_member_login_notified_${userProfile.id}`;
-          if (!localStorage.getItem(notifKey)) {
-            sendInvitationAcceptedNotification(userProfile.full_name, userProfile.email, userProfile.role).catch(console.error);
-            localStorage.setItem(notifKey, 'true');
-          }
-        }
       }
 
       navigate(from);

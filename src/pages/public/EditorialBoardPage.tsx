@@ -22,6 +22,22 @@ const DEFAULT_EDITOR_IN_CHIEF: CustomBoardMember = {
 
 const DEFAULT_BOARD_MEMBERS: CustomBoardMember[] = [
   {
+    name: 'Prof. Arthur James Swart',
+    role_title: 'Editorial Board Member',
+    designation: 'Associate Professor',
+    institution: 'Central University of Technology',
+    email: 'aswart@cut.ac.za',
+    country: 'South Africa'
+  },
+  {
+    name: 'Dr. Viju Prakash',
+    role_title: 'Editorial Board Member',
+    designation: 'Senior Lecturer',
+    institution: 'British University Vietnam',
+    email: 'viju.m@buv.edu.vn',
+    country: 'Vietnam'
+  },
+  {
     name: 'Prof. Pascal Lorenz',
     role_title: 'Editorial Board Member',
     designation: 'Professor',

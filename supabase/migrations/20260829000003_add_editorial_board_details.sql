@@ -19,13 +19,33 @@ INSERT INTO public.editorial_board (name, role_title, designation, affiliation, 
     true
   ),
   (
+    'Prof. Arthur James Swart',
+    'Editorial Board Member',
+    'Associate Professor',
+    'Central University of Technology',
+    'aswart@cut.ac.za',
+    'South Africa',
+    2,
+    true
+  ),
+  (
+    'Dr. Viju Prakash',
+    'Editorial Board Member',
+    'Senior Lecturer',
+    'British University Vietnam',
+    'viju.m@buv.edu.vn',
+    'Vietnam',
+    3,
+    true
+  ),
+  (
     'Prof. Pascal Lorenz',
     'Editorial Board Member',
     'Professor',
     'University of Haute Alsace',
     'pascal.lorenz@uha.fr',
     'France',
-    2,
+    4,
     true
   ),
   (
