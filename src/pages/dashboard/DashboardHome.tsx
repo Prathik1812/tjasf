@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, ClipboardList, BookOpen, FileEdit, Users, Megaphone } from 'lucide-react';
+import { FileText, ClipboardList, BookOpen, FileEdit, Users, Megaphone, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StatCard, StatusBadge } from '@/components/DashboardLayout';
+import { getManuscriptDisplayCode } from '@/data/disciplines';
 import type { Manuscript, Review, UserRole } from '@/types';
 
 export default function DashboardHome() {
@@ -11,6 +12,7 @@ export default function DashboardHome() {
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [editorManuscripts, setEditorManuscripts] = useState<Manuscript[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const activeProfile = profile;
 
@@ -47,6 +49,23 @@ export default function DashboardHome() {
     (['reviewer', 'section_editor', 'editor_in_chief', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role) && 
      (!profile?.keywords || profile.keywords.length === 0));
 
+  const allDashboardManuscripts = [
+    ...manuscripts,
+    ...editorManuscripts.filter((em) => !manuscripts.some((m) => m.id === em.id)),
+  ];
+
+  const searchResults = searchQuery.trim()
+    ? allDashboardManuscripts.filter((m) => {
+        const q = searchQuery.toLowerCase().trim();
+        const displayCode = getManuscriptDisplayCode(m).toLowerCase();
+        const titleMatch = (m.title || '').toLowerCase().includes(q);
+        const codeMatch = displayCode.includes(q) || (m.tracking_code || '').toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
+        const statusMatch = (m.status || '').toLowerCase().includes(q);
+        const subjectMatch = (m.subject_code || '').toLowerCase().includes(q) || (m.subject_name || '').toLowerCase().includes(q);
+        return titleMatch || codeMatch || statusMatch || subjectMatch;
+      })
+    : [];
+
   return (
     <div className="space-y-6">
       {isProfileIncomplete && (
@@ -71,10 +90,88 @@ export default function DashboardHome() {
         </div>
       )}
 
-      <div>
-        <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Welcome, {activeProfile.full_name.split(' ')[0]}</h1>
-        <p className="text-[#667082] text-sm mt-1">You are signed in as {roleLabel[activeProfile.role]}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Welcome, {activeProfile.full_name.split(' ')[0]}</h1>
+          <p className="text-[#667082] text-sm mt-1">You are signed in as {roleLabel[activeProfile.role]}</p>
+        </div>
       </div>
+
+      {/* Dashboard Search Bar */}
+      <div className="relative">
+        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7e8da4]" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search manuscripts by tracking code (e.g. 2026-CSE-...), title, or subject..."
+          className="w-full pl-10 pr-16 py-2.5 bg-white border border-[#d8d8d1] rounded-lg text-sm text-[#27334a] placeholder-[#7e8da4] focus:outline-none focus:border-[#eb5526] shadow-sm"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#7e8da4] hover:text-[#102342] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Live Search Results Container if query present */}
+      {searchQuery.trim() && (
+        <div className="bg-white rounded-lg border border-[#e6e5e0] p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-[#102342] uppercase tracking-wider">
+              Search Results ({searchResults.length})
+            </h2>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-xs text-[#667082] hover:text-[#102342]"
+            >
+              Close
+            </button>
+          </div>
+          {searchResults.length === 0 ? (
+            <p className="text-sm text-[#667082]">No manuscripts found matching "{searchQuery}".</p>
+          ) : (
+            <div className="space-y-3">
+              {searchResults.map((m) => (
+                <div key={m.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0 gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2.5 py-0.5 rounded font-bold border border-orange-200">
+                        {getManuscriptDisplayCode(m)}
+                      </span>
+                      {m.subject_name && (
+                        <span className="text-[11px] text-[#667082] font-medium hidden sm:inline">
+                          • {m.subject_name}
+                        </span>
+                      )}
+                      {m.fast_track && (
+                        <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                          Fast-Track
+                        </span>
+                      )}
+                    </div>
+                    <Link
+                      to={
+                        ['section_editor', 'editor_in_chief', 'admin', 'associate_editor', 'editorial_board_member'].includes(activeProfile.role)
+                          ? `/dashboard/editor/${m.id}`
+                          : `/dashboard/manuscripts`
+                      }
+                      className="text-sm font-semibold text-[#102342] hover:text-[#eb5526] truncate block"
+                    >
+                      {m.title || 'Untitled manuscript'}
+                    </Link>
+                    <p className="text-xs text-[#667082] mt-0.5">Submitted: {new Date(m.created_at).toLocaleDateString('en-GB')}</p>
+                  </div>
+                  <StatusBadge status={m.status} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Manuscripts" value={manuscripts.length} icon={FileText} />
@@ -100,10 +197,20 @@ export default function DashboardHome() {
           ) : (
             <div className="space-y-3">
               {manuscripts.slice(0, 5).map((m) => (
-                <div key={m.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0">
-                  <div className="min-w-0">
+                <div key={m.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0 gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2 py-0.5 rounded font-bold border border-orange-200">
+                        {getManuscriptDisplayCode(m)}
+                      </span>
+                      {m.fast_track && (
+                        <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                          Fast-Track
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm font-medium text-[#102342] truncate">{m.title || 'Untitled manuscript'}</p>
-                    <p className="text-xs text-[#667082]">{new Date(m.created_at).toLocaleDateString('en-GB')}</p>
+                    <p className="text-xs text-[#667082] mt-0.5">{new Date(m.created_at).toLocaleDateString('en-GB')}</p>
                   </div>
                   <StatusBadge status={m.status} />
                 </div>
@@ -148,10 +255,20 @@ export default function DashboardHome() {
           ) : (
             <div className="space-y-3">
               {editorManuscripts.slice(0, 5).map((m) => (
-                <div key={m.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0">
-                  <div className="min-w-0">
+                <div key={m.id} className="flex items-center justify-between border-b border-[#f1f0ec] pb-3 last:border-0 gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2 py-0.5 rounded font-bold border border-orange-200">
+                        {getManuscriptDisplayCode(m)}
+                      </span>
+                      {m.fast_track && (
+                        <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                          Fast-Track
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm font-medium text-[#102342] truncate">{m.title || 'Untitled manuscript'}</p>
-                    <p className="text-xs text-[#667082]">{new Date(m.created_at).toLocaleDateString('en-GB')}</p>
+                    <p className="text-xs text-[#667082] mt-0.5">{new Date(m.created_at).toLocaleDateString('en-GB')}</p>
                   </div>
                   <StatusBadge status={m.status} />
                 </div>

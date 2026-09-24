@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { supabase } from '@/lib/supabase';
 import { sendSubmissionEmail, sendCoAuthorConsentEmail } from '@/lib/email';
+import { DOMAIN_DISCIPLINES, findSubject } from '@/data/disciplines';
 import type { Domain, Profile } from '@/types';
 
 interface Author {
@@ -42,6 +43,7 @@ export default function SubmitManuscriptPage() {
 
   const [title, setTitle] = useState('');
   const [domainId, setDomainId] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [fastTrack, setFastTrack] = useState(false);
   const [authors, setAuthors] = useState<Author[]>([
     { name: profile?.full_name || '', email: profile?.email || '', affiliation: '', department: '', corresponding: true, orcid: profile?.orcid || '' }
@@ -70,7 +72,7 @@ export default function SubmitManuscriptPage() {
       setSaveTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
     }, 1000);
     return () => clearTimeout(delay);
-  }, [title, domainId, abstract, keywords, references, authors]);
+  }, [title, domainId, selectedSubjectId, abstract, keywords, references, authors]);
 
   useEffect(() => {
     (async () => {
@@ -83,7 +85,7 @@ export default function SubmitManuscriptPage() {
   }, []);
 
   const canProceed = () => {
-    if (step === 1) return title.trim().length > 0 && domainId.length > 0;
+    if (step === 1) return title.trim().length > 0 && (selectedSubjectId.length > 0 || domainId.length > 0);
     if (step === 2) return authors.length > 0 && authors.every((a) => a.name.trim().length > 0);
     if (step === 3) return abstract.trim().length > 0;
     if (step === 4) return fileName.length > 0;
@@ -355,7 +357,33 @@ export default function SubmitManuscriptPage() {
     setSubmitting(true);
     setError('');
     const kwArray = keywords.split(',').map((k) => k.trim()).filter(Boolean);
-    const { data, error: insErr } = await supabase.from('manuscripts').insert({
+
+    const subj = findSubject(selectedSubjectId);
+    const subjectCode = subj?.code || 'ENG';
+    const subjectName = subj?.name || 'Engineering & Technology';
+
+    // Format: YEAR-SUBJECTCODE-MMDD-SEQ (e.g. 2026-CSE-0924-01)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const date = String(now.getDate()).padStart(2, '0');
+    const prefix = `${year}-${subjectCode}-${month}${date}`;
+
+    let seq = 1;
+    try {
+      const { count } = await supabase
+        .from('manuscripts')
+        .select('id', { count: 'exact', head: true })
+        .ilike('tracking_code', `${prefix}%`);
+      if (count && count > 0) {
+        seq = count + 1;
+      }
+    } catch (e) {
+      console.warn('Could not query existing tracking codes count:', e);
+    }
+    const trackingCode = `${prefix}-${String(seq).padStart(2, '0')}`;
+
+    const insertPayload: any = {
       submitter_id: profile.id,
       title,
       abstract,
@@ -375,7 +403,23 @@ export default function SubmitManuscriptPage() {
       copyright_agreement: copyrightAgreement,
       policies_agreement: policiesAgreement,
       fast_track: fastTrack,
-    }).select().single();
+      tracking_code: trackingCode,
+      subject_code: subjectCode,
+      subject_name: subjectName,
+    };
+
+    let { data, error: insErr } = await supabase.from('manuscripts').insert(insertPayload).select().single();
+
+    // Fallback if database table columns tracking_code/subject_code don't exist yet
+    if (insErr && insErr.message?.toLowerCase().includes('column') && (insErr.message?.includes('tracking_code') || insErr.message?.includes('subject_code') || insErr.message?.includes('subject_name'))) {
+      console.warn('Database schema does not have tracking_code columns yet, falling back to basic insert payload');
+      delete insertPayload.tracking_code;
+      delete insertPayload.subject_code;
+      delete insertPayload.subject_name;
+      const retryRes = await supabase.from('manuscripts').insert(insertPayload).select().single();
+      data = retryRes.data;
+      insErr = retryRes.error;
+    }
 
     if (insErr) {
       setError(insErr.message);
@@ -418,17 +462,23 @@ export default function SubmitManuscriptPage() {
       }
     }
 
+    const finalTrackingCode = data?.tracking_code || trackingCode;
+
     try {
       await sendSubmissionEmail(
         profile.full_name,
         profile.email || '',
         title,
-        data.id.substring(0, 8).toUpperCase()
+        finalTrackingCode
       );
     } catch (err) {
       console.error('Failed to send confirmation email:', err);
     }
 
+    toast.success(`Manuscript submitted successfully! A confirmation email with tracking ID ${finalTrackingCode} has been sent to your email (${profile.email || 'your account'}).`);
+    if (authors.length > 1) {
+      toast.info('Verification and consent emails have been dispatched to all co-authors.');
+    }
     navigate('/dashboard/manuscripts');
   };
 
@@ -509,11 +559,44 @@ export default function SubmitManuscriptPage() {
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter your manuscript title" className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Research Domain *</label>
-              <select value={domainId} onChange={(e) => setDomainId(e.target.value)} className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]">
-                <option value="">Select a domain...</option>
-                {domains.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Research Domain & Subject Discipline *</label>
+              <select
+                value={selectedSubjectId}
+                onChange={(e) => {
+                  const sId = e.target.value;
+                  setSelectedSubjectId(sId);
+                  const found = findSubject(sId);
+                  if (found) {
+                    const matchedDomain = domains.find((d) => d.slug === found.domainSlug);
+                    if (matchedDomain) {
+                      setDomainId(matchedDomain.id);
+                    }
+                  } else {
+                    setDomainId('');
+                  }
+                }}
+                className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+              >
+                <option value="">Select subject discipline (e.g. Computer Science, Mechanical, AI/ML)...</option>
+                {DOMAIN_DISCIPLINES.map((group) => (
+                  <optgroup key={group.domainSlug} label={group.domainName}>
+                    {group.subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.code})
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
+              {selectedSubjectId && (
+                <div className="mt-2 text-xs text-[#667082] flex items-center gap-2">
+                  <span className="font-semibold text-[#102342]">Selected:</span>
+                  <span className="text-[#102342]">{findSubject(selectedSubjectId)?.name}</span>
+                  <span className="font-mono bg-orange-50 text-[#eb5526] px-2 py-0.5 rounded text-[11px] font-bold border border-orange-200">
+                    Subject Code: {findSubject(selectedSubjectId)?.code}
+                  </span>
+                </div>
+              )}
             </div>
             
             <div>

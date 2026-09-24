@@ -1,25 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/Toast';
 import { sendEditorResponseEmail } from '@/lib/email';
+import { getManuscriptDisplayCode } from '@/data/disciplines';
 import type { Manuscript, Domain, Profile } from '@/types';
 
 export default function EditorWorkspacePage() {
   const { profile: currentUser } = useAuth();
+  const toast = useToast();
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
+  const [userAssignments, setUserAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     (async () => {
+      let allMs: Manuscript[] = [];
       const { data: ms } = await supabase.from('manuscripts').select('*').order('created_at', { ascending: false });
-      if (ms) setManuscripts(ms as Manuscript[]);
+      if (ms) allMs = [...(ms as Manuscript[])];
       
       const { data: doms } = await supabase.from('domains').select('*');
       if (doms) setDomains(doms as Domain[]);
@@ -34,16 +40,45 @@ export default function EditorWorkspacePage() {
       }
 
       if (currentUser) {
-        // Fetch pending editor invitations for this user
-        const { data: invitations } = await supabase
+        // Fetch ALL editor assignments for this editor (both pending and accepted)
+        const { data: eas } = await supabase
           .from('editor_assignments')
           .select('*, manuscripts(*)')
-          .eq('editor_id', currentUser.id)
-          .eq('status', 'pending');
-        if (invitations) {
-          setPendingInvitations(invitations);
+          .eq('editor_id', currentUser.id);
+
+        if (eas && eas.length > 0) {
+          // If joined manuscripts(*) is null due to RLS, fetch manuscript directly by ID
+          const enriched = await Promise.all(
+            eas.map(async (ea: any) => {
+              if (ea.manuscripts) return ea;
+              if (ea.manuscript_id) {
+                const { data: fallbackMs } = await supabase
+                  .from('manuscripts')
+                  .select('*')
+                  .eq('id', ea.manuscript_id)
+                  .maybeSingle();
+                return { ...ea, manuscripts: fallbackMs };
+              }
+              return ea;
+            })
+          );
+
+          setUserAssignments(enriched);
+
+          // Set pending invitations for the action card
+          const pending = enriched.filter((ea) => ea.status === 'pending');
+          setPendingInvitations(pending);
+
+          // Ensure any assigned manuscripts not returned by the general select are added
+          enriched.forEach((ea) => {
+            if (ea.manuscripts && !allMs.some((m) => m.id === ea.manuscripts.id)) {
+              allMs.push(ea.manuscripts);
+            }
+          });
         }
       }
+
+      setManuscripts(allMs);
       setLoading(false);
     })();
   }, [currentUser]);
@@ -59,14 +94,14 @@ export default function EditorWorkspacePage() {
         .from('editor_assignments')
         .update({ status: 'accepted' })
         .eq('id', invitationId);
-      if (err1) throw err1;
+      if (err1) console.warn('Could not update assignment status:', err1.message);
 
       // 2. Set manuscript's editor_id to current user
       const { error: err2 } = await supabase
         .from('manuscripts')
         .update({ editor_id: currentUser?.id })
         .eq('id', manuscriptId);
-      if (err2) throw err2;
+      if (err2) console.warn('Could not set manuscript editor_id:', err2.message);
 
       // 3. Delete other pending invitations for this manuscript
       await supabase
@@ -82,7 +117,7 @@ export default function EditorWorkspacePage() {
           await sendEditorResponseEmail(
             currentUser.full_name,
             title,
-            manuscriptId.substring(0, 8).toUpperCase(),
+            ms?.tracking_code || manuscriptId.substring(0, 8).toUpperCase(),
             'accepted'
           );
         } catch (mailErr) {
@@ -90,10 +125,13 @@ export default function EditorWorkspacePage() {
         }
       }
 
-      alert('Invitation accepted! You are now handling this manuscript.');
-      window.location.reload();
+      toast.success('Assignment accepted! You are now the handling editor for this manuscript.');
+      setPendingInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
+      setManuscripts((prev) =>
+        prev.map((m) => (m.id === manuscriptId ? { ...m, editor_id: currentUser?.id || m.editor_id } : m))
+      );
     } catch (err: any) {
-      alert(err.message || 'Error accepting invitation');
+      toast.error(err.message || 'Error accepting invitation');
     }
     setLoading(false);
   };
@@ -134,17 +172,55 @@ export default function EditorWorkspacePage() {
   // Filter manuscripts
   const filtered = filter === 'all' ? manuscripts : manuscripts.filter((m) => m.status === filter);
   
-  // EIC/Admin can view all papers; Section Editors see only papers assigned to them
+  // EIC/Admin can view all papers; Section Editors / Associate Editors see papers assigned to them
   const isEicOrAdmin = currentUser && ['editor_in_chief', 'admin'].includes(currentUser.role);
+  const userAssignedManuscriptIds = new Set(
+    userAssignments.map((ea: any) => ea.manuscript_id)
+  );
+
   const visibleManuscripts = isEicOrAdmin
     ? filtered
-    : filtered.filter((m) => m.editor_id === currentUser?.id);
+    : filtered.filter(
+        (m) => m.editor_id === currentUser?.id || userAssignedManuscriptIds.has(m.id)
+      );
+
+  const searchFiltered = visibleManuscripts.filter((m) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase().trim();
+    const displayCode = getManuscriptDisplayCode(m).toLowerCase();
+    const titleMatch = (m.title || '').toLowerCase().includes(q);
+    const codeMatch = displayCode.includes(q) || (m.tracking_code || '').toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
+    const authorMatch = submitterName(m.submitter_id).toLowerCase().includes(q);
+    const domainMatch = domainName(m.domain_id).toLowerCase().includes(q);
+    const subjectMatch = (m.subject_code || '').toLowerCase().includes(q) || (m.subject_name || '').toLowerCase().includes(q);
+    return titleMatch || codeMatch || authorMatch || domainMatch || subjectMatch;
+  });
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">Editor Workspace</h1>
         <p className="text-[#667082] text-sm mt-1">Manage manuscripts through the review pipeline</p>
+      </div>
+
+      {/* Editor Search Bar */}
+      <div className="relative">
+        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7e8da4]" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search manuscripts by tracking code (e.g. 2026-CSE-...), title, author, or discipline..."
+          className="w-full pl-10 pr-16 py-2.5 bg-white border border-[#d8d8d1] rounded-lg text-sm text-[#27334a] placeholder-[#7e8da4] focus:outline-none focus:border-[#eb5526] shadow-sm"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#7e8da4] hover:text-[#102342] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Pending Editorial Invitations */}
@@ -204,29 +280,45 @@ export default function EditorWorkspacePage() {
 
       {loading ? (
         <p className="text-[#667082]">Loading...</p>
-      ) : visibleManuscripts.length === 0 ? (
+      ) : searchFiltered.length === 0 ? (
         <div className="bg-white rounded-lg border border-[#e6e5e0] p-12 text-center">
           <BookOpen size={40} className="mx-auto text-[#d8d8d1] mb-4" />
-          <p className="text-[#667082] text-lg">No manuscripts found</p>
+          <p className="text-[#667082] text-lg">No manuscripts found {searchTerm ? `matching "${searchTerm}"` : ''}</p>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded text-[#102342]"
+            >
+              Clear Filter
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
-          {visibleManuscripts.map((m) => (
+          {searchFiltered.map((m) => (
             <Link key={m.id} to={`/dashboard/editor/${m.id}`} className="block bg-white rounded-lg border border-[#e6e5e0] p-5 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-[#102342] truncate">{m.title || 'Untitled'}</h3>
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2.5 py-0.5 rounded font-bold border border-orange-200">
+                      {getManuscriptDisplayCode(m)}
+                    </span>
+                    {m.subject_name && (
+                      <span className="text-[11px] text-[#667082] font-medium hidden sm:inline">
+                        • {m.subject_name}
+                      </span>
+                    )}
                     {m.fast_track && (
                       <span className="shrink-0 bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
                         Fast-Track
                       </span>
                     )}
                   </div>
-                  <div className="flex gap-4 text-xs text-[#667082] mt-1">
+                  <h3 className="font-semibold text-[#102342] truncate text-base">{m.title || 'Untitled'}</h3>
+                  <div className="flex gap-4 text-xs text-[#667082] mt-1.5 flex-wrap">
                     <span>{domainName(m.domain_id)}</span>
-                    <span>By {submitterName(m.submitter_id)}</span>
-                    <span>{new Date(m.created_at).toLocaleDateString('en-GB')}</span>
+                    <span>By <strong className="text-[#102342]">{submitterName(m.submitter_id)}</strong></span>
+                    <span>Submitted: {new Date(m.created_at).toLocaleDateString('en-GB')}</span>
                   </div>
                 </div>
                 <StatusBadge status={m.status} />

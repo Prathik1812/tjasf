@@ -77,6 +77,9 @@ export interface Manuscript {
   keywords: string[];
   reference_text: string;
   domain_id: string | null;
+  tracking_code?: string;
+  subject_code?: string;
+  subject_name?: string;
   status: ManuscriptStatus;
   file_url: string;
   file_name: string;

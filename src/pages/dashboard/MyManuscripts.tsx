@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, FileText, Upload, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, FileText, Upload, Trash2, AlertCircle, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
+import { getManuscriptDisplayCode } from '@/data/disciplines';
 import type { Manuscript, Domain } from '@/types';
 
 export default function MyManuscripts() {
@@ -11,6 +12,7 @@ export default function MyManuscripts() {
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Revision states
   const [revisingId, setRevisingId] = useState<string | null>(null);
@@ -43,6 +45,18 @@ export default function MyManuscripts() {
   }, [activeProfile?.id, activeProfile?.role]);
 
   const domainName = (id: string | null) => domains.find((d) => d.id === id)?.name || 'Unassigned';
+
+  const filteredManuscripts = manuscripts.filter((m) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase().trim();
+    const displayCode = getManuscriptDisplayCode(m).toLowerCase();
+    const titleMatch = (m.title || '').toLowerCase().includes(q);
+    const domainMatch = domainName(m.domain_id).toLowerCase().includes(q);
+    const statusMatch = (m.status || '').toLowerCase().includes(q);
+    const codeMatch = displayCode.includes(q) || (m.tracking_code || '').toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
+    const subjectMatch = (m.subject_code || '').toLowerCase().includes(q) || (m.subject_name || '').toLowerCase().includes(q);
+    return titleMatch || domainMatch || statusMatch || codeMatch || subjectMatch;
+  });
 
   const handleRevisionFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -134,6 +148,27 @@ export default function MyManuscripts() {
         </Link>
       </div>
 
+      {manuscripts.length > 0 && (
+        <div className="relative">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7e8da4]" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search manuscripts by tracking code (e.g. 2026-CSE-...), title, domain, or status..."
+            className="w-full pl-10 pr-16 py-2.5 bg-white border border-[#d8d8d1] rounded-lg text-sm text-[#27334a] placeholder-[#7e8da4] focus:outline-none focus:border-[#eb5526] shadow-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#7e8da4] hover:text-[#102342] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <p className="text-[#667082]">Loading...</p>
       ) : manuscripts.length === 0 ? (
@@ -145,14 +180,41 @@ export default function MyManuscripts() {
             <Plus size={16} /> Submit a Manuscript
           </Link>
         </div>
+      ) : filteredManuscripts.length === 0 ? (
+        <div className="bg-white rounded-lg border border-[#e6e5e0] p-10 text-center shadow-sm">
+          <Search size={32} className="mx-auto text-[#d8d8d1] mb-3" />
+          <p className="text-[#102342] font-semibold text-base mb-1">No manuscripts match "{searchTerm}"</p>
+          <p className="text-[#667082] text-xs mb-4">Try checking your tracking code, title keywords, or status.</p>
+          <button
+            onClick={() => setSearchTerm('')}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#102342] text-xs font-bold rounded-lg transition-colors"
+          >
+            Clear Search Filter
+          </button>
+        </div>
       ) : (
         <div className="space-y-4">
-          {manuscripts.map((m) => (
+          {filteredManuscripts.map((m) => (
             <div key={m.id} className="bg-white rounded-lg border border-[#e6e5e0] p-5 flex flex-col gap-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                    <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2.5 py-0.5 rounded font-bold border border-orange-200 shadow-xs">
+                      {getManuscriptDisplayCode(m)}
+                    </span>
+                    {m.subject_name && (
+                      <span className="text-[11px] text-[#667082] font-medium hidden sm:inline">
+                        • {m.subject_name}
+                      </span>
+                    )}
+                    {m.fast_track && (
+                      <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
+                        Fast-Track
+                      </span>
+                    )}
+                  </div>
                   <h3 className="font-semibold text-[#102342] truncate text-base">{m.title || 'Untitled manuscript'}</h3>
-                  <div className="flex gap-4 text-xs text-[#667082] mt-1.5">
+                  <div className="flex gap-4 text-xs text-[#667082] mt-1.5 flex-wrap">
                     <span>Domain: <strong className="text-[#102342]">{domainName(m.domain_id)}</strong></span>
                     <span>Version: <strong className="text-[#102342]">v{m.version}</strong></span>
                     <span>Submitted: <strong className="text-[#102342]">{new Date(m.created_at).toLocaleDateString('en-GB')}</strong></span>

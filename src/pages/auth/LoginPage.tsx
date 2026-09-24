@@ -45,6 +45,23 @@ export default function LoginPage() {
       }
 
       if (userProfile) {
+        // Auto-elevate role to associate_editor if user is an Editorial Board member or selected EDITOR workspace
+        if (userProfile.role === 'author' && selectedRole === 'editor') {
+          const { data: boardMatch } = await supabase
+            .from('editorial_board')
+            .select('id')
+            .eq('email', userProfile.email)
+            .maybeSingle();
+
+          if (boardMatch || userProfile.email.endsWith('@tjasf.com')) {
+            userProfile.role = 'associate_editor';
+            await supabase
+              .from('profiles')
+              .update({ role: 'associate_editor' })
+              .eq('id', userProfile.id);
+          }
+        }
+
         const getMappedRoleGroup = (dbRole: string): 'author' | 'reviewer' | 'editor' | 'admin' => {
           if (dbRole === 'admin') return 'admin';
           if (dbRole === 'reviewer') return 'reviewer';

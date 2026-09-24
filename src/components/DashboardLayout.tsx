@@ -1,12 +1,15 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
-import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive, Mail, User } from 'lucide-react';
+import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive, Mail, User, Bell } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import NotificationsPane from '@/components/NotificationsPane';
 import type { UserRole } from '@/types';
 
 export default function DashboardLayout() {
   const { profile, loading, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -67,8 +70,27 @@ export default function DashboardLayout() {
             </NavLink>
           ))}
         </nav>
+        <div className="px-3 py-2 border-t border-[#1d3556]">
+          <button
+            onClick={() => {
+              setNotificationsOpen(true);
+              setSidebarOpen(false);
+            }}
+            className="flex items-center justify-between px-3 py-2.5 text-sm text-[#a4b0c4] hover:text-white hover:bg-[#1d3556]/50 rounded-lg transition-colors w-full text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <Bell size={17} />
+              <span>Notifications</span>
+            </div>
+            {unreadNotificationsCount > 0 && (
+              <span className="bg-[#eb5526] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {unreadNotificationsCount}
+              </span>
+            )}
+          </button>
+        </div>
         <div className="p-4 border-t border-[#1d3556]">
-          <button onClick={handleSignOut} className="flex items-center gap-2 text-sm text-[#a4b0c4] hover:text-white transition-colors w-full text-left">
+          <button onClick={handleSignOut} className="flex items-center gap-2 text-sm text-[#a4b0c4] hover:text-white transition-colors w-full text-left cursor-pointer">
             <LogOut size={16} /> Sign out
           </button>
         </div>
@@ -77,16 +99,49 @@ export default function DashboardLayout() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="md:hidden bg-white border-b border-[#e6e5e0] flex items-center justify-between px-4 h-14 sticky top-0 z-20">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-[#102342]">
-            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-          <span className="text-sm font-semibold text-[#102342]">Dashboard</span>
-          <Link to="/" className="text-xs text-[#eb5526] font-semibold">Home</Link>
+        {/* Universal Top Header */}
+        <header className="bg-white border-b border-[#e6e5e0] flex items-center justify-between px-6 h-14 sticky top-0 z-20 shadow-xs">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-[#102342] p-1">
+              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#7e8da4]">
+              TJASF Editorial & Research Portal
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Notification Bell Button */}
+            <button
+              onClick={() => setNotificationsOpen(true)}
+              className="relative p-2 rounded-lg text-[#102342] hover:bg-gray-100 hover:text-[#eb5526] transition-colors cursor-pointer"
+              title="View Notifications"
+              aria-label="View notifications"
+            >
+              <Bell size={19} />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-[#eb5526] text-[10px] font-bold text-white shadow-xs animate-pulse">
+                  {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+
+            <Link to="/" className="text-xs font-semibold text-[#eb5526] hover:underline hidden sm:inline">
+              Public Home &rarr;
+            </Link>
+          </div>
         </header>
+
         <div className="flex-1 p-6 md:p-8">
           <Outlet />
         </div>
+
+        {/* Notifications Pane Component */}
+        <NotificationsPane
+          isOpen={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
+          onUnreadCountChange={setUnreadNotificationsCount}
+        />
       </div>
     </div>
   );

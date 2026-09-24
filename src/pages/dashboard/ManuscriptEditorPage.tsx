@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { sendDecisionEmail, sendEditorAssignmentEmail, sendReviewReminderEmail, sendReviewerInvitation } from '@/lib/email';
+import { getManuscriptDisplayCode } from '@/data/disciplines';
 import type { Manuscript, Profile, Review, ManuscriptStatus, ReviewStatus, Domain } from '@/types';
 
 export default function ManuscriptEditorPage() {
@@ -135,13 +136,17 @@ export default function ManuscriptEditorPage() {
           submitter.full_name,
           submitter.email || '',
           manuscript.title,
-          manuscript.id.substring(0, 8).toUpperCase(),
+          manuscript.tracking_code || manuscript.id.substring(0, 8).toUpperCase(),
           status,
           decisionFeedback
         );
+        toast.success(`Status updated to ${status.replace(/_/g, ' ')}! Notification email has been sent to ${submitter.email}.`);
       } catch (err) {
         console.error('Failed to send status update email:', err);
+        toast.info(`Status updated to ${status.replace(/_/g, ' ')}.`);
       }
+    } else {
+      toast.success(`Manuscript status updated to ${status.replace(/_/g, ' ')}.`);
     }
 
     setUpdating(false);
@@ -151,12 +156,23 @@ export default function ManuscriptEditorPage() {
     if (!manuscript) return;
     setUpdating(true);
     try {
-      const { error } = await supabase.from('editor_assignments').insert({
+      const { error: eaErr } = await supabase.from('editor_assignments').insert({
         manuscript_id: manuscript.id,
         editor_id: editorId,
         status: 'pending'
       });
-      if (error) throw error;
+      if (eaErr) throw eaErr;
+
+      // Also set editor_id directly on manuscripts table so RLS and assigned lists immediately populate for the editor
+      const { error: msErr } = await supabase
+        .from('manuscripts')
+        .update({ editor_id: editorId })
+        .eq('id', manuscript.id);
+      if (msErr) {
+        console.warn('Could not update manuscript.editor_id directly:', msErr);
+      } else {
+        setManuscript({ ...manuscript, editor_id: editorId });
+      }
 
       const selectedEd = editors.find((e) => e.id === editorId);
       if (selectedEd) {
@@ -165,12 +181,14 @@ export default function ManuscriptEditorPage() {
             selectedEd.full_name,
             selectedEd.email || '',
             manuscript.title,
-            manuscript.id.substring(0, 8).toUpperCase()
+            manuscript.tracking_code || manuscript.id.substring(0, 8).toUpperCase()
           );
         } catch (err) {
           console.error('Failed to send editor assignment email:', err);
         }
       }
+
+      toast.success(`Editor ${selectedEd?.full_name || ''} successfully assigned to this manuscript.`);
 
       const { data: eas } = await supabase.from('editor_assignments').select('*').eq('manuscript_id', manuscript.id);
       if (eas) setEditorAssignments(eas);
@@ -182,14 +200,22 @@ export default function ManuscriptEditorPage() {
 
   const removeEditorAssignment = async (assignmentId: string) => {
     setUpdating(true);
+    const target = editorAssignments.find((ea) => ea.id === assignmentId);
     await supabase.from('editor_assignments').delete().eq('id', assignmentId);
+    if (target && manuscript && manuscript.editor_id === target.editor_id) {
+      await supabase.from('manuscripts').update({ editor_id: null }).eq('id', manuscript.id);
+      setManuscript({ ...manuscript, editor_id: null });
+    }
     setEditorAssignments(editorAssignments.filter((ea) => ea.id !== assignmentId));
+    toast.info('Editor assignment withdrawn.');
     setUpdating(false);
   };
 
   const assignReviewer = async () => {
     if (!manuscript || !selectedReviewer) return;
     setUpdating(true);
+    const rev = reviewers.find((r) => r.id === selectedReviewer);
+
     await supabase.from('reviews').insert({
       manuscript_id: manuscript.id,
       reviewer_id: selectedReviewer,
@@ -198,8 +224,23 @@ export default function ManuscriptEditorPage() {
       due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
+    if (rev && rev.email) {
+      try {
+        await sendReviewerInvitation(
+          rev.full_name,
+          rev.email,
+          manuscript.title,
+          manuscript.tracking_code || manuscript.id.substring(0, 8).toUpperCase(),
+          manuscript.abstract || ''
+        );
+      } catch (err) {
+        console.error('Failed to send reviewer invitation email:', err);
+      }
+    }
+
     const { data: revs } = await supabase.from('reviews').select('*').eq('manuscript_id', manuscript.id);
     if (revs) setReviews(revs as Review[]);
+    toast.success(`Reviewer assigned! An invitation email has been sent to ${rev?.email || 'the reviewer'}.`);
     setSelectedReviewer('');
     setUpdating(false);
   };
@@ -1057,14 +1098,22 @@ ${referencesXml}
       <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="min-w-0 flex-1 mr-4">
-            <div className="flex flex-wrap items-center gap-3 mb-1">
-              <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342]">{manuscript.title}</h1>
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2.5 py-0.5 rounded font-bold border border-orange-200">
+                {getManuscriptDisplayCode(manuscript)}
+              </span>
+              {manuscript.subject_name && (
+                <span className="text-xs text-[#667082] font-medium">
+                  {manuscript.subject_name}
+                </span>
+              )}
               {manuscript.fast_track && (
                 <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
                   Fast-Track
                 </span>
               )}
             </div>
+            <h1 className="font-['Playfair_Display'] font-medium text-2xl text-[#102342] mb-1">{manuscript.title}</h1>
             <div className="flex flex-wrap gap-4 text-xs text-[#667082]">
               <span>Submitted by: {submitter?.full_name || 'Unknown'}</span>
               <span>Date: {new Date(manuscript.created_at).toLocaleDateString('en-GB')}</span>
