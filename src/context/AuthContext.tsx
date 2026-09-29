@@ -77,6 +77,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Check if URL has password recovery token at root or any other page
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (
+      window.location.pathname !== '/reset-password' &&
+      (hash.includes('type=recovery') || search.includes('type=recovery'))
+    ) {
+      window.location.replace('/reset-password' + search + hash);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
@@ -85,9 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      if (event === 'PASSWORD_RECOVERY') {
+        if (window.location.pathname !== '/reset-password') {
+          window.location.href = '/reset-password';
+        }
+      }
       if (!newSession?.user) {
         setProfile(null);
         setLoading(false);

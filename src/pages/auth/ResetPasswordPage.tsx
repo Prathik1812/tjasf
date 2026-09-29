@@ -1,15 +1,140 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { AlertCircle, CheckCircle2, ArrowRight, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import PasswordInput from '@/components/PasswordInput';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifySession = async () => {
+      // 1. Check for error in hash (e.g. #error=access_denied&error_description=...)
+      const hash = window.location.hash;
+      if (hash && hash.includes('error=')) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const errorDesc = hashParams.get('error_description') || hashParams.get('error') || '';
+        if (isMounted) {
+          setError(errorDesc.replace(/\+/g, ' ') || 'This password reset link is invalid or has expired.');
+          setCheckingSession(false);
+          setHasSession(false);
+        }
+        return;
+      }
+
+      // 2. Check for implicit access_token in hash (#access_token=...&refresh_token=...)
+      if (hash && hash.includes('access_token=')) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (accessToken && refreshToken) {
+          try {
+            const { data, error: setSessionErr } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (!setSessionErr && data.session && isMounted) {
+              setHasSession(true);
+              setCheckingSession(false);
+              return;
+            }
+          } catch (e) {
+            console.warn('Hash setSession error:', e);
+          }
+        }
+      }
+
+      // 3. Check for PKCE 'code' in query params (?code=...) or hash
+      const urlParams = new URLSearchParams(window.location.search);
+      let code = urlParams.get('code') || searchParams.get('code');
+      if (!code && hash && hash.includes('code=')) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        code = hashParams.get('code');
+      }
+
+      if (code) {
+        try {
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (!exchangeError && exchangeData?.session && isMounted) {
+            setHasSession(true);
+            setCheckingSession(false);
+            return;
+          }
+          if (exchangeError) {
+            console.warn('PKCE exchange error:', exchangeError.message);
+          }
+        } catch (e: any) {
+          console.warn('Code exchange exception:', e);
+        }
+
+        // Check if session was already established or exchanged automatically by Supabase client
+        const { data: { session: postCodeSession } } = await supabase.auth.getSession();
+        if (postCodeSession && isMounted) {
+          setHasSession(true);
+          setCheckingSession(false);
+          return;
+        }
+
+        if (isMounted) {
+          setError('Your password reset link is invalid or has expired. Please request a new one.');
+          setCheckingSession(false);
+          setHasSession(false);
+        }
+        return;
+      }
+
+      // 4. Check if active session already exists in Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && isMounted) {
+        setHasSession(true);
+        setCheckingSession(false);
+        return;
+      }
+
+      // 4. Listen for auth state changes (PASSWORD_RECOVERY or SIGNED_IN)
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
+        if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && newSession) {
+          if (isMounted) {
+            setHasSession(true);
+            setCheckingSession(false);
+          }
+        }
+      });
+
+      // 5. Short fallback timeout before concluding no session exists
+      const timer = setTimeout(async () => {
+        if (!isMounted) return;
+        const { data: latest } = await supabase.auth.getSession();
+        if (latest.session) {
+          setHasSession(true);
+        } else {
+          setHasSession(false);
+        }
+        setCheckingSession(false);
+      }, 1500);
+
+      return () => {
+        clearTimeout(timer);
+        authListener.subscription.unsubscribe();
+      };
+    };
+
+    verifySession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [searchParams]);
 
   // Password Strength Logic
   const getPasswordStrength = (pwd: string) => {
@@ -44,6 +169,15 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // Pre-check session to avoid raw "Auth session missing" error
+    const { data: currentSession } = await supabase.auth.getSession();
+    if (!currentSession.session) {
+      setError('Auth session missing or expired. Password reset links expire after 1 hour or after being used. Please request a new link.');
+      setHasSession(false);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error: updateError } = await supabase.auth.updateUser({
         password: password
@@ -53,12 +187,18 @@ export default function ResetPasswordPage() {
         throw updateError;
       }
 
-      setMessage('Your password has been reset successfully. Redirecting you to login page...');
+      setMessage('Your password has been reset successfully! Redirecting you to the sign in page...');
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to update your password.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('auth session missing')) {
+        setError('Your password reset session has expired. Please request a new link.');
+        setHasSession(false);
+      } else {
+        setError(msg || 'Failed to update your password.');
+      }
     } finally {
       setLoading(false);
     }
@@ -75,9 +215,37 @@ export default function ResetPasswordPage() {
           <p className="text-sm text-[#667082] mb-6">Enter your new password below to regain access to your account.</p>
           
           {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">{error}</div>}
-          {message && <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-sm text-green-700">{message}</div>}
+          {message && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 text-sm text-green-800 flex items-start gap-2.5">
+              <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-green-600" />
+              <span>{message}</span>
+            </div>
+          )}
 
-          {!message && (
+          {checkingSession ? (
+            <div className="p-8 text-center text-xs text-[#667082] space-y-3">
+              <RefreshCw size={24} className="animate-spin mx-auto text-[#eb5526]" />
+              <p className="font-semibold text-sm text-[#102342]">Verifying reset link...</p>
+              <p className="text-xs text-[#667082]">Please wait while we establish your secure session.</p>
+            </div>
+          ) : !hasSession && !message ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 text-center space-y-3">
+              <AlertCircle size={36} className="text-amber-600 mx-auto" />
+              <h2 className="font-bold text-base text-[#102342]">Reset Link Expired or Missing</h2>
+              <p className="text-xs text-[#667082] leading-relaxed">
+                For security reasons, password reset links can only be used once and expire after 1 hour. We could not find an active authentication session.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to="/forgot-password"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+                >
+                  <span>Request New Reset Link</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          ) : !message && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-[#102342] mb-1">New Password</label>
