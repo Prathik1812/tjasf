@@ -121,7 +121,7 @@ export default function HomePage() {
               <div className="font-['Playfair_Display'] text-[72px] leading-none mt-10 tracking-tight">
                 {String(currentIssue.number).padStart(2, '0')}<span className="text-[#eb5526] text-[32px] mx-1">/</span>{currentVolume.year}
               </div>
-              <p className="text-[#bbc5d4] text-xs mt-2">Volume {currentVolume.number} &middot; Issue {currentIssue.number}</p>
+              <p className="text-[#bbc5d4] text-xs mt-4">Volume {currentVolume.number} &middot; Issue {currentIssue.number}</p>
               <div className="h-px bg-[#53627a] my-5" />
               <p className="font-['Playfair_Display'] text-[15px] leading-[1.45] text-white max-w-[210px]">
                 {currentIssue.title || 'Published Issue'}
@@ -139,7 +139,7 @@ export default function HomePage() {
               <div className="font-['Playfair_Display'] text-[72px] leading-none mt-10 tracking-tight">
                 04<span className="text-[#eb5526] text-[32px] mx-1">/</span>2027
               </div>
-              <p className="text-[#bbc5d4] text-xs mt-2">Volume 01 &middot; Inaugural Issue (04/2027)</p>
+              <p className="text-[#bbc5d4] text-xs mt-4">Volume 01 &middot; Inaugural Issue</p>
               <div className="h-px bg-[#53627a] my-5" />
               <p className="font-['Playfair_Display'] text-[15px] leading-[1.45] text-white max-w-[220px]">
                 Call for Papers — Submissions Open
