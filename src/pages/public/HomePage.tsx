@@ -12,6 +12,7 @@ export default function HomePage() {
 
   const [publishedVolumesCount, setPublishedVolumesCount] = useState<number>(0);
   const [domainsCount, setDomainsCount] = useState<number>(4);
+  const [expandedAnnouncementId, setExpandedAnnouncementId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -250,13 +251,30 @@ export default function HomePage() {
               Announcements
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {announcements.map((a) => (
-                <div key={a.id} className="bg-white rounded-lg border border-[#e6e5e0] p-5">
-                  <p className="text-xs text-[#667082] mb-2">{new Date(a.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                  <h3 className="font-semibold text-[#102342] mb-2">{a.title}</h3>
-                  <p className="text-sm text-[#667082] line-clamp-3">{a.body}</p>
-                </div>
-              ))}
+              {announcements.map((a) => {
+                const isExpanded = expandedAnnouncementId === a.id;
+                const isLong = (a.body || '').length > 120;
+                return (
+                  <div key={a.id} className="bg-white rounded-lg border border-[#e6e5e0] p-5 flex flex-col justify-between">
+                    <div>
+                      <p className="text-xs text-[#667082] mb-2">{new Date(a.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                      <h3 className="font-semibold text-[#102342] mb-2">{a.title}</h3>
+                      <p className={`text-sm text-[#667082] leading-relaxed ${isExpanded ? '' : 'line-clamp-3'}`}>
+                        {a.body}
+                      </p>
+                    </div>
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedAnnouncementId(isExpanded ? null : a.id)}
+                        className="mt-3 text-xs font-bold text-[#eb5526] hover:text-[#d7461c] self-start focus:outline-none"
+                      >
+                        {isExpanded ? 'Show less' : 'Read more →'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
