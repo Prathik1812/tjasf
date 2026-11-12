@@ -118,10 +118,10 @@ export default function HomePage() {
                 <span>Latest Issue</span>
                 <span className="w-1.5 h-1.5 bg-[#eb5526] rounded-full animate-pulse" />
               </div>
-              <div className="font-['Playfair_Display'] text-[72px] leading-none mt-10 tracking-tight">
+              <div className="font-['Playfair_Display'] text-[68px] sm:text-[72px] leading-[1.15] mt-8 mb-3 tracking-tight">
                 {String(currentIssue.number).padStart(2, '0')}<span className="text-[#eb5526] text-[32px] mx-1">/</span>{currentVolume.year}
               </div>
-              <p className="text-[#bbc5d4] text-xs mt-4">Volume {currentVolume.number} &middot; Issue {currentIssue.number}</p>
+              <p className="text-[#bbc5d4] text-xs pt-1">Volume {currentVolume.number} &middot; Issue {currentIssue.number}</p>
               <div className="h-px bg-[#53627a] my-5" />
               <p className="font-['Playfair_Display'] text-[15px] leading-[1.45] text-white max-w-[210px]">
                 {currentIssue.title || 'Published Issue'}
@@ -136,10 +136,10 @@ export default function HomePage() {
                 <span>Accepting Submissions</span>
                 <span className="w-2 h-2 bg-[#eb5526] rounded-full animate-pulse" />
               </div>
-              <div className="font-['Playfair_Display'] text-[72px] leading-none mt-10 tracking-tight">
+              <div className="font-['Playfair_Display'] text-[68px] sm:text-[72px] leading-[1.15] mt-8 mb-3 tracking-tight">
                 04<span className="text-[#eb5526] text-[32px] mx-1">/</span>2027
               </div>
-              <p className="text-[#bbc5d4] text-xs mt-4">Volume 01 &middot; Inaugural Issue</p>
+              <p className="text-[#bbc5d4] text-xs pt-1">Volume 01 &middot; Inaugural Issue</p>
               <div className="h-px bg-[#53627a] my-5" />
               <p className="font-['Playfair_Display'] text-[15px] leading-[1.45] text-white max-w-[220px]">
                 Call for Papers — Submissions Open

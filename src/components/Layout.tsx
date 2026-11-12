@@ -120,11 +120,42 @@ export default function Layout() {
                 <Link to="/register" className="hover:text-white">Create an account</Link>
               </>
             )}
+            <div className="pt-2">
+              <a
+                href="https://www.linkedin.com/company/the-journal-of-advanced-scientific-frontiers/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-[#cad3e1] hover:text-[#0a66c2] transition-colors group"
+                aria-label="TJASF on LinkedIn"
+              >
+                <div className="w-7 h-7 rounded bg-[#102342] border border-[#263651] group-hover:border-[#0a66c2] flex items-center justify-center transition-colors">
+                  <svg className="w-3.5 h-3.5 fill-[#8390a2] group-hover:fill-[#0a66c2] transition-colors" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                  </svg>
+                </div>
+                <span>LinkedIn</span>
+              </a>
+            </div>
           </div>
         </div>
-        <div className="max-w-[1160px] mx-auto px-8 border-t border-[#263651] py-5 flex justify-between text-[10px] text-[#748198] tracking-wide max-md:flex-col max-md:gap-2">
-          <span>&copy; 2026 TJASF. All rights reserved.</span>
-          <span>Open access &middot; Peer reviewed &middot; International</span>
+        <div className="max-w-[1160px] mx-auto px-8 border-t border-[#263651] py-5 flex justify-between items-center text-[10px] text-[#748198] tracking-wide max-md:flex-col max-md:gap-2">
+          <span>&copy; {new Date().getFullYear()} TJASF. All rights reserved.</span>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://www.linkedin.com/company/the-journal-of-advanced-scientific-frontiers/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#8390a2] hover:text-[#0a66c2] transition-colors flex items-center gap-1.5"
+              aria-label="TJASF on LinkedIn"
+            >
+              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+            <span className="text-[#3a4964]">&middot;</span>
+            <span>Open access &middot; Peer reviewed &middot; International</span>
+          </div>
         </div>
       </footer>
     </div>
