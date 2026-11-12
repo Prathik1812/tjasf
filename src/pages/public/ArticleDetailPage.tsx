@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, FileText, Copy, Check, Calendar, BookOpen, Bookmark } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import Loader from '@/components/Loader';
 import type { Article } from '@/types';
 
 interface JoinedArticle extends Article {
@@ -135,7 +136,7 @@ export default function ArticleDetailPage() {
     };
   }, [id]);
 
-  if (loading) return <div className="py-20 text-center text-[#667082]">Loading...</div>;
+  if (loading) return <Loader fullScreen delayMs={250} message="Loading article..." />;
 
   if (!article) {
     return (

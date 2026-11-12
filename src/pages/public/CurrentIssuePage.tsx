@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import Loader from '@/components/Loader';
 import type { Issue, Volume, Article } from '@/types';
 
 export default function CurrentIssuePage() {
@@ -37,7 +38,7 @@ export default function CurrentIssuePage() {
     })();
   }, []);
 
-  if (loading) return <div className="py-20 text-center text-[#667082]">Loading...</div>;
+  if (loading) return <Loader fullScreen delayMs={250} message="Loading issue..." />;
 
   if (!issue) {
     return (

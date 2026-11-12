@@ -4,6 +4,7 @@ import { ToastProvider } from '@/components/Toast';
 import Layout from '@/components/Layout';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ScrollToTop from '@/components/ScrollToTop';
 
 import HomePage from '@/pages/public/HomePage';
 import AboutPage from '@/pages/public/AboutPage';
@@ -48,6 +49,7 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Public site */}
             <Route element={<Layout />}>

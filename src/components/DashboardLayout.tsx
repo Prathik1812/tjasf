@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
 import { Menu, X, LayoutDashboard, FileText, Users, BookOpen, Settings, LogOut, ClipboardList, Megaphone, FileEdit, Archive, Mail, User, Bell } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,7 @@ export default function DashboardLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -132,7 +133,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        <div className="flex-1 p-6 md:p-8">
+        <div key={location.pathname} className="flex-1 p-6 md:p-8 page-transition">
           <Outlet />
         </div>
 

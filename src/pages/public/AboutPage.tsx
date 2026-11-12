@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import Loader from '@/components/Loader';
 import type { HomepageContent } from '@/types';
 
 export default function AboutPage() {
@@ -20,7 +21,7 @@ export default function AboutPage() {
     })();
   }, []);
 
-  if (loading) return <div className="py-20 text-center text-[#667082]">Loading...</div>;
+  if (loading) return <Loader fullScreen delayMs={250} message="Loading overview..." />;
 
   return (
     <div className="max-w-[900px] mx-auto px-8 py-20">

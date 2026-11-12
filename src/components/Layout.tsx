@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { ArrowRight, Menu, X, Download, Globe } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -7,6 +7,7 @@ export default function Layout() {
   const { profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,7 +86,7 @@ export default function Layout() {
         )}
       </header>
 
-      <main className="flex-1">
+      <main key={location.pathname} className="flex-1 page-transition">
         <Outlet />
       </main>
 
