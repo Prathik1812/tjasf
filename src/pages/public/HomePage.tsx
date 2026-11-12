@@ -15,35 +15,55 @@ export default function HomePage() {
 
   useEffect(() => {
     (async () => {
-      // 1. Fetch only published issues
-      const { data: issues } = await supabase
-        .from('issues')
+      // 1. Fetch published articles
+      const { data: arts } = await supabase
+        .from('articles')
         .select('*')
-        .eq('is_published', true)
         .order('publication_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(3);
+      if (arts) setArticles(arts as Article[]);
 
-      if (issues) {
-        setCurrentIssue(issues as Issue);
-        const { data: vol } = await supabase
-          .from('volumes')
-          .select('*')
-          .eq('id', (issues as Issue).volume_id)
-          .maybeSingle();
-        if (vol) setCurrentVolume(vol as Volume);
-      }
+      // 2. Fetch only published issues that actually contain published articles
+      const { data: pubArticles } = await supabase.from('articles').select('id, issue_id');
 
-      // 2. Count volumes that have published issues & articles
-      const { data: pubArticles } = await supabase.from('articles').select('id');
-      const { data: pubIssues } = await supabase
-        .from('issues')
-        .select('volume_id')
-        .eq('is_published', true);
+      if (pubArticles && pubArticles.length > 0) {
+        const publishedIssueIds = Array.from(new Set(pubArticles.map(a => a.issue_id).filter(Boolean)));
 
-      if (pubArticles && pubArticles.length > 0 && pubIssues && pubIssues.length > 0) {
-        const uniqueVolIds = new Set(pubIssues.map(i => i.volume_id));
-        setPublishedVolumesCount(uniqueVolIds.size);
+        if (publishedIssueIds.length > 0) {
+          const { data: issues } = await supabase
+            .from('issues')
+            .select('*')
+            .eq('is_published', true)
+            .in('id', publishedIssueIds)
+            .order('publication_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (issues) {
+            setCurrentIssue(issues as Issue);
+            const { data: vol } = await supabase
+              .from('volumes')
+              .select('*')
+              .eq('id', (issues as Issue).volume_id)
+              .maybeSingle();
+            if (vol) setCurrentVolume(vol as Volume);
+          }
+
+          const { data: pubIssues } = await supabase
+            .from('issues')
+            .select('volume_id')
+            .eq('is_published', true)
+            .in('id', publishedIssueIds);
+
+          if (pubIssues && pubIssues.length > 0) {
+            const uniqueVolIds = new Set(pubIssues.map(i => i.volume_id));
+            setPublishedVolumesCount(uniqueVolIds.size);
+          } else {
+            setPublishedVolumesCount(0);
+          }
+        } else {
+          setPublishedVolumesCount(0);
+        }
       } else {
         setPublishedVolumesCount(0);
       }
@@ -55,14 +75,6 @@ export default function HomePage() {
       } else {
         setDomainsCount(4);
       }
-
-      // 3. Fetch published articles
-      const { data: arts } = await supabase
-        .from('articles')
-        .select('*')
-        .order('publication_date', { ascending: false })
-        .limit(3);
-      if (arts) setArticles(arts as Article[]);
 
       // 4. Fetch announcements
       const { data: anns } = await supabase
