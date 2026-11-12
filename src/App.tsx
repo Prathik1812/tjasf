@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ScrollToTop from '@/components/ScrollToTop';
+import TopProgressBar from '@/components/TopProgressBar';
 
 import HomePage from '@/pages/public/HomePage';
 import AboutPage from '@/pages/public/AboutPage';
@@ -50,6 +51,7 @@ export default function App() {
       <ToastProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <TopProgressBar />
           <Routes>
             {/* Public site */}
             <Route element={<Layout />}>

@@ -51,12 +51,12 @@ export default function Layout() {
           </button>
           <nav className={`${menuOpen ? 'flex' : 'flex'} items-center gap-7 text-[13px] font-semibold text-[#27334a] max-md:hidden`}>
             {navItems.map((item) => (
-              <NavLink key={item.to} to={item.to} className={({ isActive }) => `hover:text-[#eb5526] transition-colors ${isActive ? 'text-[#eb5526]' : ''}`}>
+              <NavLink key={item.to} to={item.to} viewTransition className={({ isActive }) => `hover:text-[#eb5526] transition-colors ${isActive ? 'text-[#eb5526]' : ''}`}>
                 {item.label}
               </NavLink>
             ))}
             {profile && (
-              <NavLink to="/dashboard" className={({ isActive }) => `hover:text-[#eb5526] transition-colors ${isActive ? 'text-[#eb5526]' : ''}`}>
+              <NavLink to="/dashboard" viewTransition className={({ isActive }) => `hover:text-[#eb5526] transition-colors ${isActive ? 'text-[#eb5526]' : ''}`}>
                 Dashboard
               </NavLink>
             )}
