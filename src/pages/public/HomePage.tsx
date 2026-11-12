@@ -125,9 +125,9 @@ export default function HomePage() {
                 <span className="w-2 h-2 bg-[#eb5526] rounded-full animate-pulse" />
               </div>
               <div className="font-['Playfair_Display'] text-[72px] leading-none mt-10 tracking-tight">
-                01<span className="text-[#eb5526] text-[32px] mx-1">/</span>2026
+                04<span className="text-[#eb5526] text-[32px] mx-1">/</span>2027
               </div>
-              <p className="text-[#bbc5d4] text-xs mt-2">Volume 01 &middot; Inaugural Issue</p>
+              <p className="text-[#bbc5d4] text-xs mt-2">Volume 01 &middot; Inaugural Issue (04/2027)</p>
               <div className="h-px bg-[#53627a] my-5" />
               <p className="font-['Playfair_Display'] text-[15px] leading-[1.45] text-white max-w-[220px]">
                 Call for Papers — Submissions Open
@@ -221,7 +221,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="bg-white rounded-lg border border-[#e6e5e0] p-10 text-center">
-              <p className="text-[#667082] text-sm font-medium">No published articles yet. Submissions for the inaugural issue are currently being reviewed.</p>
+              <p className="text-[#667082] text-sm font-medium">No published articles yet. Submissions for the inaugural issue (04/2027) are currently being reviewed.</p>
               <Link to="/dashboard/submit" className="inline-flex items-center gap-2 text-xs font-bold text-[#eb5526] mt-3 hover:underline">
                 Submit your paper for Volume 1 <ArrowRight size={15} />
               </Link>
@@ -268,14 +268,14 @@ export default function HomePage() {
               {currentIssue ? (
                 <>New research.<br /><em className="text-[#eb5526] italic">Wider horizons.</em></>
               ) : (
-                <>Inaugural Issue.<br /><em className="text-[#eb5526] italic">Open for Submissions.</em></>
+                <>Inaugural Issue (04/2027).<br /><em className="text-[#eb5526] italic">Open for Submissions.</em></>
               )}
             </h2>
             <p className="text-[#bdc7d5] text-base leading-[1.65] max-w-[440px] mb-7">
               {currentIssue ? (
                 `Volume ${String(currentVolume?.number || 1).padStart(2, '0')}, Issue ${String(currentIssue.number).padStart(2, '0')} brings together new perspectives on the systems shaping our shared future.`
               ) : (
-                'Volume 01, Issue 01 is currently accepting manuscript submissions across all scientific, engineering, and technology domains. Accepted papers in the first 2 inaugural issues will be published 100% free of charge.'
+                'Volume 01, Inaugural Issue (04/2027) is currently accepting manuscript submissions across all scientific, engineering, and technology domains. Accepted papers in the first 2 inaugural issues will be published 100% free of charge.'
               )}
             </p>
             <Link to={currentIssue ? "/current-issue" : "/dashboard/submit"} className="button button-light">
