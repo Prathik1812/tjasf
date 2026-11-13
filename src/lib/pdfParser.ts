@@ -137,6 +137,8 @@ function formatReferences(rawRefs: string): string {
   return formatted.join('\n\n');
 }
 
+const NON_PERSON_TERMS = /(?:department|faculty|school|division|centre|center|university|institute|college|laboratory|journal|science|frontiers|paper|abstract|title|keywords|index terms|email|country|state|volume|issue|corresponding|correspondence|manuscript|research|article|international|engineering|technology|computing|intelligence|systems|analytics|networks|security|review|society|association|foundation|organization|corp|inc|ltd|gmbh|llc|hospital|clinic|press|publisher|united states|united kingdom|hong kong|san francisco|los angeles|new york|south korea|north carolina|new jersey|new zealand|saudi arabia|south africa|street|avenue|road|campus|building|box|hall|lane|drive|park|way|circle|length|must|exceed|table|figure|received|revised|accepted|published)/i;
+
 /**
  * Validates and extracts a complete author name, preserving initials with periods,
  * middle names, hyphens, and apostrophes.
@@ -157,12 +159,8 @@ function parseAuthorName(candidateStr: string): string | null {
     return 'Author Name';
   }
 
-  // Filter out non-name terms
-  if (
-    /(?:department|faculty|school|division|centre|center|university|institute|college|laboratory|journal|science|frontiers|paper|abstract|title|keywords|index terms|email|country|state|volume|issue|corresponding)/i.test(
-      s
-    )
-  ) {
+  // Reject non-person terms (departments, cities, countries, disciplines)
+  if (NON_PERSON_TERMS.test(s)) {
     return null;
   }
 
@@ -491,6 +489,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       const s = item.str.trim();
       if (emailRegex.test(s)) continue;
       if (/(?:department|faculty|school|division|centre|center|university|institute|college|laboratory)/i.test(s)) continue;
+      if (NON_PERSON_TERMS.test(s)) continue;
 
       // Check if item contains multiple names (e.g. "Author One 1, Author Two 2, and Author Three 3")
       if (s.includes(',') || /\s+(?:and|&)\s+/i.test(s)) {
@@ -502,9 +501,33 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
 
         for (const part of parts) {
           const fnMatch = part.match(/\b(\d+)\b/);
-          const hasStar = /\*|corresponding/i.test(part);
+          const hasStar = /\*|corresponding|correspondence/i.test(part);
           const parsed = parseAuthorName(part);
           if (parsed) {
+            const isDuplicate =
+              parsed !== 'Author Name' &&
+              rawAuthors.some((a) => a.name.toLowerCase() === parsed.toLowerCase());
+            if (!isDuplicate) {
+              rawAuthors.push({
+                name: parsed,
+                footnoteNum: fnMatch ? fnMatch[1] : undefined,
+                hasStar,
+                x: item.x,
+                y: item.y,
+              });
+            }
+          }
+        }
+      } else {
+        // Single name item
+        const fnMatch = s.match(/\b(\d+)\b/);
+        const hasStar = /\*|corresponding|correspondence/i.test(s);
+        const parsed = parseAuthorName(s);
+        if (parsed) {
+          const isDuplicate =
+            parsed !== 'Author Name' &&
+            rawAuthors.some((a) => a.name.toLowerCase() === parsed.toLowerCase());
+          if (!isDuplicate) {
             rawAuthors.push({
               name: parsed,
               footnoteNum: fnMatch ? fnMatch[1] : undefined,
@@ -513,20 +536,6 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
               y: item.y,
             });
           }
-        }
-      } else {
-        // Single name item
-        const fnMatch = s.match(/\b(\d+)\b/);
-        const hasStar = /\*|corresponding/i.test(s);
-        const parsed = parseAuthorName(s);
-        if (parsed) {
-          rawAuthors.push({
-            name: parsed,
-            footnoteNum: fnMatch ? fnMatch[1] : undefined,
-            hasStar,
-            x: item.x,
-            y: item.y,
-          });
         }
       }
     }
@@ -540,14 +549,38 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       for (const line of lines) {
         if (emailRegex.test(line)) continue;
         if (/(?:department|faculty|school|division|centre|center|university|institute|college|laboratory)/i.test(line)) continue;
+        if (NON_PERSON_TERMS.test(line)) continue;
 
         if (line.includes(',') || /\s+(?:and|&)\s+/i.test(line)) {
           const parts = line.replace(/\s+(?:and|&)\s+/gi, ', ').split(/[,;]/).map((p) => p.trim()).filter(Boolean);
           for (const part of parts) {
             const fnMatch = part.match(/\b(\d+)\b/);
-            const hasStar = /\*|corresponding/i.test(part);
+            const hasStar = /\*|corresponding|correspondence/i.test(part);
             const parsed = parseAuthorName(part);
             if (parsed) {
+              const isDuplicate =
+                parsed !== 'Author Name' &&
+                rawAuthors.some((a) => a.name.toLowerCase() === parsed.toLowerCase());
+              if (!isDuplicate) {
+                rawAuthors.push({
+                  name: parsed,
+                  footnoteNum: fnMatch ? fnMatch[1] : undefined,
+                  hasStar,
+                  x: 100,
+                  y: 500,
+                });
+              }
+            }
+          }
+        } else {
+          const fnMatch = line.match(/\b(\d+)\b/);
+          const hasStar = /\*|corresponding|correspondence/i.test(line);
+          const parsed = parseAuthorName(line);
+          if (parsed) {
+            const isDuplicate =
+              parsed !== 'Author Name' &&
+              rawAuthors.some((a) => a.name.toLowerCase() === parsed.toLowerCase());
+            if (!isDuplicate) {
               rawAuthors.push({
                 name: parsed,
                 footnoteNum: fnMatch ? fnMatch[1] : undefined,
@@ -556,19 +589,6 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
                 y: 500,
               });
             }
-          }
-        } else {
-          const fnMatch = line.match(/\b(\d+)\b/);
-          const hasStar = /\*|corresponding/i.test(line);
-          const parsed = parseAuthorName(line);
-          if (parsed) {
-            rawAuthors.push({
-              name: parsed,
-              footnoteNum: fnMatch ? fnMatch[1] : undefined,
-              hasStar,
-              x: 100,
-              y: 500,
-            });
           }
         }
       }
@@ -609,7 +629,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
             i.y >= entry.y - 80
         );
         if (nearbyEmail) {
-          if (!/corresponding/i.test(nearbyEmail.str) || entry.hasStar || idx === 0) {
+          if (!/correspond/i.test(nearbyEmail.str) || entry.hasStar || idx === 0) {
             matchedEmail = nearbyEmail.str.match(emailRegex)?.[0] || '';
           }
         }
