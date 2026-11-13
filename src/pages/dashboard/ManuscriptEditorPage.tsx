@@ -299,6 +299,10 @@ export default function ManuscriptEditorPage() {
 
   const handleDeleteManuscript = async () => {
     if (!manuscript) return;
+    if (activeUser?.role !== 'admin') {
+      toast.error('Access Denied: Only administrators can delete manuscripts.');
+      return;
+    }
     if (!window.confirm(`Permanently delete "${manuscript.title}"? This cannot be undone.`)) return;
     setUpdating(true);
     try {
@@ -1150,12 +1154,12 @@ ${referencesXml}
               </button>
             )}
             <StatusBadge status={manuscript.status} />
-            {['admin', 'editor_in_chief', 'associate_editor', 'section_editor'].includes(activeUser.role) && (
+            {activeUser?.role === 'admin' && (
               <button
                 onClick={handleDeleteManuscript}
                 disabled={updating}
                 className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                title="Permanently delete test manuscript"
+                title="Permanently delete test manuscript (Admin Only)"
               >
                 <Trash2 size={13} />
                 <span>Delete Paper</span>

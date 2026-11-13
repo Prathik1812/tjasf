@@ -132,6 +132,10 @@ export default function MyManuscripts() {
   };
 
   const handleDeleteManuscript = async (id: string, title?: string) => {
+    if (activeProfile?.role !== 'admin') {
+      toast.error('Access Denied: Only administrators can delete manuscripts.');
+      return;
+    }
     if (!window.confirm(`Are you sure you want to permanently delete "${title || 'this manuscript'}"? This action cannot be undone.`)) {
       return;
     }
@@ -321,14 +325,16 @@ export default function MyManuscripts() {
                   </a>
                 ) : <span />}
 
-                <button
-                  type="button"
-                  onClick={() => handleDeleteManuscript(m.id, m.title)}
-                  className="text-red-500 hover:text-red-700 font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded hover:bg-red-50"
-                  title="Permanently delete test manuscript"
-                >
-                  <Trash2 size={13} /> Delete Paper
-                </button>
+                {activeProfile?.role === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteManuscript(m.id, m.title)}
+                    className="text-red-500 hover:text-red-700 font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded hover:bg-red-50"
+                    title="Permanently delete test manuscript (Admin Only)"
+                  >
+                    <Trash2 size={13} /> Delete Paper
+                  </button>
+                )}
               </div>
             </div>
           ))}
