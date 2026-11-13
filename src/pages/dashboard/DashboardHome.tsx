@@ -174,7 +174,9 @@ export default function DashboardHome() {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Manuscripts" value={manuscripts.length} icon={FileText} />
+        {activeProfile.role !== 'admin' && (
+          <StatCard label="Manuscripts" value={manuscripts.length} icon={FileText} />
+        )}
         {(activeProfile.role === 'reviewer' || activeProfile.role === 'admin') && (
           <StatCard label="Reviews" value={reviews.length} icon={ClipboardList} />
         )}

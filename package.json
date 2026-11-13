@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
+    "@types/jszip": "^3.4.0",
     "@vercel/node": "^5.10.0",
+    "jszip": "^3.10.2",
     "lucide-react": "^1.30.0",
     "nodemailer": "^9.0.5",
-    "pdfjs-dist": "^6.5.438",
+    "pdfjs-dist": "^3.11.174",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2"

@@ -1,8 +1,13 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.js?url';
 
-// Configure the worker to use the local same-origin bundle produced by Vite
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+// Resolve ES module / CJS interop
+const pdfjs: any = (pdfjsLib as any).getDocument ? (pdfjsLib as any) : ((pdfjsLib as any).default || pdfjsLib);
+
+// Configure the worker to use the local bundle if available
+if (pdfjs && pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
+}
 
 export interface ExtractedAuthor {
   name: string;
@@ -20,6 +25,7 @@ export interface ExtractedManuscript {
   references: string;
   authors: ExtractedAuthor[];
   isTemplateConformant: boolean;
+  isScanned?: boolean;
   rawPage1Text: string;
 }
 
@@ -30,16 +36,30 @@ export interface ExtractedManuscript {
 export async function parsePdfManuscript(file: File): Promise<ExtractedManuscript | null> {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(arrayBuffer),
-      useSystemFonts: true,
-      disableFontFace: true,
-    });
+    const typedArray = new Uint8Array(arrayBuffer);
 
-    const pdf = await loadingTask.promise;
+    let pdf: pdfjsLib.PDFDocumentProxy;
+    try {
+      const loadingTask = pdfjs.getDocument({
+        data: typedArray,
+        useSystemFonts: true,
+        disableFontFace: true,
+      });
+      pdf = await loadingTask.promise;
+    } catch (loadErr) {
+      console.warn('Standard PDF worker failed, retrying with fallback settings:', loadErr);
+      const fallbackTask = pdfjs.getDocument({
+        data: typedArray,
+        useSystemFonts: true,
+        disableFontFace: true,
+        disableWorker: true,
+      } as any);
+      pdf = await fallbackTask.promise;
+    }
+
     if (!pdf || pdf.numPages === 0) return null;
 
-    // 1. Extract Page 1 text items with geometry for smart title extraction
+    // 1. Extract Page 1 text items with geometry for title & metadata extraction
     const page1 = await pdf.getPage(1);
     const textContent1 = await page1.getTextContent();
     const items: Array<{ str: string; height: number; y: number; x: number }> = [];
@@ -95,9 +115,18 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
 
     const fullScannedText = scannedPages.join(' \n ');
 
-    // If completely empty (e.g. scanned image PDF)
+    // If completely empty (e.g. scanned image PDF or corrupted)
     if (!page1Text.trim() && !lastPageText.trim()) {
-      return null;
+      return {
+        title: '',
+        abstract: '',
+        keywords: '',
+        references: '',
+        authors: [],
+        isTemplateConformant: false,
+        isScanned: true,
+        rawPage1Text: '',
+      };
     }
 
     // --- TITLE EXTRACTION ---
@@ -134,7 +163,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
 
     // Clean up title placeholder if uploaded raw template
     if (/^full paper title$/i.test(extractedTitle.trim())) {
-      extractedTitle = '';
+      extractedTitle = 'Full Paper Title';
     }
 
     // --- ABSTRACT EXTRACTION ---
@@ -145,7 +174,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
     } else {
       const absIdx = page1Text.search(/abstract/i);
       if (absIdx !== -1) {
-        let rest = page1Text.substring(absIdx + 8).replace(/^[\s:\-–—\n]+/, '');
+        const rest = page1Text.substring(absIdx + 8).replace(/^[\s:\-–—\n]+/, '');
         const stop = rest.match(/(keywords|key\s*words|index\s*terms|1[\.\s]+introduction|introduction|i\.\s+introduction)/i);
         if (stop && stop.index) {
           extractedAbstract = rest.substring(0, stop.index).trim();
@@ -209,6 +238,28 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       });
     }
 
+    // If no emails found, try extracting candidate names from beneath title
+    if (extractedAuthors.length === 0) {
+      const absIdx = page1Text.toLowerCase().indexOf('abstract');
+      const headerArea = absIdx > 0 ? page1Text.substring(0, absIdx) : page1Text.substring(0, 300);
+      const nameMatches = headerArea.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/g) || [];
+      const filteredNames = nameMatches.filter(
+        (n) => !/(journal|applied|science|frontiers|paper|title|department|university|abstract)/i.test(n)
+      );
+      if (filteredNames.length > 0) {
+        filteredNames.slice(0, 3).forEach((n, idx) => {
+          extractedAuthors.push({
+            name: n,
+            email: '',
+            affiliation: 'Department of Science & Technology',
+            department: 'Faculty of Engineering',
+            corresponding: idx === 0,
+            orcid: '',
+          });
+        });
+      }
+    }
+
     // --- STRICT TJASF TEMPLATE CONFORMANCE DETECTION ---
     // Reject any generic conference, IEEE, ACM, Springer, or non-TJASF papers.
     // 1. Direct TJASF Journal branding / ISSN / Acronym:
@@ -232,6 +283,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       references: extractedReferences,
       authors: extractedAuthors,
       isTemplateConformant,
+      isScanned: false,
       rawPage1Text: page1Text,
     };
   } catch (err) {

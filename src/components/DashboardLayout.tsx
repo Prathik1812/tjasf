@@ -161,10 +161,11 @@ function getNavItems(role?: UserRole): NavItem[] {
   ];
 
   if (role) {
-    items.push(
-      { to: '/dashboard/manuscripts', label: 'My Manuscripts', icon: FileText },
-      { to: '/dashboard/profile', label: 'My Profile', icon: User }
-    );
+    // Admins manage the journal system and do not have author personal manuscripts or submission options
+    if (role !== 'admin') {
+      items.push({ to: '/dashboard/manuscripts', label: 'My Manuscripts', icon: FileText });
+    }
+    items.push({ to: '/dashboard/profile', label: 'My Profile', icon: User });
   }
 
   if (role === 'author') {

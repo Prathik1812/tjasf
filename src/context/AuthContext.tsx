@@ -115,7 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      setLoading(true);
+      // Only set loading to true if we don't have a profile yet (initial load).
+      // Background user token refreshes must never unmount active pages!
+      if (!profile) {
+        setLoading(true);
+      }
       fetchProfile(user.id).finally(() => setLoading(false));
     } else {
       setProfile(null);

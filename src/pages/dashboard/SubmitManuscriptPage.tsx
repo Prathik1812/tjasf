@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, ChevronLeft, Upload, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -25,6 +25,8 @@ const STEPS = [
   { num: 4, label: 'Upload & References' },
   { num: 5, label: 'Declarations & Submit' },
 ];
+
+const DRAFT_STORAGE_KEY = 'tjasf_manuscript_submission_draft';
 
 export default function SubmitManuscriptPage() {
   const { profile } = useAuth();
@@ -65,15 +67,68 @@ export default function SubmitManuscriptPage() {
   const [copyrightAgreement, setCopyrightAgreement] = useState(false);
   const [policiesAgreement, setPoliciesAgreement] = useState(false);
 
+  const restoredRef = useRef(false);
+
+  // Restore draft from sessionStorage on initial mount (prevents unexpected reset to step 1)
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+
+    try {
+      const saved = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const d = JSON.parse(saved);
+        if (d.step && typeof d.step === 'number' && d.step >= 1 && d.step <= 5) setStep(d.step);
+        if (d.title) setTitle(d.title);
+        if (d.domainId) setDomainId(d.domainId);
+        if (d.selectedSubjectId) setSelectedSubjectId(d.selectedSubjectId);
+        if (d.fastTrack !== undefined) setFastTrack(Boolean(d.fastTrack));
+        if (Array.isArray(d.authors) && d.authors.length > 0) setAuthors(d.authors);
+        if (d.abstract) setAbstract(d.abstract);
+        if (d.keywords) setKeywords(d.keywords);
+        if (d.fileName) setFileName(d.fileName);
+        if (d.fileUrl) setFileUrl(d.fileUrl);
+        if (d.plagiarismFileName) setPlagiarismFileName(d.plagiarismFileName);
+        if (d.plagiarismFileUrl) setPlagiarismFileUrl(d.plagiarismFileUrl);
+        if (d.references) setReferences(d.references);
+      }
+    } catch (err) {
+      console.warn('Could not restore draft:', err);
+    }
+  }, []);
+
+  // Persist draft to sessionStorage automatically
   useEffect(() => {
     if (!title && !abstract && !references && authors.length <= 1 && !authors[0].affiliation) return;
     setSavingDraft(true);
     const delay = setTimeout(() => {
+      try {
+        sessionStorage.setItem(
+          DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            step,
+            title,
+            domainId,
+            selectedSubjectId,
+            fastTrack,
+            authors,
+            abstract,
+            keywords,
+            fileName,
+            fileUrl,
+            plagiarismFileName,
+            plagiarismFileUrl,
+            references,
+          })
+        );
+      } catch (err) {
+        console.warn('Draft save error:', err);
+      }
       setSavingDraft(false);
       setSaveTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
-    }, 1000);
+    }, 500);
     return () => clearTimeout(delay);
-  }, [title, domainId, selectedSubjectId, abstract, keywords, references, authors]);
+  }, [step, title, domainId, selectedSubjectId, fastTrack, abstract, keywords, references, authors, fileName, fileUrl, plagiarismFileName, plagiarismFileUrl]);
 
   useEffect(() => {
     (async () => {
@@ -112,9 +167,24 @@ export default function SubmitManuscriptPage() {
     setStep(step + 1);
   };
 
+  /**
+   * PDF Autofill Handler (Step 1):
+   * Strictly PDF only, validates TJASF template compliance before autofill.
+   */
   const handleAutoFillUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // 1. Strict File Type Validation: Autofill is PDF ONLY
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+    if (!isPdf) {
+      toast.error('Invalid File Type: Autofill supports PDF format only. Please upload a PDF manuscript formatted with the TJASF template.');
+      setError('Invalid File Type: Autofill supports PDF format only. For Word (.docx) files, please upload in Step 4 or enter details manually.');
+      e.target.value = '';
+      return;
+    }
 
     setAnalyzing(true);
     setError('');
@@ -122,20 +192,27 @@ export default function SubmitManuscriptPage() {
     try {
       const extracted = await parsePdfManuscript(file);
 
+      // Check for parsing failure or unreadable/scanned document
       if (!extracted) {
-        toast.error('Could not extract text from this document. Please verify it is a readable PDF or enter details manually.');
-        setError('Extraction Notice: Unable to extract text from this PDF file. If this is a scanned document, please enter details manually.');
+        toast.error('Corrupted or Unreadable PDF: Unable to read text from the uploaded document.');
+        setError('Extraction Error: Unable to extract readable text from this PDF file. Please verify the document is not corrupted or enter details manually.');
         return;
       }
 
-      // Check if document strictly conforms to the official TJASF template
+      if (extracted.isScanned) {
+        toast.error('Unreadable PDF: The uploaded document appears to be scanned or contains no extractable digital text.');
+        setError('Unreadable PDF: The document contains no extractable text. Scanned or image-only PDFs cannot be autofilled. Please enter details manually.');
+        return;
+      }
+
+      // 2. Strict TJASF Journal Template Validation
       if (!extracted.isTemplateConformant) {
         toast.error('Submission Rejected: The uploaded document does not follow the official TJASF journal template. Auto-fill accepts TJASF-formatted papers only.');
-        setError('Template Validation Failed: The uploaded PDF does not match the official TJASF Journal Paper Template format. Please download the template from Step 4, format your manuscript according to the journal guidelines, and re-upload.');
-        return;
+        setError('Template Validation Failed: The uploaded document does not match the official TJASF Journal Paper Template format. Please download the template from Step 4, format your manuscript according to the journal guidelines, and re-upload.');
+        return; // Reject without populating any fields; remain on Step 1
       }
 
-      // Populate form fields ONLY for verified TJASF template papers
+      // 3. Populate existing form fields only
       if (extracted.title) setTitle(extracted.title);
       if (extracted.abstract) setAbstract(extracted.abstract);
       if (extracted.keywords) setKeywords(extracted.keywords);
@@ -144,10 +221,10 @@ export default function SubmitManuscriptPage() {
         setAuthors(extracted.authors);
       }
 
-      toast.success('TJASF template verified! Manuscript details auto-filled successfully.');
+      toast.success('TJASF template verified! Manuscript details auto-filled successfully. You can now review and edit the fields.');
     } catch (err: any) {
       console.error('Auto-fill error:', err);
-      toast.error('Failed to parse document: ' + (err.message || err));
+      toast.error('Failed to parse document: ' + (err.message || 'Unknown parsing error'));
       setError('An error occurred while processing the file: ' + (err.message || err));
     } finally {
       setAnalyzing(false);
@@ -155,9 +232,25 @@ export default function SubmitManuscriptPage() {
     }
   };
 
+  /**
+   * Normal Manuscript Upload Handler (Step 4):
+   * Accepts both .docx and .pdf files.
+   */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate allowed file types for normal manuscript upload (.pdf, .doc, .docx)
+    const validExtensions = ['.pdf', '.doc', '.docx'];
+    const hasValidExt = validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext));
+    if (!hasValidExt) {
+      setError('Invalid File Format: Manuscript must be a PDF, DOC, or DOCX document.');
+      toast.error('Invalid File Format: Manuscript must be a PDF, DOC, or DOCX document.');
+      e.target.value = '';
+      return;
+    }
 
     setFileName(file.name);
     setAnalyzing(true);
@@ -197,12 +290,19 @@ export default function SubmitManuscriptPage() {
     }
   };
 
+  /**
+   * Plagiarism Report Upload Handler (Step 4):
+   * PDF only.
+   */
   const handlePlagiarismUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       setError('Invalid File Type: The plagiarism report must be in PDF format.');
+      toast.error('Invalid File Type: The plagiarism report must be in PDF format.');
       setPlagiarismFileName('');
       setPlagiarismFileUrl('');
       e.target.value = '';
@@ -217,12 +317,14 @@ export default function SubmitManuscriptPage() {
     const { error: upErr } = await supabase.storage.from('manuscripts').upload(filePath, file);
     if (upErr) {
       setError('Failed to upload plagiarism report: ' + upErr.message);
+      toast.error('Failed to upload plagiarism report: ' + upErr.message);
       setUploadingPlagiarism(false);
       return;
     }
     const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
     setPlagiarismFileUrl(pubData.publicUrl);
     setUploadingPlagiarism(false);
+    toast.success('Plagiarism report uploaded successfully.');
   };
 
   const handleSubmit = async () => {
@@ -296,9 +398,11 @@ export default function SubmitManuscriptPage() {
 
     if (insErr) {
       setError(insErr.message);
+      toast.error('Submission failed: ' + insErr.message);
       setSubmitting(false);
       return;
     }
+
     if (data) {
       // Insert v1 into versions archive
       await supabase.from('manuscript_versions').insert({
@@ -346,6 +450,13 @@ export default function SubmitManuscriptPage() {
       );
     } catch (err) {
       console.error('Failed to send confirmation email:', err);
+    }
+
+    // Clear saved draft on successful submission
+    try {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (e) {
+      console.warn('Draft cleanup error:', e);
     }
 
     toast.success(`Manuscript submitted successfully! A confirmation email with tracking ID ${finalTrackingCode} has been sent to your email (${profile.email || 'your account'}).`);
@@ -523,7 +634,11 @@ export default function SubmitManuscriptPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-[#102342]">Authors *</label>
-              <button onClick={addAuthor} className="inline-flex items-center gap-1.5 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]">
+              <button
+                type="button"
+                onClick={addAuthor}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#eb5526] hover:text-[#d7461c]"
+              >
                 <Plus size={16} /> Add Author
               </button>
             </div>
@@ -537,7 +652,15 @@ export default function SubmitManuscriptPage() {
                       <input type="radio" name="corresponding" checked={a.corresponding} onChange={() => updateAuthor(i, 'corresponding', true)} />
                       Corresponding
                     </label>
-                    {authors.length > 1 && <button onClick={() => removeAuthor(i)} className="text-red-400 hover:text-red-600"><Trash2 size={15} /></button>}
+                    {authors.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeAuthor(i)}
+                        className="text-red-400 hover:text-red-600"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -617,7 +740,13 @@ export default function SubmitManuscriptPage() {
                 ) : fileName ? (
                   <div className="flex items-center justify-center gap-2 text-sm text-[#102342]">
                     <Upload size={18} className="text-[#eb5526]" /> {fileName}
-                    <button onClick={() => { setFileName(''); setFileUrl(''); }} className="ml-2 text-red-400 hover:text-red-600"><Trash2 size={15} /></button>
+                    <button
+                      type="button"
+                      onClick={() => { setFileName(''); setFileUrl(''); }}
+                      className="ml-2 text-red-400 hover:text-red-600"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 ) : (
                   <>
@@ -654,7 +783,13 @@ export default function SubmitManuscriptPage() {
                 ) : plagiarismFileName ? (
                   <div className="flex items-center justify-center gap-2 text-sm text-[#102342]">
                     <Upload size={18} className="text-[#eb5526]" /> {plagiarismFileName}
-                    <button onClick={() => { setPlagiarismFileName(''); setPlagiarismFileUrl(''); }} className="ml-2 text-red-400 hover:text-red-600"><Trash2 size={15} /></button>
+                    <button
+                      type="button"
+                      onClick={() => { setPlagiarismFileName(''); setPlagiarismFileUrl(''); }}
+                      className="ml-2 text-red-400 hover:text-red-600"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 ) : (
                   <>
@@ -809,6 +944,7 @@ export default function SubmitManuscriptPage() {
         {/* Navigation */}
         <div className="flex justify-between mt-8 pt-6 border-t border-[#e6e5e0]">
           <button
+            type="button"
             onClick={() => setStep(step - 1)}
             disabled={step === 1}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-[#667082] disabled:opacity-30 hover:text-[#102342]"
@@ -817,6 +953,7 @@ export default function SubmitManuscriptPage() {
           </button>
           {step < 5 ? (
             <button
+              type="button"
               onClick={handleNext}
               disabled={!canProceed()}
               className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30"
@@ -825,6 +962,7 @@ export default function SubmitManuscriptPage() {
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={!canProceed() || submitting}
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30"
