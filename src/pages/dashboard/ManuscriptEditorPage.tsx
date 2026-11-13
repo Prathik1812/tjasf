@@ -302,14 +302,17 @@ export default function ManuscriptEditorPage() {
     if (!window.confirm(`Permanently delete "${manuscript.title}"? This cannot be undone.`)) return;
     setUpdating(true);
     try {
-      await supabase.from('reviews').delete().eq('manuscript_id', manuscript.id);
-      await supabase.from('editor_assignments').delete().eq('manuscript_id', manuscript.id);
-      await supabase.from('manuscript_versions').delete().eq('manuscript_id', manuscript.id);
-      const { error } = await supabase.from('manuscripts').delete().eq('id', manuscript.id);
-      if (error) throw error;
+      // 1. Try secure RPC delete first
+      const { error: rpcError } = await supabase.rpc('delete_manuscript', { target_manuscript_id: manuscript.id });
+      if (rpcError) {
+        console.warn('RPC delete error, falling back to direct delete:', rpcError);
+        const { error: delError } = await supabase.from('manuscripts').delete().eq('id', manuscript.id);
+        if (delError) throw delError;
+      }
+      toast.success('Manuscript permanently deleted.');
       navigate('/dashboard/editor');
     } catch (err: any) {
-      alert('Failed to delete manuscript: ' + (err.message || err));
+      toast.error('Failed to delete manuscript: ' + (err.message || err));
       setUpdating(false);
     }
   };

@@ -111,53 +111,102 @@ export default function SubmitManuscriptPage() {
     setStep(step + 1);
   };
 
+  const loadPdfJs = async (): Promise<any> => {
+    if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+      const timeout = setTimeout(() => {
+        reject(new Error('PDF loader timed out'));
+      }, 4000);
+
+      script.onload = () => {
+        clearTimeout(timeout);
+        try {
+          const lib = (window as any).pdfjsLib;
+          if (lib) {
+            lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            resolve(lib);
+          } else {
+            reject(new Error('pdfjsLib is not defined'));
+          }
+        } catch (e) {
+          reject(e);
+        }
+      };
+      script.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error('Failed to load PDF library script'));
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const extractTextFallback = async (file: File): Promise<{ page1Text: string; lastPageText: string }> => {
+    const buffer = await file.arrayBuffer();
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const rawString = decoder.decode(buffer);
+    
+    // Find text enclosed in parentheses in PDF streams (e.g., (Sample Text) Tj)
+    const matches = rawString.match(/\(([^()]{2,150})\)\s*T[jJ]/g) || [];
+    const extractedStrings = matches.map(m => m.replace(/^\(/, '').replace(/\)\s*T[jJ]$/, '').trim()).filter(s => s.length > 2);
+    
+    const page1Text = extractedStrings.slice(0, 200).join(' ');
+    const lastPageText = extractedStrings.slice(-150).join(' \n');
+    return { page1Text, lastPageText };
+  };
+
   const extractPdfMetadata = async (file: File) => {
     try {
-      const pdfjsLib: any = await new Promise((resolve, reject) => {
-        if ((window as any).pdfjsLib) {
-          resolve((window as any).pdfjsLib);
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
-        script.onload = () => {
-          const lib = (window as any).pdfjsLib;
-          lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-          resolve(lib);
-        };
-        script.onerror = () => reject(new Error('Failed to load PDF parsing library'));
-        document.body.appendChild(script);
-      });
-
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-      // Page 1
-      const page1 = await pdf.getPage(1);
-      const textContent1 = await page1.getTextContent();
-      const page1Strings: string[] = textContent1.items.map((item: any) => item.str);
-      const page1Text = page1Strings.join(' ');
-
-      // Last page
+      let page1Text = '';
       let lastPageText = '';
-      if (pdf.numPages > 1) {
-        const lastPage = await pdf.getPage(pdf.numPages);
-        const textContentLast = await lastPage.getTextContent();
-        const lastPageStrings: string[] = textContentLast.items.map((item: any) => item.str);
-        lastPageText = lastPageStrings.join(' \n');
-      } else {
-        lastPageText = page1Text;
+      let page1Strings: string[] = [];
+
+      try {
+        const pdfjsLib = await loadPdfJs();
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+        // Page 1
+        const page1 = await pdf.getPage(1);
+        const textContent1 = await page1.getTextContent();
+        page1Strings = textContent1.items.map((item: any) => item.str);
+        page1Text = page1Strings.join(' ');
+
+        // Last page
+        if (pdf.numPages > 1) {
+          const lastPage = await pdf.getPage(pdf.numPages);
+          const textContentLast = await lastPage.getTextContent();
+          const lastPageStrings: string[] = textContentLast.items.map((item: any) => item.str);
+          lastPageText = lastPageStrings.join(' \n');
+        } else {
+          lastPageText = page1Text;
+        }
+      } catch (pdfErr) {
+        console.warn('pdf.js extraction failed, falling back to binary string extractor:', pdfErr);
+        const fallback = await extractTextFallback(file);
+        page1Text = fallback.page1Text;
+        lastPageText = fallback.lastPageText;
+        page1Strings = page1Text.split(/\s+/);
       }
+
+      if (!page1Text.trim()) {
+        return null;
+      }
+
+      // Check if document contains an abstract section (mandatory in TJASF template)
+      const abstractIndex = page1Text.search(/abstract/i);
+      const hasAbstract = abstractIndex !== -1;
 
       // Title parsing
       const cleanStrings = page1Strings
         .map((s: string) => s.trim())
-        .filter((s: string) => s.length > 5 && !/journal|volume|issn|international|page/i.test(s));
+        .filter((s: string) => s.length > 5 && !/journal|volume|issn|international|page|https?:/i.test(s));
       const extractedTitle = cleanStrings[0] || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
 
       // Abstract parsing
       let extractedAbstract = '';
-      const abstractIndex = page1Text.search(/abstract/i);
       if (abstractIndex !== -1) {
         let abstractRest = page1Text.substring(abstractIndex + 8).trim();
         abstractRest = abstractRest.replace(/^[:\s\-]+/, '');
@@ -226,6 +275,7 @@ export default function SubmitManuscriptPage() {
       }
 
       return {
+        hasAbstract,
         title: extractedTitle,
         abstract: extractedAbstract,
         keywords: extractedKeywords,
@@ -233,7 +283,7 @@ export default function SubmitManuscriptPage() {
         authors: extractedAuthors.length > 0 ? extractedAuthors : null
       };
     } catch (err) {
-      console.error(err);
+      console.error('extractPdfMetadata error:', err);
       return null;
     }
   };
@@ -245,88 +295,72 @@ export default function SubmitManuscriptPage() {
     setAnalyzing(true);
     setError('');
 
-    // Compliance Check
-    const isCompliant = file.name.toLowerCase().includes('template') || file.name.toLowerCase().includes('tjasf');
-    if (!isCompliant) {
-      toast.error('The uploaded document is not according to the official TJASF journal template.');
-      setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout.');
-      setAnalyzing(false);
-      e.target.value = '';
-      return;
-    }
+    try {
+      // Extract PDF details
+      const extracted = await extractPdfMetadata(file);
 
-    // Upload to Supabase Storage
-    const filePath = `manuscripts/${Date.now()}-${file.name}`;
-    const { error: upErr } = await supabase.storage.from('manuscripts').upload(filePath, file);
-    if (upErr) {
-      toast.error('Failed to upload file: ' + upErr.message);
-      setError('Failed to upload file: ' + upErr.message);
-      setAnalyzing(false);
-      e.target.value = '';
-      return;
-    }
-    const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
-    setFileUrl(pubData.publicUrl);
-    setFileName(file.name);
+      if (!extracted || !extracted.hasAbstract) {
+        toast.error('The uploaded document is not according to the official TJASF journal template. Please ensure your PDF includes Title, Abstract, and Keywords.');
+        setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout.');
+        return;
+      }
 
-    // Extract PDF details
-    const extracted = await extractPdfMetadata(file);
-    if (extracted) {
-      setTitle(extracted.title || '');
-      setAbstract(extracted.abstract || '');
-      setKeywords(extracted.keywords || '');
-      setReferences(extracted.references || '');
+      // Populate form fields
+      if (extracted.title) setTitle(extracted.title);
+      if (extracted.abstract) setAbstract(extracted.abstract);
+      if (extracted.keywords) setKeywords(extracted.keywords);
+      if (extracted.references) setReferences(extracted.references);
       if (extracted.authors && extracted.authors.length > 0) {
         setAuthors(extracted.authors);
       }
       toast.success('Success! Manuscript details extracted and forms auto-filled.');
-    } else {
-      toast.info('Completed upload, but could not extract PDF details automatically. Please enter details manually.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Could not process this document. Please enter details manually.');
+    } finally {
+      setAnalyzing(false);
+      e.target.value = '';
     }
-    setAnalyzing(false);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Strict compliance check: manuscript must match the TJASF template format
-    const isCompliant = file.name.toLowerCase().includes('template') || file.name.toLowerCase().includes('tjasf');
-    if (!isCompliant) {
-      toast.error('The uploaded document is not according to the official TJASF journal template. Please format your paper using the TJASF template.');
-      setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout. Please download the template from the sidebar, re-format your paper, and upload a compliant document.');
-      setFileName('');
-      setFileUrl('');
-      e.target.value = '';
-      return;
-    }
-
     setFileName(file.name);
     setAnalyzing(true);
     setError('');
 
-    const filePath = `manuscripts/${Date.now()}-${file.name}`;
-    const { error: upErr } = await supabase.storage.from('manuscripts').upload(filePath, file);
-    if (upErr) {
-      setError('Failed to upload file: ' + upErr.message);
-      setAnalyzing(false);
-      return;
-    }
-    const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
-    setFileUrl(pubData.publicUrl);
-
-    // Extract details dynamically
-    const extracted = await extractPdfMetadata(file);
-    if (extracted) {
-      setTitle(extracted.title || '');
-      setAbstract(extracted.abstract || '');
-      setKeywords(extracted.keywords || '');
-      setReferences(extracted.references || '');
-      if (extracted.authors && extracted.authors.length > 0) {
-        setAuthors(extracted.authors);
+    try {
+      const filePath = `manuscripts/${Date.now()}-${file.name}`;
+      const { error: upErr } = await supabase.storage.from('manuscripts').upload(filePath, file);
+      if (upErr) {
+        setError('Failed to upload file: ' + upErr.message);
+        toast.error('Failed to upload file: ' + upErr.message);
+        return;
       }
+      const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
+      setFileUrl(pubData.publicUrl);
+      toast.success('Manuscript file uploaded successfully.');
+
+      // Extract details dynamically if fields are still empty
+      const extracted = await extractPdfMetadata(file);
+      if (extracted) {
+        if (!title && extracted.title) setTitle(extracted.title);
+        if (!abstract && extracted.abstract) setAbstract(extracted.abstract);
+        if (!keywords && extracted.keywords) setKeywords(extracted.keywords);
+        if (!references && extracted.references) setReferences(extracted.references);
+        if (extracted.authors && extracted.authors.length > 0 && authors.length <= 1 && !authors[0].name) {
+          setAuthors(extracted.authors);
+        }
+      }
+    } catch (err: any) {
+      setError('Upload error: ' + (err.message || err));
+      toast.error('Upload error: ' + (err.message || err));
+    } finally {
+      setAnalyzing(false);
+      e.target.value = '';
     }
-    setAnalyzing(false);
   };
 
   const handlePlagiarismUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -547,19 +581,20 @@ export default function SubmitManuscriptPage() {
             <div className="border border-dashed border-[#d8d8d1] rounded-lg p-5 text-center bg-gray-50/50 hover:bg-gray-50 transition-colors">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block mb-1">Time Saver Option</span>
               <p className="text-xs text-[#667082] mb-3">Upload your PDF manuscript here to automatically extract and populate the Title, Abstract, Keywords, Authors, and References.</p>
-              <label className="inline-block px-3.5 py-2 bg-[#eb5526] text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-[#d7461c] transition-colors shadow-sm">
+              <input
+                id="autofill-file-input"
+                type="file"
+                accept=".pdf"
+                onChange={handleAutoFillUpload}
+                className="sr-only"
+              />
+              <label
+                htmlFor="autofill-file-input"
+                className="inline-block px-4 py-2 bg-[#eb5526] text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-[#d7461c] transition-colors shadow-sm select-none"
+              >
                 Upload PDF to Auto-Fill
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onClick={(e) => {
-                    (e.target as HTMLInputElement).value = '';
-                  }}
-                  onChange={handleAutoFillUpload}
-                  className="hidden"
-                />
               </label>
-              {analyzing && <span className="block text-xs text-[#eb5526] mt-2 font-semibold animate-pulse">Extracting metadata...</span>}
+              {analyzing && <span className="block text-xs text-[#eb5526] mt-2 font-semibold animate-pulse">Analyzing document & extracting metadata...</span>}
             </div>
 
             <div className="pt-3 border-t border-[#f1f0ec]">

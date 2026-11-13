@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, FileText, Upload, Trash2, AlertCircle, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/Toast';
 import { supabase } from '@/lib/supabase';
 import { StatusBadge } from '@/components/DashboardLayout';
 import { getManuscriptDisplayCode } from '@/data/disciplines';
@@ -9,6 +10,7 @@ import type { Manuscript, Domain } from '@/types';
 
 export default function MyManuscripts() {
   const { user, profile } = useAuth();
+  const toast = useToast();
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,16 +64,6 @@ export default function MyManuscripts() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Strict compliance name check (same as submission page)
-    const isCompliant = file.name.toLowerCase().includes('template') || file.name.toLowerCase().includes('tjasf');
-    if (!isCompliant) {
-      setRevisionError('Template Compliance Error: The file must conform to the TJASF template layout and include "template" or "tjasf" in the file name.');
-      setRevisionFileName('');
-      setRevisionFileUrl('');
-      e.target.value = '';
-      return;
-    }
-
     setRevisionFileName(file.name);
     setUploadingRevision(true);
     setRevisionError('');
@@ -83,18 +75,20 @@ export default function MyManuscripts() {
 
       const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
       setRevisionFileUrl(pubData.publicUrl);
+      toast.success('Revision file uploaded successfully.');
     } catch (err: any) {
       setRevisionError('Failed to upload file: ' + (err.message || err));
       setRevisionFileName('');
       setRevisionFileUrl('');
     } finally {
       setUploadingRevision(false);
+      e.target.value = '';
     }
   };
 
   const submitRevision = async (m: Manuscript) => {
     if (!revisionFileUrl) {
-      setRevisionError('Please select a valid compliant file first.');
+      setRevisionError('Please select a valid file first.');
       return;
     }
     setUploadingRevision(true);
@@ -126,6 +120,7 @@ export default function MyManuscripts() {
       setRevisingId(null);
       setRevisionFileName('');
       setRevisionFileUrl('');
+      toast.success('Revision submitted successfully.');
       
       // Refresh list
       await fetchManuscripts();
@@ -141,15 +136,18 @@ export default function MyManuscripts() {
       return;
     }
     try {
-      await supabase.from('reviews').delete().eq('manuscript_id', id);
-      await supabase.from('editor_assignments').delete().eq('manuscript_id', id);
-      await supabase.from('manuscript_versions').delete().eq('manuscript_id', id);
-      const { error } = await supabase.from('manuscripts').delete().eq('id', id);
-      if (error) throw error;
+      // 1. Try secure RPC delete first
+      const { error: rpcError } = await supabase.rpc('delete_manuscript', { target_manuscript_id: id });
+      if (rpcError) {
+        console.warn('RPC delete error, falling back to direct delete:', rpcError);
+        const { error: delError } = await supabase.from('manuscripts').delete().eq('id', id);
+        if (delError) throw delError;
+      }
+      toast.success('Manuscript permanently deleted.');
       await fetchManuscripts();
     } catch (err: any) {
       console.error('Failed to delete manuscript:', err);
-      alert('Failed to delete manuscript: ' + (err.message || err));
+      toast.error('Failed to delete manuscript: ' + (err.message || err));
     }
   };
 

@@ -425,16 +425,18 @@ export default function NotificationsPane({
           >
             Unread ({unreadCount})
           </button>
-          <button
-            onClick={() => setFilter('assignments')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors ${
-              filter === 'assignments'
-                ? 'bg-[#102342] text-white'
-                : 'bg-gray-100 text-[#667082] hover:bg-gray-200'
-            }`}
-          >
-            Assignments
-          </button>
+          {profile?.role && ['reviewer', 'editor', 'editor_in_chief', 'admin', 'section_editor', 'associate_editor', 'editorial_board_member'].includes(profile.role) && (
+            <button
+              onClick={() => setFilter('assignments')}
+              className={`px-3 py-1 rounded-full font-medium transition-colors ${
+                filter === 'assignments'
+                  ? 'bg-[#102342] text-white'
+                  : 'bg-gray-100 text-[#667082] hover:bg-gray-200'
+              }`}
+            >
+              Assignments
+            </button>
+          )}
         </div>
 
         {/* Notifications List */}
