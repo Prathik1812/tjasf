@@ -248,8 +248,10 @@ export default function SubmitManuscriptPage() {
     // Compliance Check
     const isCompliant = file.name.toLowerCase().includes('template') || file.name.toLowerCase().includes('tjasf');
     if (!isCompliant) {
-      setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout. Please ensure the filename contains "template" or "tjasf".');
+      toast.error('The uploaded document is not according to the official TJASF journal template.');
+      setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout.');
       setAnalyzing(false);
+      e.target.value = '';
       return;
     }
 
@@ -257,8 +259,10 @@ export default function SubmitManuscriptPage() {
     const filePath = `manuscripts/${Date.now()}-${file.name}`;
     const { error: upErr } = await supabase.storage.from('manuscripts').upload(filePath, file);
     if (upErr) {
+      toast.error('Failed to upload file: ' + upErr.message);
       setError('Failed to upload file: ' + upErr.message);
       setAnalyzing(false);
+      e.target.value = '';
       return;
     }
     const { data: pubData } = supabase.storage.from('manuscripts').getPublicUrl(filePath);
@@ -289,6 +293,7 @@ export default function SubmitManuscriptPage() {
     // Strict compliance check: manuscript must match the TJASF template format
     const isCompliant = file.name.toLowerCase().includes('template') || file.name.toLowerCase().includes('tjasf');
     if (!isCompliant) {
+      toast.error('The uploaded document is not according to the official TJASF journal template. Please format your paper using the TJASF template.');
       setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout. Please download the template from the sidebar, re-format your paper, and upload a compliant document.');
       setFileName('');
       setFileUrl('');

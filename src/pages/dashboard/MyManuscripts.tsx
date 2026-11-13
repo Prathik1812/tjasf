@@ -136,6 +136,23 @@ export default function MyManuscripts() {
     }
   };
 
+  const handleDeleteManuscript = async (id: string, title?: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${title || 'this manuscript'}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await supabase.from('reviews').delete().eq('manuscript_id', id);
+      await supabase.from('editor_assignments').delete().eq('manuscript_id', id);
+      await supabase.from('manuscript_versions').delete().eq('manuscript_id', id);
+      const { error } = await supabase.from('manuscripts').delete().eq('id', id);
+      if (error) throw error;
+      await fetchManuscripts();
+    } catch (err: any) {
+      console.error('Failed to delete manuscript:', err);
+      alert('Failed to delete manuscript: ' + (err.message || err));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -292,6 +309,29 @@ export default function MyManuscripts() {
                   )}
                 </div>
               )}
+
+              {/* Manuscript Actions Footer */}
+              <div className="flex items-center justify-between border-t border-[#f1f0ec] pt-3 text-xs">
+                {m.file_url ? (
+                  <a
+                    href={m.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#eb5526] hover:text-[#d7461c] font-semibold inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <FileText size={14} /> Download File
+                  </a>
+                ) : <span />}
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteManuscript(m.id, m.title)}
+                  className="text-red-500 hover:text-red-700 font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded hover:bg-red-50"
+                  title="Permanently delete test manuscript"
+                >
+                  <Trash2 size={13} /> Delete Paper
+                </button>
+              </div>
             </div>
           ))}
         </div>

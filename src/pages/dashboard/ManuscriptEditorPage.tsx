@@ -297,6 +297,23 @@ export default function ManuscriptEditorPage() {
     setUpdating(false);
   };
 
+  const handleDeleteManuscript = async () => {
+    if (!manuscript) return;
+    if (!window.confirm(`Permanently delete "${manuscript.title}"? This cannot be undone.`)) return;
+    setUpdating(true);
+    try {
+      await supabase.from('reviews').delete().eq('manuscript_id', manuscript.id);
+      await supabase.from('editor_assignments').delete().eq('manuscript_id', manuscript.id);
+      await supabase.from('manuscript_versions').delete().eq('manuscript_id', manuscript.id);
+      const { error } = await supabase.from('manuscripts').delete().eq('id', manuscript.id);
+      if (error) throw error;
+      navigate('/dashboard/editor');
+    } catch (err: any) {
+      alert('Failed to delete manuscript: ' + (err.message || err));
+      setUpdating(false);
+    }
+  };
+
   const sendReminder = async (reviewId: string) => {
     const rev = reviews.find((r) => r.id === reviewId);
     if (!rev || !manuscript) return;
@@ -1130,6 +1147,17 @@ ${referencesXml}
               </button>
             )}
             <StatusBadge status={manuscript.status} />
+            {['admin', 'editor_in_chief', 'associate_editor', 'section_editor'].includes(activeUser.role) && (
+              <button
+                onClick={handleDeleteManuscript}
+                disabled={updating}
+                className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                title="Permanently delete test manuscript"
+              >
+                <Trash2 size={13} />
+                <span>Delete Paper</span>
+              </button>
+            )}
           </div>
         </div>
         <div className="space-y-3">
