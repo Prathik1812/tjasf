@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast';
 import { supabase } from '@/lib/supabase';
 import { sendSubmissionEmail, sendCoAuthorConsentEmail } from '@/lib/email';
 import { DOMAIN_DISCIPLINES, findSubject } from '@/data/disciplines';
+import { parsePdfManuscript } from '@/lib/pdfParser';
 import type { Domain, Profile } from '@/types';
 
 interface Author {
@@ -111,183 +112,6 @@ export default function SubmitManuscriptPage() {
     setStep(step + 1);
   };
 
-  const loadPdfJs = async (): Promise<any> => {
-    if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
-      const timeout = setTimeout(() => {
-        reject(new Error('PDF loader timed out'));
-      }, 4000);
-
-      script.onload = () => {
-        clearTimeout(timeout);
-        try {
-          const lib = (window as any).pdfjsLib;
-          if (lib) {
-            lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-            resolve(lib);
-          } else {
-            reject(new Error('pdfjsLib is not defined'));
-          }
-        } catch (e) {
-          reject(e);
-        }
-      };
-      script.onerror = () => {
-        clearTimeout(timeout);
-        reject(new Error('Failed to load PDF library script'));
-      };
-      document.body.appendChild(script);
-    });
-  };
-
-  const extractTextFallback = async (file: File): Promise<{ page1Text: string; lastPageText: string }> => {
-    const buffer = await file.arrayBuffer();
-    const decoder = new TextDecoder('utf-8', { fatal: false });
-    const rawString = decoder.decode(buffer);
-    
-    // Find text enclosed in parentheses in PDF streams (e.g., (Sample Text) Tj)
-    const matches = rawString.match(/\(([^()]{2,150})\)\s*T[jJ]/g) || [];
-    const extractedStrings = matches.map(m => m.replace(/^\(/, '').replace(/\)\s*T[jJ]$/, '').trim()).filter(s => s.length > 2);
-    
-    const page1Text = extractedStrings.slice(0, 200).join(' ');
-    const lastPageText = extractedStrings.slice(-150).join(' \n');
-    return { page1Text, lastPageText };
-  };
-
-  const extractPdfMetadata = async (file: File) => {
-    try {
-      let page1Text = '';
-      let lastPageText = '';
-      let page1Strings: string[] = [];
-
-      try {
-        const pdfjsLib = await loadPdfJs();
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-        // Page 1
-        const page1 = await pdf.getPage(1);
-        const textContent1 = await page1.getTextContent();
-        page1Strings = textContent1.items.map((item: any) => item.str);
-        page1Text = page1Strings.join(' ');
-
-        // Last page
-        if (pdf.numPages > 1) {
-          const lastPage = await pdf.getPage(pdf.numPages);
-          const textContentLast = await lastPage.getTextContent();
-          const lastPageStrings: string[] = textContentLast.items.map((item: any) => item.str);
-          lastPageText = lastPageStrings.join(' \n');
-        } else {
-          lastPageText = page1Text;
-        }
-      } catch (pdfErr) {
-        console.warn('pdf.js extraction failed, falling back to binary string extractor:', pdfErr);
-        const fallback = await extractTextFallback(file);
-        page1Text = fallback.page1Text;
-        lastPageText = fallback.lastPageText;
-        page1Strings = page1Text.split(/\s+/);
-      }
-
-      if (!page1Text.trim()) {
-        return null;
-      }
-
-      // Check if document contains an abstract section (mandatory in TJASF template)
-      const abstractIndex = page1Text.search(/abstract/i);
-      const hasAbstract = abstractIndex !== -1;
-
-      // Title parsing
-      const cleanStrings = page1Strings
-        .map((s: string) => s.trim())
-        .filter((s: string) => s.length > 5 && !/journal|volume|issn|international|page|https?:/i.test(s));
-      const extractedTitle = cleanStrings[0] || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-
-      // Abstract parsing
-      let extractedAbstract = '';
-      if (abstractIndex !== -1) {
-        let abstractRest = page1Text.substring(abstractIndex + 8).trim();
-        abstractRest = abstractRest.replace(/^[:\s\-]+/, '');
-        const endMatch = abstractRest.match(/(1\.\s+introduction|introduction|keywords|key\s*words|index\s*terms)/i);
-        if (endMatch && endMatch.index) {
-          extractedAbstract = abstractRest.substring(0, endMatch.index).trim();
-        } else {
-          extractedAbstract = abstractRest.substring(0, 800).trim();
-        }
-      }
-
-      // Keywords parsing
-      let extractedKeywords = '';
-      const keywordsIndex = page1Text.search(/(keywords|key\s*words|index\s*terms)/i);
-      if (keywordsIndex !== -1) {
-        let keywordsRest = page1Text.substring(keywordsIndex).trim();
-        keywordsRest = keywordsRest.replace(/^(keywords|key\s*words|index\s*terms)[:\s\-]+/i, '');
-        const endMatch = keywordsRest.match(/(1\.\s+introduction|introduction|i\.\s+)/i);
-        if (endMatch && endMatch.index) {
-          extractedKeywords = keywordsRest.substring(0, endMatch.index).trim();
-        } else {
-          extractedKeywords = keywordsRest.substring(0, 150).trim();
-        }
-      }
-
-      // References parsing
-      let extractedReferences = '';
-      const refIndex = lastPageText.search(/(references|bibliography)/i);
-      if (refIndex !== -1) {
-        extractedReferences = lastPageText.substring(refIndex).trim();
-        extractedReferences = extractedReferences.replace(/^(references|bibliography)[\s\:\-\n]+/i, '');
-      } else {
-        const lines = lastPageText.split('\n');
-        const refLines = lines.filter((l: string) => /^\s*(\[\d+\]|\d+\.)/.test(l));
-        if (refLines.length > 0) {
-          extractedReferences = refLines.join('\n');
-        }
-      }
-
-      // Authors & emails parsing
-      const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-      const emails = page1Text.match(emailRegex) || [];
-      const extractedAuthors: { name: string; email: string; affiliation: string; department: string; corresponding: boolean; orcid: string }[] = [];
-
-      if (emails.length > 0) {
-        emails.forEach((email, idx) => {
-          let nameGuess = '';
-          const emailIdx = page1Text.indexOf(email);
-          if (emailIdx !== -1) {
-            const beforeText = page1Text.substring(Math.max(0, emailIdx - 150), emailIdx);
-            const words = beforeText.match(/[A-Z][a-z]+ [A-Z][a-z]+/g) || [];
-            nameGuess = words.pop() || `Author ${idx + 1}`;
-          } else {
-            nameGuess = `Author ${idx + 1}`;
-          }
-
-          extractedAuthors.push({
-            name: nameGuess,
-            email: email,
-            affiliation: 'Department of Science',
-            department: 'Faculty of Engineering',
-            corresponding: idx === 0,
-            orcid: '',
-          });
-        });
-      }
-
-      return {
-        hasAbstract,
-        title: extractedTitle,
-        abstract: extractedAbstract,
-        keywords: extractedKeywords,
-        references: extractedReferences,
-        authors: extractedAuthors.length > 0 ? extractedAuthors : null
-      };
-    } catch (err) {
-      console.error('extractPdfMetadata error:', err);
-      return null;
-    }
-  };
-
   const handleAutoFillUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -296,12 +120,11 @@ export default function SubmitManuscriptPage() {
     setError('');
 
     try {
-      // Extract PDF details
-      const extracted = await extractPdfMetadata(file);
+      const extracted = await parsePdfManuscript(file);
 
-      if (!extracted || !extracted.hasAbstract) {
-        toast.error('The uploaded document is not according to the official TJASF journal template. Please ensure your PDF includes Title, Abstract, and Keywords.');
-        setError('Template Compliance Error: The uploaded manuscript does not conform to the official TJASF template layout.');
+      if (!extracted) {
+        toast.error('Could not extract text from this document. Please verify it is a readable PDF or enter details manually.');
+        setError('Extraction Notice: Unable to extract text from this PDF file. If this is a scanned document, please enter details manually.');
         return;
       }
 
@@ -313,10 +136,18 @@ export default function SubmitManuscriptPage() {
       if (extracted.authors && extracted.authors.length > 0) {
         setAuthors(extracted.authors);
       }
-      toast.success('Success! Manuscript details extracted and forms auto-filled.');
+
+      // Informative user feedback based on whether template was detected
+      if (!extracted.isTemplateConformant) {
+        toast.info(
+          'Document analyzed and fields auto-filled! Note: Your document layout appears to follow an external or conference format. Please format your final submission using the official TJASF template.'
+        );
+      } else {
+        toast.success('Success! Manuscript details extracted and forms auto-filled.');
+      }
     } catch (err: any) {
-      console.error(err);
-      toast.error('Could not process this document. Please enter details manually.');
+      console.error('Auto-fill error:', err);
+      toast.error('Failed to parse document: ' + (err.message || err));
     } finally {
       setAnalyzing(false);
       e.target.value = '';
@@ -344,14 +175,16 @@ export default function SubmitManuscriptPage() {
       toast.success('Manuscript file uploaded successfully.');
 
       // Extract details dynamically if fields are still empty
-      const extracted = await extractPdfMetadata(file);
-      if (extracted) {
-        if (!title && extracted.title) setTitle(extracted.title);
-        if (!abstract && extracted.abstract) setAbstract(extracted.abstract);
-        if (!keywords && extracted.keywords) setKeywords(extracted.keywords);
-        if (!references && extracted.references) setReferences(extracted.references);
-        if (extracted.authors && extracted.authors.length > 0 && authors.length <= 1 && !authors[0].name) {
-          setAuthors(extracted.authors);
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        const extracted = await parsePdfManuscript(file);
+        if (extracted) {
+          if (!title && extracted.title) setTitle(extracted.title);
+          if (!abstract && extracted.abstract) setAbstract(extracted.abstract);
+          if (!keywords && extracted.keywords) setKeywords(extracted.keywords);
+          if (!references && extracted.references) setReferences(extracted.references);
+          if (extracted.authors && extracted.authors.length > 0 && authors.length <= 1 && !authors[0].name) {
+            setAuthors(extracted.authors);
+          }
         }
       }
     } catch (err: any) {
