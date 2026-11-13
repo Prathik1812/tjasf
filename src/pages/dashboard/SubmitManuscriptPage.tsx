@@ -552,6 +552,9 @@ export default function SubmitManuscriptPage() {
                 <input
                   type="file"
                   accept=".pdf"
+                  onClick={(e) => {
+                    (e.target as HTMLInputElement).value = '';
+                  }}
                   onChange={handleAutoFillUpload}
                   className="hidden"
                 />
@@ -749,7 +752,16 @@ export default function SubmitManuscriptPage() {
                     <Upload size={32} className="mx-auto text-[#d8d8d1] mb-3" />
                     <p className="text-sm text-[#667082] mb-2">Drag and drop or click to upload</p>
                     <p className="text-xs text-[#667082]">PDF, DOC, or DOCX up to 20MB</p>
-                    <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="hidden" id="file-upload" />
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onClick={(e) => {
+                        (e.target as HTMLInputElement).value = '';
+                      }}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="file-upload"
+                    />
                     <label htmlFor="file-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-lg cursor-pointer hover:bg-[#eeece7]">
                       Choose File
                     </label>
@@ -777,7 +789,16 @@ export default function SubmitManuscriptPage() {
                     <Upload size={32} className="mx-auto text-[#d8d8d1] mb-3" />
                     <p className="text-sm text-[#667082] mb-2">Drag and drop or click to upload your similarity report (Optional)</p>
                     <p className="text-xs text-[#667082]">PDF format (Optional — If not uploaded, editorial desk screening will perform plagiarism check)</p>
-                    <input type="file" accept=".pdf" onChange={handlePlagiarismUpload} className="hidden" id="plagiarism-upload" />
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onClick={(e) => {
+                        (e.target as HTMLInputElement).value = '';
+                      }}
+                      onChange={handlePlagiarismUpload}
+                      className="hidden"
+                      id="plagiarism-upload"
+                    />
                     <label htmlFor="plagiarism-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-lg cursor-pointer hover:bg-[#eeece7]">
                       Choose Report PDF
                     </label>
