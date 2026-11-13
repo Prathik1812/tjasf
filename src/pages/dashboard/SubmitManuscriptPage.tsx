@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { sendSubmissionEmail, sendCoAuthorConsentEmail } from '@/lib/email';
 import { DOMAIN_DISCIPLINES, findSubject } from '@/data/disciplines';
 import { parsePdfManuscript } from '@/lib/pdfParser';
-import type { Domain, Profile } from '@/types';
+import type { Domain } from '@/types';
 
 interface Author {
   name: string;
@@ -35,7 +35,6 @@ export default function SubmitManuscriptPage() {
 
   const [step, setStep] = useState(1);
   const [domains, setDomains] = useState<Domain[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
@@ -134,9 +133,6 @@ export default function SubmitManuscriptPage() {
     (async () => {
       const { data: domainsData } = await supabase.from('domains').select('*').order('name');
       if (domainsData) setDomains(domainsData as Domain[]);
-
-      const { data: profilesData } = await supabase.from('profiles').select('*').order('full_name');
-      if (profilesData) setProfiles(profilesData as Profile[]);
     })();
   }, []);
 
@@ -152,13 +148,16 @@ export default function SubmitManuscriptPage() {
   const handleNext = () => {
     setError('');
 
-    // Validate Step 2: Authors Names (prevent numbers)
+    // Validate Step 2: Authors Names
     if (step === 2) {
-      const nameRegex = /^[a-zA-Z\s\.\-]+$/;
       for (let i = 0; i < authors.length; i++) {
         const name = authors[i].name.trim();
-        if (!nameRegex.test(name)) {
-          setError(`Invalid Name for Author ${i + 1}: Name must only contain letters, spaces, periods, or hyphens (no numbers).`);
+        if (!name) {
+          setError(`Invalid Name for Author ${i + 1}: Author name is required.`);
+          return;
+        }
+        if (/\d/.test(name)) {
+          setError(`Invalid Name for Author ${i + 1}: Name must not contain numbers.`);
           return;
         }
       }
@@ -664,36 +663,57 @@ export default function SubmitManuscriptPage() {
                   </div>
                 </div>
 
-                {/* Profile selection dropdown */}
-                <div className="border-b border-[#e6e5e0] pb-3 mb-2">
-                  <label className="block text-xs font-semibold text-[#102342] mb-1">Link to Registered User (Optional)</label>
-                  <select
-                    value={profiles.find((p) => p.email === a.email)?.id || ''}
-                    onChange={(e) => {
-                      const selected = profiles.find((p) => p.id === e.target.value);
-                      if (selected) {
-                        updateAuthor(i, 'name', selected.full_name);
-                        updateAuthor(i, 'email', selected.email || '');
-                        updateAuthor(i, 'affiliation', selected.affiliation || '');
-                        updateAuthor(i, 'department', selected.department || '');
-                        updateAuthor(i, 'orcid', selected.orcid || '');
-                      }
-                    }}
-                    className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-xs outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
-                  >
-                    <option value="">-- Click to search & select user profile --</option>
-                    {profiles.map((p) => (
-                      <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input type="text" placeholder="Full name *" value={a.name} onChange={(e) => updateAuthor(i, 'name', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
-                  <input type="email" placeholder="Email" value={a.email} onChange={(e) => updateAuthor(i, 'email', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
-                  <input type="text" placeholder="Affiliation" value={a.affiliation} onChange={(e) => updateAuthor(i, 'affiliation', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
-                  <input type="text" placeholder="Department" value={a.department} onChange={(e) => updateAuthor(i, 'department', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white" />
-                  <input type="text" placeholder="ORCID ID (e.g., 0000-0002-1825-0097)" value={a.orcid || ''} onChange={(e) => updateAuthor(i, 'orcid', e.target.value)} className="border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white md:col-span-2" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#102342] mb-1">Author Name *</label>
+                    <input
+                      type="text"
+                      placeholder="Full name (e.g. Dr. Sarah A. Jenkins) *"
+                      value={a.name}
+                      onChange={(e) => updateAuthor(i, 'name', e.target.value)}
+                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#102342] mb-1">Email</label>
+                    <input
+                      type="email"
+                      placeholder="author@example.com"
+                      value={a.email}
+                      onChange={(e) => updateAuthor(i, 'email', e.target.value)}
+                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#102342] mb-1">Affiliation / Institution</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Stanford University"
+                      value={a.affiliation}
+                      onChange={(e) => updateAuthor(i, 'affiliation', e.target.value)}
+                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#102342] mb-1">Department</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Department of Computer Science"
+                      value={a.department}
+                      onChange={(e) => updateAuthor(i, 'department', e.target.value)}
+                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#102342] mb-1">ORCID ID (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="0000-0002-1825-0097"
+                      value={a.orcid || ''}
+                      onChange={(e) => updateAuthor(i, 'orcid', e.target.value)}
+                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
