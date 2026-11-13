@@ -81,13 +81,9 @@ function isJournalHeader(item: PdfItem, maxY: number): boolean {
  */
 function cleanExtractedParagraphs(text: string): string {
   if (!text) return '';
-  // Rejoin hyphenated words (e.g. "com-\nputing" -> "computing")
   let cleaned = text.replace(/(\b[a-zA-Z]+)-\s*\n\s*([a-zA-Z]+\b)/g, '$1$2');
-  // Mark genuine paragraph breaks
   cleaned = cleaned.replace(/\n\s*\n+/g, '{{PARABREAK}}');
-  // Replace single newlines with spaces so sentences flow continuously
   cleaned = cleaned.replace(/\n\s*/g, ' ');
-  // Restore paragraph breaks
   cleaned = cleaned.replace(/\{\{PARABREAK\}\}/g, '\n\n');
   return cleaned
     .split('\n\n')
@@ -152,26 +148,29 @@ function parseAuthorName(candidateStr: string): string | null {
   // Strip academic / professional titles
   s = s.replace(/^(?:Dr\.|Prof\.|Professor|Mr\.|Ms\.|Mrs\.)\s+/i, '').trim();
 
+  // Strip footnote numbers, superscripts, or symbols FIRST
+  s = s.replace(/[\d\*†‡§\^\(\)]/g, '').replace(/\s+/g, ' ').trim();
+  if (s.length < 3) return null;
+
+  // Accept template placeholder
+  if (/^author\s*name$/i.test(s)) {
+    return 'Author Name';
+  }
+
   // Filter out non-name terms
   if (
-    /(?:department|faculty|school|division|centre|center|university|institute|college|laboratory|journal|science|frontiers|paper|abstract|title|keywords|index terms|email|country|state|volume|issue)/i.test(
+    /(?:department|faculty|school|division|centre|center|university|institute|college|laboratory|journal|science|frontiers|paper|abstract|title|keywords|index terms|email|country|state|volume|issue|corresponding)/i.test(
       s
     )
   ) {
     return null;
   }
 
-  // Must contain letters and no digits or email signs
+  // Must contain letters and no @
   if (!/[a-zA-Z\u00C0-\u024F]/.test(s)) return null;
-  if (/[\d@]/.test(s)) return null;
+  if (/@/.test(s)) return null;
 
-  // Clean footnotes, superscripts, or symbols
-  const cleaned = s
-    .replace(/[\d\*†‡§\^\(\)]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  const tokens = cleaned.split(' ').filter(Boolean);
+  const tokens = s.split(' ').filter(Boolean);
   if (tokens.length < 2 || tokens.length > 5) return null;
 
   // Each token must be an initial or valid name part (supporting hyphens, apostrophes, accents)
@@ -179,7 +178,7 @@ function parseAuthorName(candidateStr: string): string | null {
     /^[A-Z\u00C0-\u024F][a-zA-Z\u00C0-\u024F'\-]*\.?$/.test(tok)
   );
 
-  return isValid ? cleaned : null;
+  return isValid ? s : null;
 }
 
 /**
@@ -435,100 +434,236 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       extractedKeywords = cleanKeywords(kwMatch[1]);
     }
 
-    // --- 4. AUTHORS & AFFILIATIONS EXTRACTION ---
+    // --- 4. AUTHORS & AFFILIATIONS EXTRACTION (ALL AUTHORS EXTRACTED) ---
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    const extractedAuthors: ExtractedAuthor[] = [];
 
     // Focus on the author block region between Title bottom and Abstract top
     const authorBlockItems = items.filter(
-      (i) => i.y < minTitleY && (absY > 0 ? i.y > absY : i.y > maxY - 300)
+      (i) => i.y < minTitleY && (absY > 0 ? i.y > absY : i.y > maxY - 320)
     );
 
-    // Identify emails located on Page 1
-    const emailItems = authorBlockItems.filter((i) => emailRegex.test(i.str));
-    // If none found in bounded author block, check entire Page 1
-    const allPage1Emails = items.filter((i) => emailRegex.test(i.str));
-    const activeEmails = emailItems.length > 0 ? emailItems : allPage1Emails;
-
-    if (activeEmails.length > 0) {
-      activeEmails.forEach((emailItem, idx) => {
-        const matchedEmail = emailItem.str.match(emailRegex)?.[0] || emailItem.str;
-
-        // Find candidate items in the same horizontal column, strictly above the email (within 70pt)
-        const colItems = authorBlockItems
-          .filter(
-            (i) =>
-              Math.abs(i.x - emailItem.x) < 140 &&
-              i.y > emailItem.y &&
-              i.y <= emailItem.y + 70
-          )
-          // Sort ascending (closest upward from email)
-          .sort((a, b) => a.y - emailItem.y - (b.y - emailItem.y));
-
-        let nameGuess = '';
-        let deptGuess = '';
-        let affGuess = '';
-
-        for (const item of colItems) {
-          const parsed = parseAuthorName(item.str);
-          if (parsed && !nameGuess) {
-            nameGuess = parsed;
-          } else if (/(department|faculty|school|division|dept\.)/i.test(item.str)) {
-            const parts = item.str.split(',');
-            deptGuess = parts[0]?.trim() || item.str;
-            if (parts.length > 1) {
-              affGuess = parts.slice(1).join(', ').trim();
-            }
-          } else if (/(university|institute|college|laboratory)/i.test(item.str) && !affGuess) {
-            affGuess = item.str;
-          }
-        }
-
-        // If no name found in closest vertical range, check surrounding page 1 text chunk
-        if (!nameGuess) {
-          const emailIdx = page1Text.indexOf(matchedEmail);
-          if (emailIdx !== -1) {
-            const beforeChunk = page1Text.substring(Math.max(0, emailIdx - 140), emailIdx);
-            const lines = beforeChunk.split('\n').map((l) => l.trim()).filter(Boolean);
-            for (let li = lines.length - 1; li >= 0; li--) {
-              const pName = parseAuthorName(lines[li]);
-              if (pName) {
-                nameGuess = pName;
-                break;
-              }
-            }
-          }
-        }
-
-        extractedAuthors.push({
-          name: nameGuess || `Author ${idx + 1}`,
-          email: matchedEmail,
-          affiliation: affGuess || 'Department of Science & Technology',
-          department: deptGuess || 'Faculty of Engineering',
-          corresponding: idx === 0,
-          orcid: '',
-        });
-      });
+    // Collect all distinct emails in order of appearance
+    const page1Emails: string[] = [];
+    const rawEmailMatches = page1Text.match(emailRegex) || [];
+    for (const em of rawEmailMatches) {
+      if (!page1Emails.includes(em)) {
+        page1Emails.push(em);
+      }
     }
 
-    // Fallback: If no emails in document, extract names from the block above abstract
-    if (extractedAuthors.length === 0) {
-      const searchItems = authorBlockItems.length > 0 ? authorBlockItems : items.slice(0, 10);
-      for (const item of searchItems) {
-        const pName = parseAuthorName(item.str);
-        if (pName && !extractedAuthors.some((a) => a.name === pName)) {
-          extractedAuthors.push({
-            name: pName,
-            email: '',
-            affiliation: 'Department of Science & Technology',
-            department: 'Faculty of Engineering',
-            corresponding: extractedAuthors.length === 0,
-            orcid: '',
+    // Build affiliation map from numbered lines (e.g. "1 Stanford University", "2 MIT")
+    const footnoteAffMap: Record<string, string> = {};
+    const allAffLines: string[] = [];
+    const allDeptLines: string[] = [];
+
+    for (const item of authorBlockItems) {
+      const s = item.str.trim();
+      const fnMatch = s.match(/^(\d+)\s+(.+)$/);
+      if (fnMatch) {
+        footnoteAffMap[fnMatch[1]] = fnMatch[2].trim();
+      }
+      if (/(?:department|faculty|school|division|centre|center|dept\.)/i.test(s)) {
+        const parts = s.split(',');
+        allDeptLines.push(parts[0]?.trim() || s);
+        if (parts.length > 1) {
+          allAffLines.push(parts.slice(1).join(', ').trim());
+        }
+      } else if (/(?:university|institute|college|laboratory|corp)/i.test(s)) {
+        allAffLines.push(s);
+      }
+    }
+
+    const defaultDept = allDeptLines[0] || 'Faculty of Engineering';
+    const defaultAff = allAffLines[0] || 'Department of Science & Technology';
+
+    // Identify all author entries across all layout styles (inline comma-separated, columns, or stacked)
+    interface RawAuthorCandidate {
+      name: string;
+      footnoteNum?: string;
+      hasStar?: boolean;
+      x: number;
+      y: number;
+    }
+    const rawAuthors: RawAuthorCandidate[] = [];
+
+    // Scan author block items
+    for (const item of authorBlockItems) {
+      const s = item.str.trim();
+      if (emailRegex.test(s)) continue;
+      if (/(?:department|faculty|school|division|centre|center|university|institute|college|laboratory)/i.test(s)) continue;
+
+      // Check if item contains multiple names (e.g. "Author One 1, Author Two 2, and Author Three 3")
+      if (s.includes(',') || /\s+(?:and|&)\s+/i.test(s)) {
+        const parts = s
+          .replace(/\s+(?:and|&)\s+/gi, ', ')
+          .split(/[,;]/)
+          .map((p) => p.trim())
+          .filter(Boolean);
+
+        for (const part of parts) {
+          const fnMatch = part.match(/\b(\d+)\b/);
+          const hasStar = /\*|corresponding/i.test(part);
+          const parsed = parseAuthorName(part);
+          if (parsed) {
+            rawAuthors.push({
+              name: parsed,
+              footnoteNum: fnMatch ? fnMatch[1] : undefined,
+              hasStar,
+              x: item.x,
+              y: item.y,
+            });
+          }
+        }
+      } else {
+        // Single name item
+        const fnMatch = s.match(/\b(\d+)\b/);
+        const hasStar = /\*|corresponding/i.test(s);
+        const parsed = parseAuthorName(s);
+        if (parsed) {
+          rawAuthors.push({
+            name: parsed,
+            footnoteNum: fnMatch ? fnMatch[1] : undefined,
+            hasStar,
+            x: item.x,
+            y: item.y,
           });
-          if (extractedAuthors.length >= 8) break;
         }
       }
     }
+
+    // Fallback: Check text lines between title and abstract
+    if (rawAuthors.length === 0) {
+      const absIdx = page1Text.toLowerCase().indexOf('abstract');
+      const headerSlice = absIdx > 0 ? page1Text.substring(0, absIdx) : page1Text.substring(0, 400);
+      const lines = headerSlice.split('\n').map((l) => l.trim()).filter(Boolean);
+
+      for (const line of lines) {
+        if (emailRegex.test(line)) continue;
+        if (/(?:department|faculty|school|division|centre|center|university|institute|college|laboratory)/i.test(line)) continue;
+
+        if (line.includes(',') || /\s+(?:and|&)\s+/i.test(line)) {
+          const parts = line.replace(/\s+(?:and|&)\s+/gi, ', ').split(/[,;]/).map((p) => p.trim()).filter(Boolean);
+          for (const part of parts) {
+            const fnMatch = part.match(/\b(\d+)\b/);
+            const hasStar = /\*|corresponding/i.test(part);
+            const parsed = parseAuthorName(part);
+            if (parsed) {
+              rawAuthors.push({
+                name: parsed,
+                footnoteNum: fnMatch ? fnMatch[1] : undefined,
+                hasStar,
+                x: 100,
+                y: 500,
+              });
+            }
+          }
+        } else {
+          const fnMatch = line.match(/\b(\d+)\b/);
+          const hasStar = /\*|corresponding/i.test(line);
+          const parsed = parseAuthorName(line);
+          if (parsed) {
+            rawAuthors.push({
+              name: parsed,
+              footnoteNum: fnMatch ? fnMatch[1] : undefined,
+              hasStar,
+              x: 100,
+              y: 500,
+            });
+          }
+        }
+      }
+    }
+
+    // If still empty, create author entries from emails or fallback
+    if (rawAuthors.length === 0) {
+      if (page1Emails.length > 0) {
+        page1Emails.forEach((_em, idx) => {
+          rawAuthors.push({ name: `Author ${idx + 1}`, x: 100, y: 500 });
+        });
+      } else {
+        rawAuthors.push({ name: 'Author 1', x: 100, y: 500 });
+      }
+    }
+
+    // Map each author to their email, affiliation, and department
+    const extractedAuthors: ExtractedAuthor[] = rawAuthors.map((entry, idx) => {
+      let matchedEmail = '';
+      const nameTokens = entry.name.toLowerCase().split(' ').filter((t) => t.length > 2);
+
+      // 1. By author name token matching in email address
+      for (const em of page1Emails) {
+        const emLower = em.toLowerCase();
+        if (nameTokens.some((tok) => emLower.includes(tok))) {
+          matchedEmail = em;
+          break;
+        }
+      }
+
+      // 2. By column proximity (if email directly under author block)
+      if (!matchedEmail) {
+        const nearbyEmail = authorBlockItems.find(
+          (i) =>
+            emailRegex.test(i.str) &&
+            Math.abs(i.x - entry.x) < 140 &&
+            i.y < entry.y &&
+            i.y >= entry.y - 80
+        );
+        if (nearbyEmail) {
+          if (!/corresponding/i.test(nearbyEmail.str) || entry.hasStar || idx === 0) {
+            matchedEmail = nearbyEmail.str.match(emailRegex)?.[0] || '';
+          }
+        }
+      }
+
+      // 3. By index matching
+      if (!matchedEmail && page1Emails[idx]) {
+        matchedEmail = page1Emails[idx];
+      } else if (!matchedEmail && page1Emails.length === 1 && (entry.hasStar || idx === 0)) {
+        matchedEmail = page1Emails[0];
+      }
+
+      // Determine affiliation & department
+      let aff = defaultAff;
+      let dept = defaultDept;
+
+      if (entry.footnoteNum && footnoteAffMap[entry.footnoteNum]) {
+        aff = footnoteAffMap[entry.footnoteNum];
+      } else {
+        const nearbyDept = authorBlockItems.find(
+          (i) =>
+            /(?:department|faculty|school|division|dept\.)/i.test(i.str) &&
+            Math.abs(i.x - entry.x) < 140 &&
+            i.y < entry.y &&
+            i.y >= entry.y - 70
+        );
+        const nearbyAff = authorBlockItems.find(
+          (i) =>
+            /(?:university|institute|college|laboratory|corp)/i.test(i.str) &&
+            Math.abs(i.x - entry.x) < 140 &&
+            i.y < entry.y &&
+            i.y >= entry.y - 70
+        );
+        if (nearbyDept) {
+          const parts = nearbyDept.str.split(',');
+          dept = parts[0]?.trim() || nearbyDept.str;
+          if (parts.length > 1) aff = parts.slice(1).join(', ').trim();
+        }
+        if (nearbyAff) {
+          aff = nearbyAff.str;
+        }
+      }
+
+      const isCorresponding = Boolean(entry.hasStar || (idx === 0 && !rawAuthors.some((a) => a.hasStar)));
+
+      return {
+        name: entry.name,
+        email: matchedEmail || '',
+        affiliation: aff,
+        department: dept,
+        corresponding: isCorresponding,
+        orcid: '',
+      };
+    });
 
     // --- 5. REFERENCES EXTRACTION ---
     let extractedReferences = '';
@@ -544,19 +679,16 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
     }
 
     // --- 6. STRICT TJASF TEMPLATE CONFORMANCE DETECTION ---
-    // 1. Direct TJASF Journal branding / ISSN / Acronym:
     const hasTjasfBranding =
       /(tjasf|journal of advanced scientific frontiers|journal of applied science|the journal of applied science & frontiers|the journal of applied science and frontiers|issn\s*\(?\s*online\s*\)?\s*:?\s*xxxx-xxxx)/i.test(
         fullScannedText
       ) || /(tjasf|paper[\s_-]*template)/i.test(file.name);
 
-    // 2. Specific textual instructions and phrases unique to the TJASF template:
     const hasTjasfSpecificPhrasing =
       /(must not exceed 12 pages when formatted with this template|must not exceed 12 pages|two-column formatting is mandatory|3\.25\s*in(?:ches)? wide with a 5\/16|corresponding author name\s*&?\s*email|leave one blank line between the abstract and index terms|section ii reviews related work; section iii describes|table i\.\s*example comparison table|iv\.\s*figures and tables|v\.\s*equations and notation|vi\.\s*citations and references|vii\.\s*proposed method)/i.test(
         fullScannedText
       );
 
-    // 3. TJASF template structural layout:
     const hasTjasfSectionStructure =
       /index\s*terms/i.test(page1Text) &&
       /\bI\.\s*INTRODUCTION\b/i.test(fullScannedText) &&
