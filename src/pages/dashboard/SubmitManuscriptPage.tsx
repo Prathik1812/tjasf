@@ -128,7 +128,14 @@ export default function SubmitManuscriptPage() {
         return;
       }
 
-      // Populate form fields
+      // Check if document strictly conforms to the official TJASF template
+      if (!extracted.isTemplateConformant) {
+        toast.error('Submission Rejected: The uploaded document does not follow the official TJASF journal template. Auto-fill accepts TJASF-formatted papers only.');
+        setError('Template Validation Failed: The uploaded PDF does not match the official TJASF Journal Paper Template format. Please download the template from Step 4, format your manuscript according to the journal guidelines, and re-upload.');
+        return;
+      }
+
+      // Populate form fields ONLY for verified TJASF template papers
       if (extracted.title) setTitle(extracted.title);
       if (extracted.abstract) setAbstract(extracted.abstract);
       if (extracted.keywords) setKeywords(extracted.keywords);
@@ -137,17 +144,11 @@ export default function SubmitManuscriptPage() {
         setAuthors(extracted.authors);
       }
 
-      // Informative user feedback based on whether template was detected
-      if (!extracted.isTemplateConformant) {
-        toast.info(
-          'Document analyzed and fields auto-filled! Note: Your document layout appears to follow an external or conference format. Please format your final submission using the official TJASF template.'
-        );
-      } else {
-        toast.success('Success! Manuscript details extracted and forms auto-filled.');
-      }
+      toast.success('TJASF template verified! Manuscript details auto-filled successfully.');
     } catch (err: any) {
       console.error('Auto-fill error:', err);
       toast.error('Failed to parse document: ' + (err.message || err));
+      setError('An error occurred while processing the file: ' + (err.message || err));
     } finally {
       setAnalyzing(false);
       e.target.value = '';
@@ -174,10 +175,10 @@ export default function SubmitManuscriptPage() {
       setFileUrl(pubData.publicUrl);
       toast.success('Manuscript file uploaded successfully.');
 
-      // Extract details dynamically if fields are still empty
+      // Extract details dynamically if fields are still empty and document is TJASF compliant
       if (file.name.toLowerCase().endsWith('.pdf')) {
         const extracted = await parsePdfManuscript(file);
-        if (extracted) {
+        if (extracted && extracted.isTemplateConformant) {
           if (!title && extracted.title) setTitle(extracted.title);
           if (!abstract && extracted.abstract) setAbstract(extracted.abstract);
           if (!keywords && extracted.keywords) setKeywords(extracted.keywords);
@@ -418,6 +419,9 @@ export default function SubmitManuscriptPage() {
                 id="autofill-file-input"
                 type="file"
                 accept=".pdf"
+                onClick={(e) => {
+                  (e.target as HTMLInputElement).value = '';
+                }}
                 onChange={handleAutoFillUpload}
                 className="sr-only"
               />

@@ -42,17 +42,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ toast: { success, error, info } }}>
       {children}
       {/* Toast container portal */}
-      <div className="fixed top-5 right-5 z-[999999] pointer-events-none flex flex-col gap-2.5 max-w-sm w-full px-4 sm:px-0">
+      <div 
+        className="fixed top-5 right-5 pointer-events-none flex flex-col gap-2.5 max-w-sm w-full px-4 sm:px-0"
+        style={{ zIndex: 9999999 }}
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-2xl transition-all duration-300 animate-in slide-in-from-top-3 ${
+            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-2xl transition-all duration-300 toast-enter ${
               t.type === 'success'
                 ? 'bg-[#047857] border-emerald-800 text-white'
                 : t.type === 'error'
                 ? 'bg-[#b91c1c] border-red-800 text-white'
                 : 'bg-[#102342] border-[#1d3556] text-white'
             }`}
+            style={{
+              boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)'
+            }}
           >
             <div className="flex-shrink-0 mt-0.5">
               {t.type === 'success' && <CheckCircle size={18} className="text-emerald-200" />}

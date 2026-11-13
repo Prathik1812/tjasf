@@ -141,3 +141,19 @@ h1 em, h2 em { color: var(--orange); font-style: italic; }
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Toast Notification Animation */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

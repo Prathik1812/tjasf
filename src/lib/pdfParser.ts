@@ -24,7 +24,8 @@ export interface ExtractedManuscript {
 }
 
 /**
- * Extracts metadata from an academic PDF manuscript.
+ * Extracts metadata from an academic PDF manuscript and validates
+ * strictly against the official TJASF journal template.
  */
 export async function parsePdfManuscript(file: File): Promise<ExtractedManuscript | null> {
   try {
@@ -59,14 +60,40 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
     const page1Strings = items.map((i) => i.str);
     const page1Text = page1Strings.join(' ');
 
-    // 2. Extract Last Page text for references
+    // 2. Scan first few pages to detect template conformance markers (headers, footers, sections)
+    const scannedPages: string[] = [page1Text];
+    const maxScanPages = Math.min(pdf.numPages, 5);
+    for (let p = 2; p <= maxScanPages; p++) {
+      try {
+        const pPage = await pdf.getPage(p);
+        const pContent = await pPage.getTextContent();
+        const pText = (pContent.items as any[])
+          .map((i) => (i.str || '').trim())
+          .filter(Boolean)
+          .join(' ');
+        scannedPages.push(pText);
+      } catch (e) {
+        console.warn(`Could not read page ${p} for template verification:`, e);
+      }
+    }
+
+    // 3. Extract Last Page text for references
     let lastPageText = page1Text;
     if (pdf.numPages > 1) {
-      const lastPage = await pdf.getPage(pdf.numPages);
-      const textContentLast = await lastPage.getTextContent();
-      const lastPageItems = (textContentLast.items as any[]).map((i) => (i.str || '').trim()).filter(Boolean);
-      lastPageText = lastPageItems.join(' \n');
+      try {
+        const lastPage = await pdf.getPage(pdf.numPages);
+        const textContentLast = await lastPage.getTextContent();
+        const lastPageItems = (textContentLast.items as any[])
+          .map((i) => (i.str || '').trim())
+          .filter(Boolean);
+        lastPageText = lastPageItems.join(' \n');
+        scannedPages.push(lastPageText);
+      } catch (e) {
+        console.warn('Could not read last page for references:', e);
+      }
     }
+
+    const fullScannedText = scannedPages.join(' \n ');
 
     // If completely empty (e.g. scanned image PDF)
     if (!page1Text.trim() && !lastPageText.trim()) {
@@ -79,7 +106,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       const s = item.str.toLowerCase();
       if (s.length < 3) return false;
       if (/^(tjasf|the journal|international journal|volume|issue|issn|doi|http|www|page|\d+$)/i.test(s)) return false;
-      if (/(all rights reserved|published by|copyright|received:|accepted:|published:)/i.test(s)) return false;
+      if (/(all rights reserved|published by|copyright|received:|accepted:|published:|journal of advanced|scientific frontiers)/i.test(s)) return false;
       return true;
     });
 
@@ -105,6 +132,11 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
         .trim();
     }
 
+    // Clean up title placeholder if uploaded raw template
+    if (/^full paper title$/i.test(extractedTitle.trim())) {
+      extractedTitle = '';
+    }
+
     // --- ABSTRACT EXTRACTION ---
     let extractedAbstract = '';
     const abstractMatch = page1Text.match(/abstract[\s:\-–—\n]+([\s\S]+?)(keywords|key\s*words|index\s*terms|1[\.\s]+introduction|introduction|i\.\s+introduction|$)/i);
@@ -114,7 +146,7 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       const absIdx = page1Text.search(/abstract/i);
       if (absIdx !== -1) {
         let rest = page1Text.substring(absIdx + 8).replace(/^[\s:\-–—\n]+/, '');
-        const stop = rest.match(/(keywords|key\s*words|index\s*terms|1[\.\s]+introduction|introduction)/i);
+        const stop = rest.match(/(keywords|key\s*words|index\s*terms|1[\.\s]+introduction|introduction|i\.\s+introduction)/i);
         if (stop && stop.index) {
           extractedAbstract = rest.substring(0, stop.index).trim();
         } else {
@@ -122,18 +154,17 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
         }
       }
     }
-    // Clean up trailing dashes or intro numbers
     extractedAbstract = extractedAbstract.replace(/[\-–—\s]+$/, '');
 
-    // --- KEYWORDS EXTRACTION ---
+    // --- KEYWORDS / INDEX TERMS EXTRACTION ---
     let extractedKeywords = '';
-    const kwMatch = page1Text.match(/(?:keywords|key\s*words|index\s*terms)[\s:\-–—\n]+([\s\S]+?)(?:1[\.\s]+introduction|introduction|i\.\s+introduction|\n\s*\n|$)/i);
+    const kwMatch = page1Text.match(/(?:keywords|key\s*words|index\s*terms)[\s:\-–—\n]+([\s\S]+?)(?:1[\.\s]+introduction|introduction|i[\.\s]+introduction|\n\s*\n|$)/i);
     if (kwMatch && kwMatch[1]) {
       extractedKeywords = kwMatch[1]
         .replace(/[\.\;]$/, '')
         .split(/[;,\n•—]/)
         .map((k) => k.trim())
-        .filter((k) => k.length > 1 && !/^(1|introduction)$/i.test(k))
+        .filter((k) => k.length > 1 && !/^(1|introduction|instructions)$/i.test(k))
         .join(', ');
     }
 
@@ -178,11 +209,21 @@ export async function parsePdfManuscript(file: File): Promise<ExtractedManuscrip
       });
     }
 
-    // --- TEMPLATE CONFORMANCE DETECTION ---
-    // Does the document contain the standard academic sections and TJASF identifiers?
-    const hasAbstractWord = /abstract/i.test(page1Text);
-    const hasIntroOrRef = /(introduction|references|keywords|index terms)/i.test(page1Text + ' ' + lastPageText);
-    const isTemplateConformant = hasAbstractWord && hasIntroOrRef;
+    // --- STRICT TJASF TEMPLATE CONFORMANCE DETECTION ---
+    // Reject any generic conference, IEEE, ACM, Springer, or non-TJASF papers.
+    // 1. Direct TJASF Journal branding / ISSN / Acronym:
+    const hasTjasfBranding = /(tjasf|journal of advanced scientific frontiers|journal of applied science|the journal of applied science & frontiers|the journal of applied science and frontiers|ijasf|issn\s*\(?\s*online\s*\)?\s*:?\s*xxxx-xxxx)/i.test(fullScannedText) ||
+      /(tjasf|paper[\s_-]*template)/i.test(file.name);
+
+    // 2. Specific textual instructions and phrases unique to the TJASF template:
+    const hasTjasfSpecificPhrasing = /(must not exceed 12 pages when formatted with this template|must not exceed 12 pages|two-column formatting is mandatory|3\.25\s*in(?:ches)? wide with a 5\/16|corresponding author name\s*&?\s*email|section ii reviews related work; section iii describes|table i\.\s*example comparison table|iv\.\s*figures and tables|v\.\s*equations and notation|vi\.\s*citations and references|vii\.\s*proposed method)/i.test(fullScannedText);
+
+    // 3. TJASF template structural layout (Index Terms + Roman Numeral I. INTRODUCTION + II. RELATED WORK or other TJASF numbered sections):
+    const hasTjasfSectionStructure = /index\s*terms/i.test(page1Text) &&
+      /\bI\.\s*INTRODUCTION\b/i.test(fullScannedText) &&
+      /(\bII\.\s*RELATED\s*WORK\b|\bVII\.\s*PROPOSED\s*METHOD\b|\bVIII\.\s*RESULTS\s*AND\s*DISCUSSION\b)/i.test(fullScannedText);
+
+    const isTemplateConformant = Boolean(hasTjasfBranding || hasTjasfSpecificPhrasing || hasTjasfSectionStructure);
 
     return {
       title: extractedTitle,
