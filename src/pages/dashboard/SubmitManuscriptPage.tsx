@@ -521,27 +521,43 @@ export default function SubmitManuscriptPage() {
         {/* Step 1: Manuscript Info */}
         {step === 1 && (
           <div className="space-y-5">
-            {/* Auto-Fill Upload Box */}
-            <div className="border border-dashed border-[#d8d8d1] rounded-lg p-5 text-center bg-gray-50/50 hover:bg-gray-50 transition-colors">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block mb-1">Time Saver Option</span>
-              <p className="text-xs text-[#667082] mb-3">Upload your PDF manuscript here to automatically extract and populate the Title, Abstract, Keywords, Authors, and References.</p>
-              <input
-                id="autofill-file-input"
-                type="file"
-                accept=".pdf"
-                onClick={(e) => {
-                  (e.target as HTMLInputElement).value = '';
-                }}
-                onChange={handleAutoFillUpload}
-                className="sr-only"
-              />
-              <label
-                htmlFor="autofill-file-input"
-                className="inline-block px-4 py-2 bg-[#eb5526] text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-[#d7461c] transition-colors shadow-sm select-none"
-              >
-                Upload PDF to Auto-Fill
-              </label>
-              {analyzing && <span className="block text-xs text-[#eb5526] mt-2 font-semibold animate-pulse">Analyzing document & extracting metadata...</span>}
+            {/* Template Download & Auto-Fill Option */}
+            <div className="border border-dashed border-[#d8d8d1] rounded-lg p-5 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#e6e5e0] pb-3.5 mb-3.5">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block">Journal Guidelines</span>
+                  <p className="text-xs text-[#667082]">Download the official template to format your research before submission.</p>
+                </div>
+                <a
+                  href="/assets/templates/TJASF_PaperTemplate.docx"
+                  download
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 border border-[#eb5526] text-[#eb5526] bg-white text-xs font-bold rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap self-start sm:self-auto shadow-sm"
+                >
+                  Download Journal Manuscript Template (.docx)
+                </a>
+              </div>
+
+              <div className="text-center pt-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block mb-1">Time Saver Option</span>
+                <p className="text-xs text-[#667082] mb-3">Upload your PDF manuscript here to automatically extract and populate the Title, Abstract, Keywords, Authors, and References.</p>
+                <input
+                  id="autofill-file-input"
+                  type="file"
+                  accept=".pdf"
+                  onClick={(e) => {
+                    (e.target as HTMLInputElement).value = '';
+                  }}
+                  onChange={handleAutoFillUpload}
+                  className="sr-only"
+                />
+                <label
+                  htmlFor="autofill-file-input"
+                  className="inline-block px-4 py-2 bg-[#eb5526] text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-[#d7461c] transition-colors shadow-sm select-none"
+                >
+                  Upload PDF to Auto-Fill
+                </label>
+                {analyzing && <span className="block text-xs text-[#eb5526] mt-2 font-semibold animate-pulse">Analyzing document & extracting metadata...</span>}
+              </div>
             </div>
 
             <div className="pt-3 border-t border-[#f1f0ec]">
@@ -740,15 +756,8 @@ export default function SubmitManuscriptPage() {
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="mb-1.5">
                 <label className="block text-sm font-semibold text-[#102342]">Manuscript File</label>
-                <a
-                  href="/assets/templates/TJASF_PaperTemplate.docx"
-                  download
-                  className="text-xs font-bold text-[#eb5526] hover:underline"
-                >
-                  Download Template (.docx)
-                </a>
               </div>
               <div className="border-2 border-dashed border-[#d8d8d1] rounded-lg p-8 text-center bg-[#fbfaf8]">
                 {analyzing ? (
