@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, ChevronLeft, Upload, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Upload, Plus, Trash2, Info } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { supabase } from '@/lib/supabase';
@@ -41,6 +41,7 @@ export default function SubmitManuscriptPage() {
   
   const [saveTime, setSaveTime] = useState<string>('');
   const [savingDraft, setSavingDraft] = useState(false);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
   const [showRefPreview, setShowRefPreview] = useState(false);
 
   const [title, setTitle] = useState('');
@@ -90,6 +91,7 @@ export default function SubmitManuscriptPage() {
         if (d.plagiarismFileName) setPlagiarismFileName(d.plagiarismFileName);
         if (d.plagiarismFileUrl) setPlagiarismFileUrl(d.plagiarismFileUrl);
         if (d.references) setReferences(d.references);
+        if (d.isAutoFilled !== undefined) setIsAutoFilled(Boolean(d.isAutoFilled));
       }
     } catch (err) {
       console.warn('Could not restore draft:', err);
@@ -118,6 +120,7 @@ export default function SubmitManuscriptPage() {
             plagiarismFileName,
             plagiarismFileUrl,
             references,
+            isAutoFilled,
           })
         );
       } catch (err) {
@@ -127,7 +130,7 @@ export default function SubmitManuscriptPage() {
       setSaveTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
     }, 500);
     return () => clearTimeout(delay);
-  }, [step, title, domainId, selectedSubjectId, fastTrack, abstract, keywords, references, authors, fileName, fileUrl, plagiarismFileName, plagiarismFileUrl]);
+  }, [step, title, domainId, selectedSubjectId, fastTrack, abstract, keywords, references, authors, fileName, fileUrl, plagiarismFileName, plagiarismFileUrl, isAutoFilled]);
 
   useEffect(() => {
     (async () => {
@@ -207,7 +210,7 @@ export default function SubmitManuscriptPage() {
       // 2. Strict TJASF Journal Template Validation
       if (!extracted.isTemplateConformant) {
         toast.error('Submission Rejected: The uploaded document does not follow the official TJASF journal template. Auto-fill accepts TJASF-formatted papers only.');
-        setError('Template Validation Failed: The uploaded document does not match the official TJASF Journal Paper Template format. Please download the template from Step 4, format your manuscript according to the journal guidelines, and re-upload.');
+        setError('Template Validation Failed: The uploaded document does not match the official TJASF Journal Paper Template format. Please download the template from Step 1, format your manuscript according to the journal guidelines, and re-upload.');
         return; // Reject without populating any fields; remain on Step 1
       }
 
@@ -219,8 +222,9 @@ export default function SubmitManuscriptPage() {
       if (extracted.authors && extracted.authors.length > 0) {
         setAuthors(extracted.authors);
       }
+      setIsAutoFilled(true);
 
-      toast.success('TJASF template verified! Manuscript details auto-filled successfully. You can now review and edit the fields.');
+      toast.success('TJASF template verified! Manuscript details auto-filled successfully. Auto-extracted fields should not be edited unless correcting an error.');
     } catch (err: any) {
       console.error('Auto-fill error:', err);
       toast.error('Failed to parse document: ' + (err.message || 'Unknown parsing error'));
@@ -278,6 +282,7 @@ export default function SubmitManuscriptPage() {
           if (extracted.authors && extracted.authors.length > 0 && authors.length <= 1 && !authors[0].name) {
             setAuthors(extracted.authors);
           }
+          setIsAutoFilled(true);
         }
       }
     } catch (err: any) {
@@ -481,7 +486,12 @@ export default function SubmitManuscriptPage() {
     <div className="max-w-[900px] mx-auto px-8 py-12">
       <div className="flex items-center justify-between mb-4">
         <div className="text-[#eb5526] uppercase tracking-[0.14em] text-[10px] font-bold">New Submission</div>
-        <div className="flex items-center gap-2 text-xs text-[#667082]">
+        <div className="flex items-center gap-2.5 text-xs text-[#667082]">
+          {isAutoFilled && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              Auto-filled • Do not edit
+            </span>
+          )}
           {savingDraft ? (
             <>
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
@@ -518,6 +528,19 @@ export default function SubmitManuscriptPage() {
       <div className="bg-white rounded-lg border border-[#e6e5e0] p-8">
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">{error}</div>}
 
+        {isAutoFilled && (
+          <div className="bg-amber-50/90 border border-amber-200 rounded-lg p-4 mb-6 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
+            <Info size={18} className="text-[#eb5526] shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold text-[#102342] text-sm block">Auto-Filled from Verified TJASF Template</span>
+              <p className="text-amber-800 leading-relaxed text-xs">
+                Your manuscript information has been automatically parsed and populated into your submission draft.
+                {' '}<strong>Please do not edit or reformat these fields</strong> unless strictly necessary to fix an extraction typo or supply missing details.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Step 1: Manuscript Info */}
         {step === 1 && (
           <div className="space-y-5">
@@ -539,7 +562,10 @@ export default function SubmitManuscriptPage() {
 
               <div className="text-center pt-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block mb-1">Time Saver Option</span>
-                <p className="text-xs text-[#667082] mb-3">Upload your PDF manuscript here to automatically extract and populate the Title, Abstract, Keywords, Authors, and References.</p>
+                <p className="text-xs text-[#667082] mb-1.5">Upload your PDF manuscript here to automatically extract and populate the Title, Abstract, Keywords, Authors, and References.</p>
+                <p className="text-[11px] text-[#667082] mb-3 italic">
+                  Note: Auto-filled fields are extracted directly from your paper. Do not edit unless correcting an error.
+                </p>
                 <input
                   id="autofill-file-input"
                   type="file"
@@ -657,7 +683,14 @@ export default function SubmitManuscriptPage() {
                 <Plus size={16} /> Add Author
               </button>
             </div>
-            <p className="text-xs text-[#667082]">Add all authors who contributed to this work. Mark the corresponding author.</p>
+            <p className="text-xs text-[#667082]">
+              Add all authors who contributed to this work. Mark the corresponding author.
+              {isAutoFilled && (
+                <span className="text-amber-800 font-medium block mt-1">
+                  • Extracted from verified PDF. Please do not edit author names or affiliations unless correcting an omission.
+                </span>
+              )}
+            </p>
             {authors.map((a, i) => (
               <div key={i} className="border border-[#e6e5e0] rounded-lg p-4 space-y-3 relative bg-[#fbfaf8]">
                 <div className="flex items-center justify-between">
@@ -741,11 +774,21 @@ export default function SubmitManuscriptPage() {
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1.5">Abstract *</label>
+              {isAutoFilled && (
+                <p className="text-xs text-amber-800 font-medium mb-1.5">
+                  • Auto-extracted abstract. Please do not edit unless correcting text fragments.
+                </p>
+              )}
               <textarea rows={8} value={abstract} onChange={(e) => setAbstract(e.target.value)} placeholder="Paste your manuscript abstract here..." className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
               <p className="text-xs text-[#667082] mt-1">{abstract.length} characters</p>
             </div>
             <div>
               <label className="block text-sm font-semibold text-[#102342] mb-1.5">Keywords</label>
+              {isAutoFilled && (
+                <p className="text-xs text-amber-800 font-medium mb-1.5">
+                  • Auto-extracted keywords. Please do not edit unless correcting terms.
+                </p>
+              )}
               <input type="text" value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="keyword1, keyword2, keyword3..." className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               <p className="text-xs text-[#667082] mt-1">Separate keywords with commas. Add 3-5 keywords for better discoverability.</p>
             </div>
