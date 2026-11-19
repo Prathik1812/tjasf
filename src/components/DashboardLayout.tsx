@@ -204,9 +204,9 @@ function getNavItems(role?: UserRole): NavItem[] {
 
 export function DashboardCard({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="bg-white rounded-lg border border-[#e6e5e0] p-6">
+    <div className="bg-white rounded-none border border-[#e6e5e0] p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-[#102342]">{title}</h2>
+        <h2 className="font-['Playfair_Display'] text-lg font-semibold text-[#102342]">{title}</h2>
         {action}
       </div>
       {children}
@@ -216,8 +216,8 @@ export function DashboardCard({ title, children, action }: { title: string; chil
 
 export function StatCard({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof LayoutDashboard }) {
   return (
-    <div className="bg-white rounded-lg border border-[#e6e5e0] p-5 flex items-center gap-4">
-      <div className="w-11 h-11 bg-[#f1f0ec] rounded-lg flex items-center justify-center text-[#eb5526]">
+    <div className="bg-white rounded-none border border-[#e6e5e0] p-5 flex items-center gap-4">
+      <div className="w-11 h-11 bg-[#f1f0ec] rounded-none flex items-center justify-center text-[#eb5526]">
         <Icon size={22} />
       </div>
       <div>
@@ -246,7 +246,7 @@ export function StatusBadge({ status }: { status: string }) {
   };
   const label = status.replace(/_/g, ' ');
   return (
-    <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
+    <span className={`inline-block px-2.5 py-0.5 rounded-none text-[11px] font-bold uppercase tracking-wider ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
       {label}
     </span>
   );

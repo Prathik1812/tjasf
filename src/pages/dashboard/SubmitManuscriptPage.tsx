@@ -488,18 +488,18 @@ export default function SubmitManuscriptPage() {
         <div className="text-[#eb5526] uppercase tracking-[0.14em] text-[10px] font-bold">New Submission</div>
         <div className="flex items-center gap-2.5 text-xs text-[#667082]">
           {isAutoFilled && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-none border border-amber-200">
               Auto-filled • Do not edit
             </span>
           )}
           {savingDraft ? (
             <>
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-none bg-amber-500 animate-pulse" />
               <span>Saving draft...</span>
             </>
           ) : saveTime ? (
             <>
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="w-2 h-2 rounded-none bg-green-500" />
               <span>Draft saved at {saveTime}</span>
             </>
           ) : null}
@@ -513,7 +513,7 @@ export default function SubmitManuscriptPage() {
         {STEPS.map((s) => (
           <div key={s.num} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+              <div className={`w-9 h-9 rounded-none flex items-center justify-center text-sm font-semibold transition-colors ${
                 step > s.num ? 'bg-green-500 text-white' : step === s.num ? 'bg-[#eb5526] text-white' : 'bg-[#f1f0ec] text-[#667082]'
               }`}>
                 {step > s.num ? <Check size={18} /> : s.num}
@@ -525,14 +525,14 @@ export default function SubmitManuscriptPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-lg border border-[#e6e5e0] p-8">
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">{error}</div>}
+      <div className="bg-white rounded-none border border-[#e6e5e0] p-8">
+        {error && <div className="bg-red-50 border border-red-200 rounded-none p-3 mb-4 text-sm text-red-700">{error}</div>}
 
         {isAutoFilled && (
-          <div className="bg-amber-50/90 border border-amber-200 rounded-lg p-4 mb-6 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
+          <div className="bg-amber-50/90 border border-amber-200 rounded-none p-4 mb-6 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
             <Info size={18} className="text-[#eb5526] shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="font-bold text-[#102342] text-sm block">Auto-Filled from Verified TJASF Template</span>
+              <span className="font-['Playfair_Display'] font-bold text-[#102342] text-sm block">Auto-Filled from Verified TJASF Template</span>
               <p className="text-amber-800 leading-relaxed text-xs">
                 Your manuscript information has been automatically parsed and populated into your submission draft.
                 {' '}<strong>Please do not edit or reformat these fields</strong> unless strictly necessary to fix an extraction typo or supply missing details.
@@ -545,23 +545,23 @@ export default function SubmitManuscriptPage() {
         {step === 1 && (
           <div className="space-y-5">
             {/* Template Download & Auto-Fill Option */}
-            <div className="border border-dashed border-[#d8d8d1] rounded-lg p-5 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+            <div className="border border-dashed border-[#d8d8d1] rounded-none p-5 bg-gray-50/50 hover:bg-gray-50 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#e6e5e0] pb-3.5 mb-3.5">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block">Journal Guidelines</span>
+                  <span className="font-['Playfair_Display'] text-xs font-bold uppercase tracking-wider text-[#102342] block">Journal Guidelines</span>
                   <p className="text-xs text-[#667082]">Download the official template to format your research before submission.</p>
                 </div>
                 <a
                   href="/assets/templates/TJASF_PaperTemplate.docx"
                   download
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 border border-[#eb5526] text-[#eb5526] bg-white text-xs font-bold rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap self-start sm:self-auto shadow-sm"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 border border-[#eb5526] text-[#eb5526] bg-white text-xs font-bold rounded-none hover:bg-orange-50 transition-colors whitespace-nowrap self-start sm:self-auto shadow-sm"
                 >
                   Download Journal Manuscript Template (.docx)
                 </a>
               </div>
 
               <div className="text-center pt-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#667082] block mb-1">Time Saver Option</span>
+                <span className="font-['Playfair_Display'] text-xs font-bold uppercase tracking-wider text-[#102342] block mb-1">Time Saver Option</span>
                 <p className="text-xs text-[#667082] mb-1.5">Upload your PDF manuscript here to automatically extract and populate the Title, Abstract, Keywords, Authors, and References.</p>
                 <p className="text-[11px] text-[#667082] mb-3 italic">
                   Note: Auto-filled fields are extracted directly from your paper. Do not edit unless correcting an error.
@@ -578,7 +578,7 @@ export default function SubmitManuscriptPage() {
                 />
                 <label
                   htmlFor="autofill-file-input"
-                  className="inline-block px-4 py-2 bg-[#eb5526] text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-[#d7461c] transition-colors shadow-sm select-none"
+                  className="inline-block px-4 py-2 bg-[#eb5526] text-white text-xs font-bold rounded-none cursor-pointer hover:bg-[#d7461c] transition-colors shadow-sm select-none"
                 >
                   Upload PDF to Auto-Fill
                 </label>
@@ -587,11 +587,11 @@ export default function SubmitManuscriptPage() {
             </div>
 
             <div className="pt-3 border-t border-[#f1f0ec]">
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Manuscript Title *</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter your manuscript title" className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]" />
+              <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-1.5">Manuscript Title *</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter your manuscript title" className="w-full border border-[#d8d8d1] rounded-none px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Research Domain & Subject Discipline *</label>
+              <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-1.5">Research Domain & Subject Discipline *</label>
               <select
                 value={selectedSubjectId}
                 onChange={(e) => {
@@ -607,7 +607,7 @@ export default function SubmitManuscriptPage() {
                     setDomainId('');
                   }
                 }}
-                className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
+                className="w-full border border-[#d8d8d1] rounded-none px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] bg-white text-[#27334a]"
               >
                 <option value="">Select subject discipline (e.g. Computer Science, Mechanical, AI/ML)...</option>
                 {DOMAIN_DISCIPLINES.map((group) => (
@@ -624,7 +624,7 @@ export default function SubmitManuscriptPage() {
                 <div className="mt-2 text-xs text-[#667082] flex items-center gap-2">
                   <span className="font-semibold text-[#102342]">Selected:</span>
                   <span className="text-[#102342]">{findSubject(selectedSubjectId)?.name}</span>
-                  <span className="font-mono bg-orange-50 text-[#eb5526] px-2 py-0.5 rounded text-[11px] font-bold border border-orange-200">
+                  <span className="font-mono bg-orange-50 text-[#eb5526] px-2 py-0.5 rounded-none text-[11px] font-bold border border-orange-200">
                     Subject Code: {findSubject(selectedSubjectId)?.code}
                   </span>
                 </div>
@@ -632,32 +632,32 @@ export default function SubmitManuscriptPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-2.5">Submission Track *</label>
+              <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-2.5">Submission Track *</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setFastTrack(false)}
-                  className={`p-4 rounded-lg border text-left transition-all ${
+                  className={`p-4 rounded-none border text-left transition-all ${
                     !fastTrack
                       ? 'border-[#eb5526] bg-amber-50/20 shadow-sm'
                       : 'border-[#d8d8d1] hover:border-gray-400 bg-white'
                   }`}
                 >
-                  <div className="font-bold text-xs text-[#102342] mb-1">Regular Track</div>
+                  <div className="font-['Playfair_Display'] font-semibold text-sm text-[#102342] mb-1">Regular Track</div>
                   <div className="text-[11px] text-[#667082] leading-relaxed">Standard peer-review cycle (approx. 12-16 weeks). Free of charge.</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFastTrack(true)}
-                  className={`p-4 rounded-lg border text-left transition-all ${
+                  className={`p-4 rounded-none border text-left transition-all ${
                     fastTrack
                       ? 'border-[#eb5526] bg-amber-50/20 shadow-sm'
                       : 'border-[#d8d8d1] hover:border-gray-400 bg-white'
                   }`}
                 >
-                  <div className="font-bold text-xs text-[#102342] mb-1 flex items-center justify-between">
+                  <div className="font-['Playfair_Display'] font-semibold text-sm text-[#102342] mb-1 flex items-center justify-between">
                     <span>Fast-Track</span>
-                    <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
+                    <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-none tracking-wide uppercase">
                       $49 USD
                     </span>
                   </div>
@@ -674,7 +674,7 @@ export default function SubmitManuscriptPage() {
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-[#102342]">Authors *</label>
+              <label className="font-['Playfair_Display'] font-semibold text-lg text-[#102342]">Authors *</label>
               <button
                 type="button"
                 onClick={addAuthor}
@@ -692,9 +692,9 @@ export default function SubmitManuscriptPage() {
               )}
             </p>
             {authors.map((a, i) => (
-              <div key={i} className="border border-[#e6e5e0] rounded-lg p-4 space-y-3 relative bg-[#fbfaf8]">
+              <div key={i} className="border border-[#e6e5e0] rounded-none p-4 space-y-3 relative bg-[#fbfaf8]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#667082] uppercase tracking-wide">Author {i + 1}</span>
+                  <span className="font-['Playfair_Display'] text-xs font-bold text-[#667082] uppercase tracking-wide">Author {i + 1}</span>
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-1.5 text-xs text-[#667082] cursor-pointer">
                       <input type="radio" name="corresponding" checked={a.corresponding} onChange={() => updateAuthor(i, 'corresponding', true)} />
@@ -714,53 +714,53 @@ export default function SubmitManuscriptPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-[#102342] mb-1">Author Name *</label>
+                    <label className="block font-['Playfair_Display'] text-xs font-semibold text-[#102342] mb-1">Author Name *</label>
                     <input
                       type="text"
                       placeholder="Full name (e.g. Dr. Sarah A. Jenkins) *"
                       value={a.name}
                       onChange={(e) => updateAuthor(i, 'name', e.target.value)}
-                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                      className="w-full border border-[#d8d8d1] rounded-none px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#102342] mb-1">Email</label>
+                    <label className="block font-['Playfair_Display'] text-xs font-semibold text-[#102342] mb-1">Email</label>
                     <input
                       type="email"
                       placeholder="author@example.com"
                       value={a.email}
                       onChange={(e) => updateAuthor(i, 'email', e.target.value)}
-                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                      className="w-full border border-[#d8d8d1] rounded-none px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#102342] mb-1">Affiliation / Institution</label>
+                    <label className="block font-['Playfair_Display'] text-xs font-semibold text-[#102342] mb-1">Affiliation / Institution</label>
                     <input
                       type="text"
                       placeholder="e.g. Stanford University"
                       value={a.affiliation}
                       onChange={(e) => updateAuthor(i, 'affiliation', e.target.value)}
-                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                      className="w-full border border-[#d8d8d1] rounded-none px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#102342] mb-1">Department</label>
+                    <label className="block font-['Playfair_Display'] text-xs font-semibold text-[#102342] mb-1">Department</label>
                     <input
                       type="text"
                       placeholder="e.g. Department of Computer Science"
                       value={a.department}
                       onChange={(e) => updateAuthor(i, 'department', e.target.value)}
-                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                      className="w-full border border-[#d8d8d1] rounded-none px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-[#102342] mb-1">ORCID ID (Optional)</label>
+                    <label className="block font-['Playfair_Display'] text-xs font-semibold text-[#102342] mb-1">ORCID ID (Optional)</label>
                     <input
                       type="text"
                       placeholder="0000-0002-1825-0097"
                       value={a.orcid || ''}
                       onChange={(e) => updateAuthor(i, 'orcid', e.target.value)}
-                      className="w-full border border-[#d8d8d1] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
+                      className="w-full border border-[#d8d8d1] rounded-none px-3 py-2 text-sm outline-none focus:border-[#eb5526] bg-white text-[#102342]"
                     />
                   </div>
                 </div>
@@ -773,23 +773,23 @@ export default function SubmitManuscriptPage() {
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Abstract *</label>
+              <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-1.5">Abstract *</label>
               {isAutoFilled && (
                 <p className="text-xs text-amber-800 font-medium mb-1.5">
                   • Auto-extracted abstract. Please do not edit unless correcting text fragments.
                 </p>
               )}
-              <textarea rows={8} value={abstract} onChange={(e) => setAbstract(e.target.value)} placeholder="Paste your manuscript abstract here..." className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
+              <textarea rows={8} value={abstract} onChange={(e) => setAbstract(e.target.value)} placeholder="Paste your manuscript abstract here..." className="w-full border border-[#d8d8d1] rounded-none px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
               <p className="text-xs text-[#667082] mt-1">{abstract.length} characters</p>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Keywords</label>
+              <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-1.5">Keywords</label>
               {isAutoFilled && (
                 <p className="text-xs text-amber-800 font-medium mb-1.5">
                   • Auto-extracted keywords. Please do not edit unless correcting terms.
                 </p>
               )}
-              <input type="text" value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="keyword1, keyword2, keyword3..." className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
+              <input type="text" value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="keyword1, keyword2, keyword3..." className="w-full border border-[#d8d8d1] rounded-none px-4 py-2.5 text-sm outline-none focus:border-[#eb5526]" />
               <p className="text-xs text-[#667082] mt-1">Separate keywords with commas. Add 3-5 keywords for better discoverability.</p>
             </div>
           </div>
@@ -800,13 +800,13 @@ export default function SubmitManuscriptPage() {
           <div className="space-y-5">
             <div>
               <div className="mb-1.5">
-                <label className="block text-sm font-semibold text-[#102342]">Manuscript File</label>
+                <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342]">Manuscript File *</label>
               </div>
-              <div className="border-2 border-dashed border-[#d8d8d1] rounded-lg p-8 text-center bg-[#fbfaf8]">
+              <div className="border-2 border-dashed border-[#d8d8d1] rounded-none p-8 text-center bg-[#fbfaf8]">
                 {analyzing ? (
                   <div className="py-4 space-y-3">
                     <div className="w-10 h-10 border-4 border-t-[#eb5526] border-[#f1f0ec] rounded-full animate-spin mx-auto" />
-                    <p className="text-sm font-semibold text-[#102342]">Analyzing document layout...</p>
+                    <p className="font-['Playfair_Display'] text-base font-semibold text-[#102342]">Analyzing document layout...</p>
                     <p className="text-xs text-[#667082]">Extracting Title, Abstract, Keywords, and References from document stream...</p>
                   </div>
                 ) : fileName ? (
@@ -835,7 +835,7 @@ export default function SubmitManuscriptPage() {
                       className="hidden"
                       id="file-upload"
                     />
-                    <label htmlFor="file-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-lg cursor-pointer hover:bg-[#eeece7]">
+                    <label htmlFor="file-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-none cursor-pointer hover:bg-[#eeece7]">
                       Choose File
                     </label>
                   </>
@@ -845,12 +845,14 @@ export default function SubmitManuscriptPage() {
             
             {/* Plagiarism Report File */}
             <div>
-              <label className="block text-sm font-semibold text-[#102342] mb-1.5">Plagiarism Report (Turnitin or iThenticate PDF) <span className="text-[#667082] font-normal">(Optional)</span></label>
-              <div className="border-2 border-dashed border-[#d8d8d1] rounded-lg p-8 text-center bg-[#fbfaf8]">
+              <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-1.5">
+                Plagiarism Report (Turnitin or iThenticate PDF) <span className="font-sans text-xs text-[#667082] font-normal">(Optional)</span>
+              </label>
+              <div className="border-2 border-dashed border-[#d8d8d1] rounded-none p-8 text-center bg-[#fbfaf8]">
                 {uploadingPlagiarism ? (
                   <div className="py-4 space-y-3">
                     <div className="w-10 h-10 border-4 border-t-[#eb5526] border-[#f1f0ec] rounded-full animate-spin mx-auto" />
-                    <p className="text-sm font-semibold text-[#102342]">Uploading plagiarism report...</p>
+                    <p className="font-['Playfair_Display'] text-base font-semibold text-[#102342]">Uploading plagiarism report...</p>
                   </div>
                 ) : plagiarismFileName ? (
                   <div className="flex items-center justify-center gap-2 text-sm text-[#102342]">
@@ -878,7 +880,7 @@ export default function SubmitManuscriptPage() {
                       className="hidden"
                       id="plagiarism-upload"
                     />
-                    <label htmlFor="plagiarism-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-lg cursor-pointer hover:bg-[#eeece7]">
+                    <label htmlFor="plagiarism-upload" className="inline-block mt-3 px-4 py-2 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-none cursor-pointer hover:bg-[#eeece7]">
                       Choose Report PDF
                     </label>
                   </>
@@ -887,7 +889,7 @@ export default function SubmitManuscriptPage() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-semibold text-[#102342]">References</label>
+                <label className="block font-['Playfair_Display'] font-semibold text-base text-[#102342]">References</label>
                 {references.trim() && (
                   <button
                     type="button"
@@ -898,12 +900,12 @@ export default function SubmitManuscriptPage() {
                   </button>
                 )}
               </div>
-              <textarea rows={6} value={references} onChange={(e) => setReferences(e.target.value)} placeholder="Paste your references list here..." className="w-full border border-[#d8d8d1] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
+              <textarea rows={6} value={references} onChange={(e) => setReferences(e.target.value)} placeholder="Paste your references list here..." className="w-full border border-[#d8d8d1] rounded-none px-4 py-2.5 text-sm outline-none focus:border-[#eb5526] resize-none" />
               <p className="text-xs text-[#667082] mt-1">Include all cited references in your preferred citation style.</p>
 
               {showRefPreview && references.trim() && (
-                <div className="mt-4 bg-[#fbfaf8] border border-[#e6e5e0] rounded-lg p-4">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#102342] mb-3">Extracted Bibliography Preview</h4>
+                <div className="mt-4 bg-[#fbfaf8] border border-[#e6e5e0] rounded-none p-4">
+                  <h4 className="font-['Playfair_Display'] text-xs font-bold uppercase tracking-wider text-[#102342] mb-3">Extracted Bibliography Preview</h4>
                   <ol className="list-decimal list-inside space-y-2.5 text-xs text-[#667082] leading-relaxed">
                     {references.split('\n').filter(line => line.trim()).map((ref, idx) => {
                       const cleanRef = ref.replace(/^\d+[\.\s\-]+/g, ""); // Strips manual leading list numbers
@@ -924,46 +926,46 @@ export default function SubmitManuscriptPage() {
         {step === 5 && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-semibold text-lg text-[#102342] mb-1">Verify Manuscript Details</h3>
+              <h3 className="font-['Playfair_Display'] font-semibold text-xl text-[#102342] mb-1">Verify Manuscript Details</h3>
               <p className="text-xs text-[#667082]">Carefully review all extracted and inputted details below before signing declarations and submitting.</p>
             </div>
 
             {/* Review Block Grid */}
-            <div className="bg-[#fbfaf8] border border-[#e6e5e0] rounded-lg p-6 space-y-5 text-sm text-[#27334a]">
+            <div className="bg-[#fbfaf8] border border-[#e6e5e0] rounded-none p-6 space-y-5 text-sm text-[#27334a]">
               <div>
-                <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Manuscript Title</strong>
+                <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1">Manuscript Title</strong>
                 <p className="text-base font-semibold text-[#102342] leading-snug">{title || '—'}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-[#e6e5e0] pt-4">
                 <div>
-                  <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Research Domain</strong>
-                  <span className="inline-block px-2.5 py-1 bg-[#f1f0ec] rounded-full text-xs font-semibold text-[#102342]">
+                  <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1">Research Domain</strong>
+                  <span className="inline-block px-2.5 py-1 bg-[#f1f0ec] rounded-none text-xs font-semibold text-[#102342]">
                     {domains.find((d) => d.id === domainId)?.name || '—'}
                   </span>
                 </div>
                 <div>
-                  <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Manuscript File</strong>
+                  <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1">Manuscript File</strong>
                   <p className="text-xs font-medium text-[#eb5526] truncate">{fileName || 'No file uploaded'}</p>
                 </div>
                 <div>
-                  <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1">Plagiarism Report</strong>
+                  <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1">Plagiarism Report</strong>
                   <p className="text-xs font-medium text-[#eb5526] truncate">{plagiarismFileName || 'No report uploaded'}</p>
                 </div>
               </div>
 
               <div className="border-t border-[#e6e5e0] pt-4">
-                <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-2">Authors</strong>
+                <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-2">Authors</strong>
                 <div className="space-y-2">
                   {authors.map((a, i) => (
-                    <div key={i} className="flex flex-col md:flex-row md:items-center justify-between text-xs bg-white border border-[#e6e5e0] p-3 rounded-lg">
+                    <div key={i} className="flex flex-col md:flex-row md:items-center justify-between text-xs bg-white border border-[#e6e5e0] p-3 rounded-none">
                       <div>
                         <p className="font-semibold text-[#102342]">{a.name || 'Untitled'}</p>
                         <p className="text-[#667082]">{a.affiliation || 'No Affiliation'}{a.department ? ` — ${a.department}` : ''}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-1 md:mt-0">
                         <span className="text-[#667082]">{a.email}</span>
-                        {a.corresponding && <span className="px-2 py-0.5 bg-[#eb5526]/10 text-[#eb5526] rounded text-[10px] font-bold">Corresponding</span>}
+                        {a.corresponding && <span className="px-2 py-0.5 bg-[#eb5526]/10 text-[#eb5526] rounded-none text-[10px] font-bold">Corresponding</span>}
                       </div>
                     </div>
                   ))}
@@ -971,27 +973,28 @@ export default function SubmitManuscriptPage() {
               </div>
 
               <div className="border-t border-[#e6e5e0] pt-4">
-                <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1.5">Abstract</strong>
-                <p className="text-xs leading-relaxed text-[#667082] bg-white border border-[#e6e5e0] p-4 rounded-lg italic whitespace-pre-wrap">{abstract || '—'}</p>
+                <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1.5">Abstract</strong>
+                <p className="text-xs leading-relaxed text-[#667082] bg-white border border-[#e6e5e0] p-4 rounded-none italic whitespace-pre-wrap">{abstract || '—'}</p>
               </div>
 
               <div className="border-t border-[#e6e5e0] pt-4">
-                <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1.5">Keywords</strong>
+                <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1.5">Keywords</strong>
                 <div className="flex flex-wrap gap-1.5">
                   {keywords ? keywords.split(',').map((k, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-[#f1f0ec] rounded text-xs text-[#667082]">{k.trim()}</span>
+                    <span key={idx} className="px-2 py-1 bg-[#f1f0ec] rounded-none text-xs text-[#667082]">{k.trim()}</span>
                   )) : <span className="text-xs text-[#667082]">None specified</span>}
                 </div>
               </div>
 
               <div className="border-t border-[#e6e5e0] pt-4">
-                <strong className="block text-xs uppercase tracking-wider text-[#667082] mb-1.5">References</strong>
-                <pre className="text-[10px] leading-relaxed text-[#667082] bg-white border border-[#e6e5e0] p-4 rounded-lg overflow-x-auto font-mono whitespace-pre-wrap max-h-40">{references || '—'}</pre>
+                <strong className="block font-['Playfair_Display'] text-xs uppercase tracking-wider text-[#667082] mb-1.5">References</strong>
+                <pre className="text-[10px] leading-relaxed text-[#667082] bg-white border border-[#e6e5e0] p-4 rounded-none overflow-x-auto font-mono whitespace-pre-wrap max-h-40">{references || '—'}</pre>
               </div>
             </div>
 
             {/* Checkboxes */}
             <div className="space-y-3 pt-2">
+              <h4 className="font-['Playfair_Display'] font-semibold text-base text-[#102342] mb-2">Declarations & Policies Confirmation *</h4>
               {[
                 { label: 'This is original work and has not been published elsewhere', state: originalWork, set: setOriginalWork, required: true },
                 { label: 'I agree to the copyright and licensing terms', state: copyrightAgreement, set: setCopyrightAgreement, required: true },
@@ -1002,7 +1005,7 @@ export default function SubmitManuscriptPage() {
                 { label: 'This manuscript was previously submitted elsewhere', state: previouslySubmitted, set: setPreviouslySubmitted, required: false },
               ].map((decl, i) => (
                 <label key={i} className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={decl.state} onChange={(e) => decl.set(e.target.checked)} className="mt-0.5 w-4 h-4 accent-[#eb5526]" />
+                  <input type="checkbox" checked={decl.state} onChange={(e) => decl.set(e.target.checked)} className="mt-0.5 w-4 h-4 accent-[#eb5526] rounded-none" />
                   <span className="text-sm text-[#27334a]">
                     {decl.label}
                     {decl.required && <span className="text-[#eb5526]"> *</span>}
@@ -1028,7 +1031,7 @@ export default function SubmitManuscriptPage() {
               type="button"
               onClick={handleNext}
               disabled={!canProceed()}
-              className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30"
+              className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-none hover:bg-[#d7461c] disabled:opacity-30"
             >
               Continue <ChevronRight size={18} />
             </button>
@@ -1037,7 +1040,7 @@ export default function SubmitManuscriptPage() {
               type="button"
               onClick={handleSubmit}
               disabled={!canProceed() || submitting}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-lg hover:bg-[#d7461c] disabled:opacity-30"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#eb5526] text-white text-sm font-bold rounded-none hover:bg-[#d7461c] disabled:opacity-30"
             >
               {submitting ? 'Submitting...' : 'Submit Manuscript'}
             </button>

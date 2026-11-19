@@ -162,7 +162,7 @@ export default function MyManuscripts() {
           <h1 className="font-['Playfair_Display'] font-medium text-3xl text-[#102342]">My Manuscripts</h1>
           <p className="text-[#667082] text-sm mt-1">Track and manage your submissions</p>
         </div>
-        <Link to="/dashboard/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c] shadow-sm">
+        <Link to="/dashboard/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-none hover:bg-[#d7461c] shadow-sm">
           <Plus size={16} /> New Submission
         </Link>
       </div>
@@ -175,12 +175,12 @@ export default function MyManuscripts() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search manuscripts by tracking code (e.g. 2026-CSE-...), title, domain, or status..."
-            className="w-full pl-10 pr-16 py-2.5 bg-white border border-[#d8d8d1] rounded-lg text-sm text-[#27334a] placeholder-[#7e8da4] focus:outline-none focus:border-[#eb5526] shadow-sm"
+            className="w-full pl-10 pr-16 py-2.5 bg-white border border-[#d8d8d1] rounded-none text-sm text-[#27334a] placeholder-[#7e8da4] focus:outline-none focus:border-[#eb5526] shadow-sm"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#7e8da4] hover:text-[#102342] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#7e8da4] hover:text-[#102342] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-none"
             >
               Clear
             </button>
@@ -191,22 +191,22 @@ export default function MyManuscripts() {
       {loading ? (
         <p className="text-[#667082]">Loading...</p>
       ) : manuscripts.length === 0 ? (
-        <div className="bg-white rounded-lg border border-[#e6e5e0] p-12 text-center shadow-sm">
+        <div className="bg-white rounded-none border border-[#e6e5e0] p-12 text-center shadow-sm">
           <FileText size={40} className="mx-auto text-[#d8d8d1] mb-4" />
-          <p className="text-[#667082] text-lg mb-2">No manuscripts yet</p>
+          <p className="font-['Playfair_Display'] text-[#102342] text-xl mb-2">No manuscripts yet</p>
           <p className="text-[#667082] text-sm mb-6">Start your first submission to see it here.</p>
-          <Link to="/dashboard/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-lg hover:bg-[#d7461c] shadow-sm">
+          <Link to="/dashboard/submit" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#eb5526] text-white text-xs font-bold rounded-none hover:bg-[#d7461c] shadow-sm">
             <Plus size={16} /> Submit a Manuscript
           </Link>
         </div>
       ) : filteredManuscripts.length === 0 ? (
-        <div className="bg-white rounded-lg border border-[#e6e5e0] p-10 text-center shadow-sm">
+        <div className="bg-white rounded-none border border-[#e6e5e0] p-10 text-center shadow-sm">
           <Search size={32} className="mx-auto text-[#d8d8d1] mb-3" />
-          <p className="text-[#102342] font-semibold text-base mb-1">No manuscripts match "{searchTerm}"</p>
+          <p className="font-['Playfair_Display'] text-[#102342] font-semibold text-lg mb-1">No manuscripts match "{searchTerm}"</p>
           <p className="text-[#667082] text-xs mb-4">Try checking your tracking code, title keywords, or status.</p>
           <button
             onClick={() => setSearchTerm('')}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#102342] text-xs font-bold rounded-lg transition-colors"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#102342] text-xs font-bold rounded-none transition-colors"
           >
             Clear Search Filter
           </button>
@@ -214,11 +214,11 @@ export default function MyManuscripts() {
       ) : (
         <div className="space-y-4">
           {filteredManuscripts.map((m) => (
-            <div key={m.id} className="bg-white rounded-lg border border-[#e6e5e0] p-5 flex flex-col gap-4 shadow-sm">
+            <div key={m.id} className="bg-white rounded-none border border-[#e6e5e0] p-5 flex flex-col gap-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
-                    <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2.5 py-0.5 rounded font-bold border border-orange-200 shadow-xs">
+                    <span className="font-mono text-xs bg-orange-50 text-[#eb5526] px-2.5 py-0.5 rounded-none font-bold border border-orange-200 shadow-xs">
                       {getManuscriptDisplayCode(m)}
                     </span>
                     {m.subject_name && (
@@ -227,12 +227,12 @@ export default function MyManuscripts() {
                       </span>
                     )}
                     {m.fast_track && (
-                      <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase">
+                      <span className="bg-[#eb5526] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-none tracking-wide uppercase">
                         Fast-Track
                       </span>
                     )}
                   </div>
-                  <h3 className="font-semibold text-[#102342] truncate text-base">{m.title || 'Untitled manuscript'}</h3>
+                  <h3 className="font-['Playfair_Display'] font-semibold text-[#102342] truncate text-lg">{m.title || 'Untitled manuscript'}</h3>
                   <div className="flex gap-4 text-xs text-[#667082] mt-1.5 flex-wrap">
                     <span>Domain: <strong className="text-[#102342]">{domainName(m.domain_id)}</strong></span>
                     <span>Version: <strong className="text-[#102342]">v{m.version}</strong></span>
@@ -246,9 +246,9 @@ export default function MyManuscripts() {
               {m.status === 'revision_requested' && (
                 <div className="border-t border-[#f1f0ec] pt-4">
                   {revisingId === m.id ? (
-                    <div className="bg-[#fbfaf8] border border-[#d8d8d1] rounded-lg p-4 space-y-3">
+                    <div className="bg-[#fbfaf8] border border-[#d8d8d1] rounded-none p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#eb5526] uppercase tracking-wide">Submit Revised File (v{m.version + 1})</span>
+                        <span className="font-['Playfair_Display'] text-xs font-bold text-[#eb5526] uppercase tracking-wide">Submit Revised File (v{m.version + 1})</span>
                         <button 
                           onClick={() => { setRevisingId(null); setRevisionFileName(''); setRevisionFileUrl(''); setRevisionError(''); }} 
                           className="text-xs text-[#667082] hover:text-[#102342]"
@@ -258,13 +258,13 @@ export default function MyManuscripts() {
                       </div>
 
                       {revisionError && (
-                        <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 p-2.5 rounded text-xs">
+                        <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 p-2.5 rounded-none text-xs">
                           <AlertCircle size={15} className="mt-0.5 shrink-0" />
                           <span>{revisionError}</span>
                         </div>
                       )}
 
-                      <div className="border-2 border-dashed border-[#d8d8d1] rounded bg-white p-6 text-center">
+                      <div className="border-2 border-dashed border-[#d8d8d1] rounded-none bg-white p-6 text-center">
                         {uploadingRevision ? (
                           <div className="space-y-2">
                             <div className="w-6 h-6 border-2 border-t-[#eb5526] border-[#f1f0ec] rounded-full animate-spin mx-auto" />
@@ -281,7 +281,7 @@ export default function MyManuscripts() {
                           <>
                             <p className="text-xs text-[#667082] mb-2">Select your updated manuscript file</p>
                             <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => handleRevisionFileChange(e)} id={`revision-file-${m.id}`} className="hidden" />
-                            <label htmlFor={`revision-file-${m.id}`} className="inline-block px-3 py-1.5 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded cursor-pointer hover:bg-[#eeece7]">
+                            <label htmlFor={`revision-file-${m.id}`} className="inline-block px-3 py-1.5 bg-[#f1f0ec] text-xs font-bold text-[#102342] rounded-none cursor-pointer hover:bg-[#eeece7]">
                               Choose File
                             </label>
                           </>
@@ -291,19 +291,19 @@ export default function MyManuscripts() {
                       <button
                         onClick={() => submitRevision(m)}
                         disabled={!revisionFileUrl || uploadingRevision}
-                        className="w-full py-2 bg-[#102342] hover:bg-[#eb5526] text-white text-xs font-bold rounded transition-colors disabled:opacity-35"
+                        className="w-full py-2 bg-[#102342] hover:bg-[#eb5526] text-white text-xs font-bold rounded-none transition-colors disabled:opacity-35"
                       >
                         Submit Revision Document
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-none p-3">
                       <p className="text-xs text-orange-800">
                         The editor has requested revisions for this manuscript. Please submit your corrected version.
                       </p>
                       <button 
                         onClick={() => setRevisingId(m.id)} 
-                        className="px-3.5 py-1.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded"
+                        className="px-3.5 py-1.5 bg-[#eb5526] hover:bg-[#d7461c] text-white text-xs font-bold rounded-none"
                       >
                         Upload Revision
                       </button>
@@ -329,7 +329,7 @@ export default function MyManuscripts() {
                   <button
                     type="button"
                     onClick={() => handleDeleteManuscript(m.id, m.title)}
-                    className="text-red-500 hover:text-red-700 font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded hover:bg-red-50"
+                    className="text-red-500 hover:text-red-700 font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded-none hover:bg-red-50"
                     title="Permanently delete test manuscript (Admin Only)"
                   >
                     <Trash2 size={13} /> Delete Paper
